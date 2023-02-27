@@ -1,7 +1,7 @@
 
 # TransitFit
 
-TransitFit has been developed as part of the ongoing effort of the Spectroscopy and Photometry of Exoplanet Atmospheres Research Network (SPEARNET). SPEARNET is undertaking a survey of exoplanet atmospheres using transmission spectroscopy.
+TransitFit has been developed as part of the ongoing effort of the Spectroscopy and Photometry of Exoplanet Atmospheres Research Network (SPEARNET). [SPEARNET](https://doi.org/10.1093/mnras/stz783) is undertaking a survey of exoplanet atmospheres using transmission spectroscopy.
 
 **Original Author** - Joshua Hayes (Univ. Manchester)
 
