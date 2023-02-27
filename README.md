@@ -1,14 +1,14 @@
 
 # TransitFit
 
-TransitFit has been developed as part of the ongoing effort of the Spectroscopy and Photometry of Exoplanet Atmospheres Research Network (SPEARNET). [SPEARNET](https://doi.org/10.1093/mnras/stz783) is undertaking a survey of exoplanet atmospheres using transmission spectroscopy.
+[TransitFit](https://transitfit.readthedocs.io/en/latest/) has been developed as part of the ongoing effort of the Spectroscopy and Photometry of Exoplanet Atmospheres Research Network (SPEARNET). [SPEARNET](https://doi.org/10.1093/mnras/stz783) is undertaking a survey of exoplanet atmospheres using transmission spectroscopy.
 
 **Original Author** - Joshua Hayes (Univ. Manchester)
 
 **Current maintainer** - Akshay Priyadarshi (Univ Manchester)
 
 ## Overview
-[TransitFit](https://transitfit.readthedocs.io/en/latest/) is designed for exoplanetary transmission spectroscopy studies and offers a flexible approach to fitting single or multiple transits of an exoplanet at different observation wavelengths.  It possesses the functionality to efficiently couple host limb-darkening parameters to a range of physical models across different wavelengths, through the use of the [Limb darkening toolkit (ldtk)](https://github.com/hpparvi/ldtk) and the [Kipping parameterisations of two-parameter limb darkening models](https://arxiv.org/abs/1308.0009). TransitFit uses [batman](https://www.cfa.harvard.edu/~lkreidberg/batman/index.html) to handle transit light curve modelling, and sampling and retrieval uses the nested sampling algorithm available through [dynesty](https://dynesty.readthedocs.io/en/latest/index.html).
+TransitFit is designed for exoplanetary transmission spectroscopy studies and offers a flexible approach to fitting single or multiple transits of an exoplanet at different observation wavelengths.  It possesses the functionality to efficiently couple host limb-darkening parameters to a range of physical models across different wavelengths, through the use of the [Limb darkening toolkit (ldtk)](https://github.com/hpparvi/ldtk) and the [Kipping parameterisations of two-parameter limb darkening models](https://arxiv.org/abs/1308.0009). TransitFit uses [batman](https://www.cfa.harvard.edu/~lkreidberg/batman/index.html) to handle transit light curve modelling, and sampling and retrieval uses the nested sampling algorithm available through [dynesty](https://dynesty.readthedocs.io/en/latest/index.html).
 
 <a name="installation"></a>
 ## Installation
