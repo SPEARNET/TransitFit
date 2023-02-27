@@ -1,9 +1,11 @@
 
 # TransitFit
 
-**Original Author** - Joshua Hayes (Univ. Manchester), as part of the [SPEARNET collaboration]mailto:eamonn.kerins@manchester.ac.uk.
+TransitFit has been developed as part of the ongoing effort of the Spectroscopy and Photometry of Exoplanet Atmospheres Researcg Network (SPEARNET) SPEARNET is undertaking a survey of exoplanet atmospheres using transmission spectroscopy.
 
-**Current maintainer** - Akshay Priyadarshi (Univ Manchester), as part of the [SPEARNET Collaboration]mailto:akshay.priyadarshi@manchester.ac.uk.
+**Original Author** - Joshua Hayes (Univ. Manchester)
+
+**Current maintainer** - Akshay Priyadarshi (Univ Manchester)
 
 ## Overview
 [TransitFit](https://transitfit.readthedocs.io/en/latest/) is designed for exoplanetary transmission spectroscopy studies and offers a flexible approach to fitting single or multiple transits of an exoplanet at different observation wavelengths.  It possesses the functionality to efficiently couple host limb-darkening parameters to a range of physical models across different wavelengths, through the use of the [Limb darkening toolkit (ldtk)](https://github.com/hpparvi/ldtk) and the [Kipping parameterisations of two-parameter limb darkening models](https://arxiv.org/abs/1308.0009). TransitFit uses [batman](https://www.cfa.harvard.edu/~lkreidberg/batman/index.html) to handle transit light curve modelling, and sampling and retrieval uses the nested sampling algorithm available through [dynesty](https://dynesty.readthedocs.io/en/latest/index.html).
