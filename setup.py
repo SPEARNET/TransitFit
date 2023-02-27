@@ -28,11 +28,11 @@ setuptools.setup(
     name="transitfit",
     version=get_version('transitfit/__init__.py'),
     author="Joshua Hayes",
-    author_email="joshjchayes@gmail.com",
+    author_email="Eamonn.Kerins@manchester.ac.uk",
     description="A package to fit exoplanet transit light curves",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/joshjchayes/TransitFit",
+    url="https://github.com/SPEARNET/TransitFit",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
