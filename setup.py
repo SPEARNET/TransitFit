@@ -27,7 +27,7 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name="transitfit",
     version=get_version('transitfit/__init__.py'),
-    author="Joshua Hayes",
+    author="Joshua Hayes and collaborators",
     author_email="Eamonn.Kerins@manchester.ac.uk",
     description="A package to fit exoplanet transit light curves",
     long_description=long_description,
