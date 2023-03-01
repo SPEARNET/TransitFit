@@ -60,7 +60,7 @@ def run_retrieval(data_files, priors, filter_info=None,
         Accepted methods are
             ``['nth order', order]``
 
-            ``['custom', function, [global fit indices, filter fit indices, epoch fit indices]]``
+            ``['custom', function, [global fit indices], [filter fit indices], [epoch fit indices]]``
 
             ``['off', ]``
         ``function`` here is a custom detrending function. TransitFit assumes
@@ -77,7 +77,7 @@ def run_retrieval(data_files, priors, filter_info=None,
         no indices to be given, then use an empty list: []
         e.g. if the detrending function is given by::
 
-            foo(times, a, b, c):
+            foo(times, a, b, c, t0, P):
                 # do something
 
         and a should be fitted globally, then the entry in the method_list
