@@ -281,7 +281,7 @@ of a method and a second parameter dependent on the method.
 Accepted methods are</p>
 <blockquote>
 <div><p><code class="docutils literal notranslate"><span class="pre">['nth</span> <span class="pre">order',</span> <span class="pre">order]</span></code></p>
-<p><code class="docutils literal notranslate"><span class="pre">['custom',</span> <span class="pre">function,</span> <span class="pre">[global</span> <span class="pre">fit</span> <span class="pre">indices,</span> <span class="pre">filter</span> <span class="pre">fit</span> <span class="pre">indices,</span> <span class="pre">epoch</span> <span class="pre">fit</span> <span class="pre">indices]]</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">['custom',</span> <span class="pre">function,</span> <span class="pre">[global</span> <span class="pre">fit</span> <span class="pre">indices],</span> <span class="pre">[filter</span> <span class="pre">fit</span> <span class="pre">indices],</span> <span class="pre">[epoch</span> <span class="pre">fit</span> <span class="pre">indices]]</span></code></p>
 <p><code class="docutils literal notranslate"><span class="pre">['off',</span> <span class="pre">]</span></code></p>
 </div></blockquote>
 <p><code class="docutils literal notranslate"><span class="pre">function</span></code> here is a custom detrending function. TransitFit assumes
@@ -296,7 +296,7 @@ a given epoch, the indices of where these fall within the arguments
 of the detrending function should be given as a list. If there are
 no indices to be given, then use an empty list: []
 e.g. if the detrending function is given by:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">foo</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">foo</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>
     <span class="c1"># do something</span>
 </pre></div>
 </div>
