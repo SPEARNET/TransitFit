@@ -25,7 +25,7 @@ To install the most recent stable version, run::
 
     pip install transitfit
 
-Alternatively, you can install it direct from the source by downloading the project from the `GitHub page <https://github.com/joshjchayes/TransitFit>`_ and running::
+Alternatively, you can install it direct from the source by downloading the project from the `GitHub page <https://github.com/SPEARNET/TransitFit>`_ and running::
 
     python setup.py install
 
