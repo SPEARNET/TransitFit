@@ -138,6 +138,7 @@ class Retriever:
         normalise=True,
         normalise_limits=None,
         detrend=True,
+        median_normalisation=False,
     ):
 
         ###################
@@ -198,6 +199,14 @@ class Retriever:
         self.all_lightcurves, self.detrending_index_array = read_input_file(
             data_files, data_skiprows
         )
+
+        if median_normalisation:
+            print("Normalising lightcurves...")
+            #normalise_limits=[0.95,1.05]
+            for i in np.ndindex(self.all_lightcurves.shape):
+                scale=np.median(self.all_lightcurves[i].flux)
+                self.all_lightcurves[i].flux = self.all_lightcurves[i].flux/scale
+                self.all_lightcurves[i].errors = self.all_lightcurves[i].errors/scale
         
         if detrend:
             # intialise detrending in each light curve
