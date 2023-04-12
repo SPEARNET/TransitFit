@@ -584,12 +584,15 @@ class Retriever:
         if n_procs > 1:
             print('TransitFit is spawning n_procs = {:d} processes. Dynesty output might look scrambled!'.format(n_procs))
 
-        pool = mp.Pool(n_procs)
-        # Run the pool!
-        # batch_run_results = [pool.map_async(_run_batch, i) for i in mp_input]
-        batch_run_results = pool.map(_run_batch, mp_input)
-        pool.close()
-        pool.join()
+            pool = mp.Pool(n_procs)
+            # Run the pool!
+            # batch_run_results = [pool.map_async(_run_batch, i) for i in mp_input]
+            batch_run_results = pool.map(_run_batch, mp_input)
+            pool.close()
+            pool.join()
+            
+        else: # For easy debugging, removing the case of multiprocessing when using only 1 CPU.
+            batch_run_results=[_run_batch(mpinps) for mpinps in mp_input]
 
         all_results = np.array([r[0] for r in batch_run_results])
         all_priors = np.array([r[1] for r in batch_run_results])
