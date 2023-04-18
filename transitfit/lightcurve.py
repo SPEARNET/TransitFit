@@ -517,7 +517,7 @@ class LightCurve:
         '''
         n = (self.times - (t0 - 0.5*P))//P
 
-        return (self.times-t0)/P - n + 0.5
+        return (self.times-t0)/P - n #+ 0.5
 
     def bin(self, cadence, residuals=None):
         '''
