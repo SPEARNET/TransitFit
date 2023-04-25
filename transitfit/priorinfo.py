@@ -189,10 +189,15 @@ class PriorInfo:
             negative_allowed = False
         else:
             negative_allowed = True
+        
+        if name in 'inc':
+            clipped_gaussian=True
+        else:
+            clipped_gaussian=False
 
         self.priors[name].add_gaussian_fit_param(mean, stdev,
                                                  telescope_idx, filter_idx,
-                                                 epoch_idx, negative_allowed)
+                                                 epoch_idx, negative_allowed, clipped_gaussian)
 
         # Store some info for later
         if self.fitting_params is None:
@@ -458,7 +463,10 @@ class PriorInfo:
 
         for i, param_info in enumerate(self.fitting_params):
             name, tidx, fidx, eidx = param_info
-            new_cube[i] = self.priors[name].from_unit_interval(cube[i], tidx, fidx, eidx)
+            if name == 'inc':
+                new_cube[i] = self.priors[name].clipped_gaussian_transform(cube[i], tidx, fidx, eidx)
+            else:
+                new_cube[i] = self.priors[name].from_unit_interval(cube[i], tidx, fidx, eidx)
 
         return new_cube
 

@@ -97,11 +97,12 @@ class ParamArray:
 
     def add_gaussian_fit_param(self, mean, stdev, telescope_idx=None,
                                filter_idx=None, epoch_idx=None,
-                               negative_allowed=True):
+                               negative_allowed=True,
+                               clipped_gaussian=False):
         '''
         Adds a gaussian sampled fitting parameter
         '''
-        self.set_value(_GaussianParam(mean, stdev, negative_allowed),
+        self.set_value(_GaussianParam(mean, stdev, negative_allowed, clipped_gaussian),
                        telescope_idx, filter_idx, epoch_idx)
 
     def from_unit_interval(self, u, telescope_idx=None, filter_idx=None,
@@ -112,6 +113,15 @@ class ParamArray:
         '''
         idx = self._generate_idx(telescope_idx, filter_idx, epoch_idx)
         return self.array[idx].from_unit_interval(u)
+
+    def clipped_gaussian_transform(self, u, telescope_idx=None, filter_idx=None,
+                           epoch_idx=None):
+        '''
+        Converts a value u in the range [0,1] to a physical value. Used in the
+        dynesty routine
+        '''
+        idx = self._generate_idx(telescope_idx, filter_idx, epoch_idx)
+        return self.array[idx].uniform_to_clipped_gaussian(u)
 
     def generate_blank_ParamArray(self):
         '''

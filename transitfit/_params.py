@@ -3,7 +3,7 @@ A class for parameters in TransitFit which can be retrieved. These are used
 by the PriorInfo to determine dimensionality etc.
 
 '''
-from scipy.special import erfinv
+from scipy.special import erf, erfinv
 import numpy as np
 
 class _Param:
@@ -41,7 +41,7 @@ class _UniformParam(_Param):
         return abs(val)
 
 class _GaussianParam(_Param):
-    def __init__(self, best, sigma, negative_allowed=True):
+    def __init__(self, best, sigma, negative_allowed=True, clipped_gaussian=False):
         '''
         A GaussianParam is one which is fitted using a Gaussian prior (normal)
         distribution.
@@ -52,6 +52,10 @@ class _GaussianParam(_Param):
         self.stdev = sigma
         self.negative_allowed = negative_allowed
 
+        if clipped_gaussian:
+            self.factor_for_clipping=(erf((90 - self.mean)/(self.stdev * np.sqrt(2))) + 1)/2 
+        
+
     def from_unit_interval(self, u):
         '''
         Function to convert value u in range (0,1], will convert to a value to
@@ -61,6 +65,19 @@ class _GaussianParam(_Param):
             raise ValueError('u must satisfy 0 < u < 1')
 
         val = self.mean + self.stdev * np.sqrt(2) * erfinv(2 * u - 1)
+        if self.negative_allowed:
+            return val
+        return abs(val)
+    
+    def uniform_to_clipped_gaussian(self,u):
+        '''
+        Function to convert value u in range (0,1], will convert to a value to
+        be used by Batman
+        '''
+        if u > 1 or u < 0:
+            raise ValueError('u must satisfy 0 < u < 1')
+
+        val = self.mean + self.stdev * np.sqrt(2) * erfinv(2 * u * self.factor_for_clipping - 1)
         if self.negative_allowed:
             return val
         return abs(val)
