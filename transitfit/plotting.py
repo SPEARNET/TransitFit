@@ -31,7 +31,7 @@ def plot_individual_lightcurves(lightcurves, priorinfo, results,
         than time on x axis. This is useful for folded curves.
     t0 : float, optional
         The value of t0 that the lightcurves are folded to. This is treated as
-        phase 0.5 (centred in plot).
+        phase 0 (centred in plot).
     period : float, optional
         The period that lightcurves are folded with.
     '''

@@ -205,7 +205,7 @@ class OutputHandler:
                 # get model phase:
                 n = (model_times - (self.best_model['t0'][i][0] - 0.5 * self.best_model['P'][i][0]))//self.best_model['P'][i][0]
 
-                model_phase = (model_times - self.best_model['t0'][i][0])/self.best_model['P'][i][0] - n + 0.5
+                model_phase = (model_times - self.best_model['t0'][i][0])/self.best_model['P'][i][0] - n# + 0.5
 
                 # Get the residual
                 residuals = flux - time_wise_best_curve
@@ -260,7 +260,7 @@ class OutputHandler:
                     # get model phase:
                     n = (model_times - (self.best_model['t0'][i][0] - 0.5 * self.best_model['P'][i][0]))//self.best_model['P'][i][0]
 
-                    lc_model_phase = (model_times - self.best_model['t0'][i][0])/self.best_model['P'][i][0] - n + 0.5
+                    lc_model_phase = (model_times - self.best_model['t0'][i][0])/self.best_model['P'][i][0] - n# + 0.5
 
                     lc_residuals = lc_flux - time_wise_best_curve
 
