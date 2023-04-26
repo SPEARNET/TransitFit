@@ -301,7 +301,7 @@ def quick_plot(lightcurve, fname, folder_path, t0=None, period=None):
     ax.errorbar(x_vals, lightcurve.flux, lightcurve.errors, zorder=1,
         linestyle='', marker='x', color='dimgrey', elinewidth=0.8, alpha=0.6)
 
-    ax.axvline(0.5, linestyle='dashed', color='gray',
+    ax.axvline(0, linestyle='dashed', color='gray',
                linewidth=1, zorder=1)
 
     ax.set_xlabel(x_label)
