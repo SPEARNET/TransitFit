@@ -549,14 +549,16 @@ class PriorInfo:
         return print_str
     
     def get_latex_friendly_labels(self):
-        """Adds a \ in front of underscored to make the latex displays work"""
+        """Adds a $ around the underscored text to make the latex displays work"""
         labels = []
         for param in self.fitting_params[:,0]:
             if "_" in param:
                 new_label = ''
                 for s in param.split("_")[:-1]:
-                    new_label += s + "\_"
-                new_label += param.split("_")[-1]
+                    new_label += s + "$_"
+                new_label += param.split("_")[-1]+"$"
+            elif param[-1].isdigit() or param =='rp':
+                new_label = param[:-1]+'$_'+param[-1]+'$'
             else:
                 new_label = param
             labels.append(new_label)
