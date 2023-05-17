@@ -12,6 +12,7 @@
 # Editor backups #
 ##################
 *~
+.vscode
 
 # Packages #
 ############
