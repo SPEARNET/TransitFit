@@ -13,6 +13,7 @@ This mode groups the light curves by filter, and then splits the retrieval into 
 
 The batches are generally constructed to have at least one filter in common with at least one other batch. This ensures that there is still some coupling of information between the batches. The exception to this is when there is one filter in particular which has a very high number of observations. In this case, we recommend using the ``'folded'`` mode.
 
+It is suggested to run the model twice if using 'batched' mode. For the second run, use the output from first run as the priors for the wavelength independent parameters (P, t0, a, inc). The error limits, standard deviation on these priors should be narrowed down to not allow for much variation in individual batches/lightcurves.
 
 'Folded' fitting
 ----------------
