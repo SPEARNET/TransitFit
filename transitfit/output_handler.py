@@ -23,6 +23,7 @@ from .retriever import global_params, filter_dependent_params, lightcurve_depend
 from ._utils import weighted_avg_and_std, host_radii_to_AU, get_normalised_weights, get_covariance_matrix
 from ._paramarray import ParamArray
 from .lightcurve import LightCurve
+from .error_analysis import ErrorLimits
 
 
 class OutputHandler:
@@ -319,6 +320,9 @@ class OutputHandler:
         print('Saving final results')
 
         self._save_results_dict(self.best_model, os.path.join(output_folder, 'Complete_results.csv'), False)
+
+        el = ErrorLimits(output_folder)
+        el.get_errors()
 
     def save_results(self, results, priors, lightcurves,
                      output_folder='./output_parameters',
