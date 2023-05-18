@@ -1033,7 +1033,12 @@ class OutputHandler:
         titles=[] 
         for i in range(ndim):
             _l,_u = get_quantiles_on_best_val(samples[:,i], weights, best[i])
-            titles+=[r'best$_{_l}^{_u}$'.replace('best',f"{result.best[i]:.6f}").replace('_l',f"{_l:.6f}").replace('_u',f"{_u:.6f}")]
+            _title = r'param = best$_{_l}^{_u}$'
+            _title = _title.replace('param', labels[i])
+            _title = _title.replace('best', f"{result.best[i]:.6f}")
+            _title = _title.replace('_l', f"{_l:.6f}")
+            _title = _title.replace('_u', f"{_u:.6f}")
+            titles+=[_title]
 
         fig = corner.corner(samples, labels=labels, titles=titles,
                        show_titles=True, title_fmt=None, title_kwargs={"fontsize": 12})
