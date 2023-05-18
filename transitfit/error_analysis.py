@@ -6,6 +6,7 @@ import glob
 import pickle
 import numpy as np
 import pandas as pd
+from statsmodels.stats import weightstats
 
 
 def get_quantiles_on_best_val(samples, weights, best_val):
@@ -31,7 +32,13 @@ def get_quantiles_on_best_val(samples, weights, best_val):
 
     best_val_idx = np.argmin(np.abs(sorted_samples-float(best_val)))
 
-    total_sum = 0
+    # Faster method
+    best_percentile = np.sum(sorted_weights[:best_val_idx])
+    model = weightstats.DescrStatsW(sorted_samples, sorted_weights)
+    lower_error, upper_error = model.quantile([(1-.6827)*best_percentile, best_percentile+(.6827*(
+        1-best_percentile))], return_pandas=False)-sorted_samples[best_val_idx]
+
+    """total_sum = 0
     for i in range(best_val_idx, len(sorted_weights)):
         total_sum += sorted_weights[i]
         if total_sum >= .6827*np.sum(sorted_weights[best_val_idx:]):
@@ -43,7 +50,7 @@ def get_quantiles_on_best_val(samples, weights, best_val):
         total_sum += sorted_weights[i]
         if total_sum >= .6827*np.sum(sorted_weights[:best_val_idx]):
             lower_error = sorted_samples[i]-best_val
-            break
+            break"""
 
     return lower_error, upper_error
 
@@ -83,6 +90,16 @@ class ErrorLimits:
         # This will be the name of the output file
         self.MODIFIED_SUMMARY_OUTPUT = 'modifed_output.csv'
 
+        # Summary_output file
+        self.summary_output = glob.glob(
+            self.OUTPUT_PARAMETERS_FOLDER+'/*summary_output.csv')
+        if len(self.summary_output) == 0:
+            print('')
+            raise RuntimeError(
+                'Please check the pathname, it may not be correct.')
+
+            # return
+
         # Searching for all the .pkl files
         self.files_pkl = glob.glob(
             self.OUTPUT_PARAMETERS_FOLDER+'/quicksaves/*results.pkl')
@@ -106,21 +123,108 @@ class ErrorLimits:
             self.folded_mode_pkl.sort()
             self.folded_mode_csv.sort()
 
+            self.folded_mode_priors_pkl = glob.glob(
+                self.OUTPUT_PARAMETERS_FOLDER+'/*/quicksaves/*priors.pkl')
+            self.folded_mode_priors_pkl.sort()
+            # if len(unfolded_priors_pkl)>0:
+            with open(self.folded_mode_priors_pkl[0], 'rb') as handle:
+                priors = pickle.load(handle)
+
+            self.allow_ttv = priors.allow_ttv
+            if self.allow_ttv:
+                print('TTV mode detected.')
+
         else:
+            self.allow_ttv = False
             self.FOLDED_MODE = False
             self.folded_params = []
 
         # The list of required parameters to analyze
         self.required_params = ['P', 't0', 'a/r*', 'inc', 'rp/r*']
+        self.values = {}
+
+    def handle_ttv(self):
+        all_epochs = np.empty(0)
+        for i, fmpk in enumerate(self.folded_mode_priors_pkl):
+            with open(fmpk, 'rb') as handle:
+                priors = pickle.load(handle)
+
+            fitting_params = priors.fitting_params  # [name, tidx,fidx, eidx]
+            # filters = fitting_params[:,2]
+            params = fitting_params[:, 0]
+
+            df = pd.read_csv(self.folded_mode_csv[i])
+            selected_df = df.loc[df['Parameter'] == 't0']
+            epochs = selected_df['Epoch'].to_numpy(dtype=float)
+            all_epochs = np.append(all_epochs, epochs)
+            with open(self.folded_mode_pkl[i], 'rb') as handle:
+                results = pickle.load(handle)
+
+            for j, p in enumerate(params):
+                if p == 't0':
+                    make_dict(self.values, p+'_' +
+                              str(int(epochs[j])), results.samples[:, j])
+                    make_dict(self.values, p+'_' +
+                              str(int(epochs[j]))+'_weights', results.weights)
+                    self.values[p+'_'+str(int(epochs[j])) +
+                                '_best'] = results.best[j]
+
+        priors_pkl = glob.glob(
+            self.OUTPUT_PARAMETERS_FOLDER+'/quicksaves/*priors.pkl')
+        priors_pkl.sort()
+        for i, pp in enumerate(priors_pkl):
+            with open(pp, 'rb') as handle:
+                priors = pickle.load(handle)
+            fitting_params = priors.fitting_params  # [name, tidx,fidx, eidx]
+            # filters=fitting_params[:,2]
+            params = fitting_params[:, 0]
+
+            with open(self.files_pkl[i], 'rb') as handle:
+                results = pickle.load(handle)
+
+            for j, p in enumerate(params):
+                # elif params[p] in {'a','inc','rp','q0','q1'}:
+                make_dict(self.values, p, results.samples[:, j])
+                make_dict(self.values, p+'_weights', results.weights)
+                self.values[p+'_best'] = results.best[j]
+
+        all_epochs = np.sort(all_epochs)
+        # Generating the output
+        with open(self.OUTPUT_PARAMETERS_FOLDER+'/'+self.MODIFIED_SUMMARY_OUTPUT, 'w') as mso:
+            mso.write(
+                'Parameter, Filter, Epoch, Best, Lower_error, Upper_error\n')
+            for e in all_epochs:
+                param_ = 't0_'+str(int(e))
+                errs = get_quantiles_on_best_val(
+                    samples=self.values[param_], weights=self.values[param_+'_weights'], best_val=self.values[param_+'_best'])
+                # (model.mean)
+                mso.write(
+                    f"t0,-,{e},{self.values[param_+'_best']},{errs[0]},{errs[1]}\n")
+
+            for p in params:
+                param_ = p
+                errs = get_quantiles_on_best_val(
+                    samples=self.values[param_], weights=self.values[param_+'_weights'], best_val=self.values[param_+'_best'])
+                # (model.mean)
+                mso.write(
+                    f"{p},-,-,{self.values[param_+'_best']},{errs[0]},{errs[1]}\n")
+        print(
+            f"Saved results in {self.OUTPUT_PARAMETERS_FOLDER+'/'+self.MODIFIED_SUMMARY_OUTPUT}")
+
+        return
 
     def get_errors(self):
 
         # Initalising values dictionary and filters list.
-        values = {}
+        # selvalues = {}
         filters = []
 
+        if self.allow_ttv:
+            self.handle_ttv()
+            return
+
         # Getting the values of 'P' and 't0' in case of folded mode.
-        if self.FOLDED_MODE:
+        elif self.FOLDED_MODE:
             self.folded_params = self.required_params[:2]
             self.required_params = self.required_params[2:]
             for i, file in enumerate(self.folded_mode_pkl):
@@ -133,8 +237,8 @@ class ErrorLimits:
                     selected_df = df_csv.loc[df_csv['Parameter'] == param]
                     index = selected_df.index
 
-                    make_dict(values, param, result.samples[:, index])
-                    make_dict(values, param+'_weights', result.weights)
+                    make_dict(self.values, param, result.samples[:, index])
+                    make_dict(self.values, param+'_weights', result.weights)
 
         for i, file in enumerate(self.files_pkl):
             with open(file, 'rb') as handle:
@@ -154,53 +258,53 @@ class ErrorLimits:
                     batch_filters = selected_df['Filter'].to_list()
                     filters += batch_filters
                     for i, f in enumerate(batch_filters):
-                        make_dict(values, param+'_'+f,
+                        make_dict(self.values, param+'_'+f,
                                   result.samples[:, index[i]])
-                        make_dict(values, param+'_'+f +
+                        make_dict(self.values, param+'_'+f +
                                   '_weights', result.weights)
                         i = 2*i  # q0 and q1 are saved as pairs in the .pkl files
-                        make_dict(values, 'q0'+'_'+f,
+                        make_dict(self.values, 'q0'+'_'+f,
                                   result.samples[:, index[-1]+1+i])
-                        make_dict(values, 'q1'+'_'+f,
+                        make_dict(self.values, 'q1'+'_'+f,
                                   result.samples[:, index[-1]+1+i+1])
 
-                        make_dict(values, 'q0'+'_'+f +
+                        make_dict(self.values, 'q0'+'_'+f +
                                   '_weights', result.weights)
-                        make_dict(values, 'q1'+'_'+f +
+                        make_dict(self.values, 'q1'+'_'+f +
                                   '_weights', result.weights)
 
                 else:
 
-                    make_dict(values, param, result.samples[:, index])
-                    make_dict(values, param+'_weights', result.weights)
+                    make_dict(self.values, param, result.samples[:, index])
+                    make_dict(self.values, param+'_weights', result.weights)
 
                     if param == 'rp/r*':  # Folded mode
-                        make_dict(values, 'q0', result.samples[:, index+1])
-                        make_dict(values, 'q1', result.samples[:, index+2])
+                        make_dict(self.values, 'q0',
+                                  result.samples[:, index+1])
+                        make_dict(self.values, 'q1',
+                                  result.samples[:, index+2])
 
-                        make_dict(values, 'q0'+'_weights', result.weights)
-                        make_dict(values, 'q1'+'_weights', result.weights)
+                        make_dict(self.values, 'q0'+'_weights', result.weights)
+                        make_dict(self.values, 'q1'+'_weights', result.weights)
 
         self.required_params = self.folded_params + \
             self.required_params+['q0', 'q1']
         filters = list(set(filters))
-        filters.sort()
+        filters = np.sort(np.array(filters, dtype=int))
 
-        summary_output = glob.glob(
-            self.OUTPUT_PARAMETERS_FOLDER+'/*summary_output.csv')
-        df_so = pd.read_csv(summary_output[0])
+        df_so = pd.read_csv(self.summary_output[0])
 
         # Getting the best_values from the summary_output.csv file
         for p in self.required_params:
             selected_df = df_so.loc[df_so['Parameter'] == p]
             if len(selected_df) == 1:
-                values[p+'_best'] = float(selected_df['Best'])
+                self.values[p+'_best'] = float(selected_df['Best'])
 
             else:
                 batch_filters = selected_df['Filter']
                 bestvals = selected_df['Best'].to_numpy(dtype=float)
                 for i, f in enumerate(batch_filters):
-                    values[p+'_'+str(f)+'_best'] = float(bestvals[i])
+                    self.values[p+'_'+str(f)+'_best'] = float(bestvals[i])
 
         # Generating the output
         with open(self.OUTPUT_PARAMETERS_FOLDER+'/'+self.MODIFIED_SUMMARY_OUTPUT, 'w') as mso:
@@ -208,18 +312,20 @@ class ErrorLimits:
             for param in self.required_params:
                 if param in {'rp/r*', 'q0', 'q1'} and len(filters) > 0:
                     for fil in filters:
-                        param_ = param+'_'+fil
+                        param_ = param+'_'+str(int(fil))
                         errs = get_quantiles_on_best_val(
-                            samples=values[param_], weights=values[param_+'_weights'], best_val=values[param_+'_best'])
+                            samples=self.values[param_], weights=self.values[param_+'_weights'], best_val=self.values[param_+'_best'])
                         # (model.mean)
                         mso.write(
-                            f"{param},{fil},{values[param_+'_best']},{errs[0]},{errs[1]}\n")
+                            f"{param},{fil},{self.values[param_+'_best']},{errs[0]},{errs[1]}\n")
 
                 else:
                     errs = get_quantiles_on_best_val(
-                        samples=values[param], weights=values[param+'_weights'], best_val=values[param+'_best'])
+                        samples=self.values[param], weights=self.values[param+'_weights'], best_val=self.values[param+'_best'])
                     mso.write(
-                        f"{param},-,{values[param+'_best']},{errs[0]},{errs[1]}\n")
+                        f"{param},-,{self.values[param+'_best']},{errs[0]},{errs[1]}\n")
 
         print(
             f"Saved results in {self.OUTPUT_PARAMETERS_FOLDER+'/'+self.MODIFIED_SUMMARY_OUTPUT}")
+
+        return
