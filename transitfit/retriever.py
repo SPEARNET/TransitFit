@@ -574,8 +574,8 @@ class Retriever:
                 slices,
                 output_folder,
                 filter_idx,
-                summary_file,
-                full_output_file,
+                #summary_file,
+                #full_output_file,
             ]
             for bi, batch in enumerate(batches)
         ]
