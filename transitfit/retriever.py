@@ -600,7 +600,7 @@ class Retriever:
         all_priors = np.array([r[1] for r in batch_run_results])
         all_lightcurves = [r[2] for r in batch_run_results]
 
-        """# Make outputs etc
+        # Make outputs etc
         if "filter" in os.path.basename(plot_folder):
             # plot_folder = os.path.dirname(plot_folder)
             plot_folder = os.path.join(
@@ -620,7 +620,7 @@ class Retriever:
             full_output_file,
             plot_folder,
             folded,
-        )"""
+        )
 
         if full_return:
             return all_results, all_priors, all_lightcurves
@@ -1908,8 +1908,6 @@ def _run_batch(x):
         slices,
         output_folder,
         filter_idx,
-        summary_file,
-        full_output_file,
     ) = x
 
     print("Running batch {} of {}".format(bi + 1, n_batches))
@@ -1945,26 +1943,5 @@ def _run_batch(x):
         results, batch_prior, batch_lightcurves, output_folder, filter_idx, bi
     )
 
-    # Make outputs etc
-    if "filter" in os.path.basename(plot_folder):
-        # plot_folder = os.path.dirname(plot_folder)
-        plot_folder = os.path.join(
-            os.path.dirname(plot_folder),
-            "posteriors",
-            os.path.basename(plot_folder),
-        )
-    else:
-        plot_folder = os.path.join(plot_folder, "posteriors")
-
-    output_handler.save_results(
-        results,
-        batch_prior,
-        batch_lightcurves,
-        output_folder,
-        summary_file,
-        full_output_file,
-        plot_folder,
-        folded,
-        )
     #print('The shapes are:',np.shape(results),np.shape(batch_prior),np.shape(batch_lightcurves))
     return results, batch_prior, batch_lightcurves
