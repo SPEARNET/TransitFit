@@ -38,7 +38,11 @@ def get_quantiles_on_best_val(samples, weights, best_val):
     lower_error, upper_error = model.quantile([(1-.6827)*best_percentile, best_percentile+(.6827*(
         1-best_percentile))], return_pandas=False)-sorted_samples[best_val_idx]
 
-    """total_sum = 0
+    """
+    # Previous method (slower)
+    # Shows more detail on how we are getting the errors
+    
+    total_sum = 0
     for i in range(best_val_idx, len(sorted_weights)):
         total_sum += sorted_weights[i]
         if total_sum >= .6827*np.sum(sorted_weights[best_val_idx:]):
