@@ -343,6 +343,7 @@ class ErrorLimits:
         with open(self.OUTPUT_PARAMETERS_FOLDER+'/'+self.MODIFIED_SUMMARY_OUTPUT, 'w') as mso:
             mso.write('Parameter, Filter, Best, Lower_error, Upper_error\n')
             q, q_low, q_up = [], [], []
+            q_dict = {}
 
             for param in self.required_params:
                 if param in {'rp/r*', 'q0', 'q1'} and len(filters) > 0:
@@ -364,11 +365,27 @@ class ErrorLimits:
                         q.append(self.values[param+'_best']),
                         q_low.append(errs[0])
                         q_up.append(errs[1])
-                        
             if len(q) > 0:
                 u, u_low, u_up = q_to_u(q, q_low, q_up)
                 mso.write(f"u0,-,-,{u[0]},{u_low[0]},{u_up[0]}\n")
                 mso.write(f"u1,-,-,{u[1]},{u_low[1]},{u_up[1]}\n")
+
+            elif len(filters) > 0:
+                for fil in filters:
+                    for param in ['q0', 'q1']:
+                        param_ = param+'_'+str(int(fil))
+                        errs = get_quantiles_on_best_val(
+                            samples=self.values[param_], weights=self.values[param_+'_weights'], best_val=self.values[param_+'_best'])
+
+                        q.append(self.values[param_+'_best']),
+                        q_low.append(errs[0])
+                        q_up.append(errs[1])
+
+                    u, u_low, u_up = q_to_u(q, q_low, q_up)
+                    mso.write(
+                        f"u0,{str(int(fil))},-,{u[0]},{u_low[0]},{u_up[0]}\n")
+                    mso.write(
+                        f"u1,{str(int(fil))},-,{u[1]},{u_low[1]},{u_up[1]}\n")
 
         print(
             f"Saved results in {self.OUTPUT_PARAMETERS_FOLDER+'/'+self.MODIFIED_SUMMARY_OUTPUT}")
