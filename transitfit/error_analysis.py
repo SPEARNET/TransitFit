@@ -38,7 +38,10 @@ def get_quantiles_on_best_val(samples, weights, best_val):
     lower_error, upper_error = model.quantile([(1-.6827)*best_percentile, best_percentile+(.6827*(
         1-best_percentile))], return_pandas=False)-sorted_samples[best_val_idx]
 
-    """total_sum = 0
+    """
+    # This gives a detailed explanation of the method. 
+    # Slower method
+    total_sum = 0
     for i in range(best_val_idx, len(sorted_weights)):
         total_sum += sorted_weights[i]
         if total_sum >= .6827*np.sum(sorted_weights[best_val_idx:]):
@@ -70,6 +73,26 @@ def make_dict(val_dict, key, vals):
         val_dict[key] = np.ndarray.flatten(np.append(val_dict[key], vals))
     else:
         val_dict[key] = np.ndarray.flatten(vals)
+
+
+def q_to_u_err(q, q_err):
+
+    u_err = []
+    u_err.append(np.sqrt(((q[1] * q_err[0])**2)/q[0] + 4 * q[0] * q_err[1]**2))
+    u_err.append(np.sqrt(
+        (((1 - 2 * q[1]) * q_err[0])**2)/(0.25 * q[0]) + 4 * q[0] * q_err[1] ** 2))
+
+    return u_err
+
+
+def q_to_u(q, q_err_l, q_err_u):
+
+    u = [2 * np.sqrt(q[0]) * q[1], np.sqrt(q[0]) * (1 - 2 * q[1])]
+
+    u_err_l = q_to_u_err(q, q_err_l)
+    u_err_u = q_to_u_err(q, q_err_u)
+
+    return u, u_err_l, u_err_u
 
 
 class ErrorLimits:
@@ -189,6 +212,7 @@ class ErrorLimits:
                 self.values[p+'_best'] = results.best[j]
 
         all_epochs = np.sort(all_epochs)
+
         # Generating the output
         with open(self.OUTPUT_PARAMETERS_FOLDER+'/'+self.MODIFIED_SUMMARY_OUTPUT, 'w') as mso:
             mso.write(
@@ -201,13 +225,25 @@ class ErrorLimits:
                 mso.write(
                     f"t0,-,{e},{self.values[param_+'_best']},{errs[0]},{errs[1]}\n")
 
+            q, q_low, q_up = [], [], []
             for p in params:
                 param_ = p
                 errs = get_quantiles_on_best_val(
                     samples=self.values[param_], weights=self.values[param_+'_weights'], best_val=self.values[param_+'_best'])
                 # (model.mean)
+
                 mso.write(
                     f"{p},-,-,{self.values[param_+'_best']},{errs[0]},{errs[1]}\n")
+
+                if p in {'q0', 'q1'}:
+                    q.append(self.values[param_+'_best']),
+                    q_low.append(errs[0])
+                    q_up.append(errs[1])
+
+            u, u_low, u_up = q_to_u(q, q_low, q_up)
+            mso.write(f"u0,-,-,{u[0]},{u_low[0]},{u_up[0]}\n")
+            mso.write(f"u1,-,-,{u[1]},{u_low[1]},{u_up[1]}\n")
+
         print(
             f"Saved results in {self.OUTPUT_PARAMETERS_FOLDER+'/'+self.MODIFIED_SUMMARY_OUTPUT}")
 
