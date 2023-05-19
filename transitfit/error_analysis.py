@@ -38,10 +38,7 @@ def get_quantiles_on_best_val(samples, weights, best_val):
     lower_error, upper_error = model.quantile([(1-.6827)*best_percentile, best_percentile+(.6827*(
         1-best_percentile))], return_pandas=False)-sorted_samples[best_val_idx]
 
-    """
-    # This gives a detailed explanation of the method. 
-    # Slower method
-    total_sum = 0
+    """total_sum = 0
     for i in range(best_val_idx, len(sorted_weights)):
         total_sum += sorted_weights[i]
         if total_sum >= .6827*np.sum(sorted_weights[best_val_idx:]):
@@ -345,6 +342,8 @@ class ErrorLimits:
         # Generating the output
         with open(self.OUTPUT_PARAMETERS_FOLDER+'/'+self.MODIFIED_SUMMARY_OUTPUT, 'w') as mso:
             mso.write('Parameter, Filter, Best, Lower_error, Upper_error\n')
+            q, q_low, q_up = [], [], []
+
             for param in self.required_params:
                 if param in {'rp/r*', 'q0', 'q1'} and len(filters) > 0:
                     for fil in filters:
@@ -360,6 +359,15 @@ class ErrorLimits:
                         samples=self.values[param], weights=self.values[param+'_weights'], best_val=self.values[param+'_best'])
                     mso.write(
                         f"{param},-,{self.values[param+'_best']},{errs[0]},{errs[1]}\n")
+
+                    if param in {'q0', 'q1'}:
+                        q.append(self.values[param+'_best']),
+                        q_low.append(errs[0])
+                        q_up.append(errs[1])
+            if len(q) > 0:
+                u, u_low, u_up = q_to_u(q, q_low, q_up)
+                mso.write(f"u0,-,-,{u[0]},{u_low[0]},{u_up[0]}\n")
+                mso.write(f"u1,-,-,{u[1]},{u_low[1]},{u_up[1]}\n")
 
         print(
             f"Saved results in {self.OUTPUT_PARAMETERS_FOLDER+'/'+self.MODIFIED_SUMMARY_OUTPUT}")
