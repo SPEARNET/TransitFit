@@ -41,7 +41,7 @@ setuptools.setup(
         "Development Status :: 4 - Beta"
     ],
     python_requires='>=3.6',
-    install_requires=['batman-package', 'dynesty', 'numpy', 'matplotlib',
+    install_requires=['numpy','batman-package', 'dynesty',  'matplotlib',
                       'pandas', 'ldtk>=1.5.0', 'corner', 
                       'semantic_version', 'scipy', 'statsmodels'],
     zip_safe=False,

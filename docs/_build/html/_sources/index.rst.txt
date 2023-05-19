@@ -27,7 +27,7 @@ To install the most recent stable version, run::
 
 Alternatively, you can install it direct from the source by downloading the project from the `GitHub page <https://github.com/joshjchayes/TransitFit>`_ and running::
 
-    python setup.py install
+    pip install -e .
 
 
 Citing
