@@ -217,7 +217,7 @@ class ErrorLimits:
         # Generating the output
         with open(self.OUTPUT_PARAMETERS_FOLDER+'/'+self.MODIFIED_SUMMARY_OUTPUT, 'w') as mso:
             mso.write(
-                'Parameter, Filter, Epoch, Best, Lower_error, Upper_error\n')
+                'Parameter,Filter,Epoch,Best,Lower_error,Upper_error\n')
             for e in all_epochs:
                 param_ = 't0_'+str(int(e))
                 errs = get_quantiles_on_best_val(
@@ -345,7 +345,7 @@ class ErrorLimits:
 
         # Generating the output
         with open(self.OUTPUT_PARAMETERS_FOLDER+'/'+self.MODIFIED_SUMMARY_OUTPUT, 'w') as mso:
-            mso.write('Parameter, Filter, Best, Lower_error, Upper_error\n')
+            mso.write('Parameter,Filter,Best,Lower_error,Upper_error\n')
             q, q_low, q_up = [], [], []
             q_dict = {}
 
