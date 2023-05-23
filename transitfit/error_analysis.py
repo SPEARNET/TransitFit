@@ -212,7 +212,7 @@ class ErrorLimits:
                 make_dict(self.values, p+'_weights', results.weights)
                 self.values[p+'_best'] = results.best[j]
 
-        all_epochs = np.sort(all_epochs)
+        all_epochs = np.unique(all_epochs)
 
         # Generating the output
         with open(self.OUTPUT_PARAMETERS_FOLDER+'/'+self.MODIFIED_SUMMARY_OUTPUT, 'w') as mso:
