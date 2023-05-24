@@ -309,7 +309,10 @@ class ErrorLimits:
                                   '_weights', result.weights)
                         make_dict(self.values, 'q1'+'_'+f +
                                   '_weights', result.weights)
-
+                
+                elif selected_df['Error'].iloc[0]=='-':
+                    self.required_params.remove(param)
+                
                 else:
 
                     make_dict(self.values, param, result.samples[:, index])
