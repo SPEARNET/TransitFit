@@ -164,6 +164,9 @@ class PriorInfo:
             negative_allowed = False
         else:
             negative_allowed = True
+        
+        if name in ['inc']:
+            high_lim = 90
 
         self.priors[name].add_uniform_fit_param(low_lim, high_lim,
                                                 telescope_idx, filter_idx,
