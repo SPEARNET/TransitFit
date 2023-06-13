@@ -466,8 +466,16 @@ class PriorInfo:
 
         for i, param_info in enumerate(self.fitting_params):
             name, tidx, fidx, eidx = param_info
+
             if name == 'inc':
-                new_cube[i] = self.priors[name].clipped_gaussian_transform(cube[i], tidx, fidx, eidx)
+                idx = self.priors[name]._generate_idx(tidx, fidx, eidx)
+
+                if hasattr(self.priors[name].array[idx], "uniform_to_clipped_gaussian"):
+                    new_cube[i] = self.priors[name].clipped_gaussian_transform(cube[i], tidx, fidx, eidx)
+
+                else:
+                    new_cube[i] = self.priors[name].from_unit_interval(cube[i], tidx, fidx, eidx)
+
             else:
                 new_cube[i] = self.priors[name].from_unit_interval(cube[i], tidx, fidx, eidx)
 
