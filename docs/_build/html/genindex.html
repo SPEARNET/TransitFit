@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; TransitFit 3.0.3 documentation</title>
+  <title>Index &mdash; TransitFit 3.0.7 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -90,6 +90,7 @@
  | <a href="#N"><strong>N</strong></a>
  | <a href="#O"><strong>O</strong></a>
  | <a href="#P"><strong>P</strong></a>
+ | <a href="#Q"><strong>Q</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
@@ -217,12 +218,14 @@
 </li>
       <li><a href="api.html#transitfit._utils.check_batches">check_batches() (in module transitfit._utils)</a>
 </li>
-      <li><a href="api.html#transitfit.lightcurve.LightCurve.combine">combine() (transitfit.lightcurve.LightCurve method)</a>
+      <li><a href="api.html#transitfit._paramarray.ParamArray.clipped_gaussian_transform">clipped_gaussian_transform() (transitfit._paramarray.ParamArray method)</a>
 </li>
-      <li><a href="api.html#transitfit.output_handler.OutputHandler.combine_results_dicts">combine_results_dicts() (transitfit.output_handler.OutputHandler method)</a>
+      <li><a href="api.html#transitfit.lightcurve.LightCurve.combine">combine() (transitfit.lightcurve.LightCurve method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#transitfit.output_handler.OutputHandler.combine_results_dicts">combine_results_dicts() (transitfit.output_handler.OutputHandler method)</a>
+</li>
       <li><a href="api.html#transitfit._limb_darkening_handler.LimbDarkeningHandler.convert_qtou">convert_qtou() (transitfit._limb_darkening_handler.LimbDarkeningHandler method)</a>
 </li>
       <li><a href="api.html#transitfit._limb_darkening_handler.LimbDarkeningHandler.convert_qtou_with_errors">convert_qtou_with_errors() (transitfit._limb_darkening_handler.LimbDarkeningHandler method)</a>
@@ -253,6 +256,8 @@
 <h2 id="E">E</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#transitfit.error_analysis.ErrorLimits">ErrorLimits (class in transitfit.error_analysis)</a>
+</li>
       <li><a href="api.html#transitfit.lightcurve.LightCurve.estimate_normalisation_limits">estimate_normalisation_limits() (transitfit.lightcurve.LightCurve method)</a>
 </li>
   </ul></td>
@@ -301,6 +306,8 @@
 </li>
       <li><a href="api.html#transitfit._utils.get_covariance_matrix">get_covariance_matrix() (in module transitfit._utils)</a>
 </li>
+      <li><a href="api.html#transitfit.error_analysis.ErrorLimits.get_errors">get_errors() (transitfit.error_analysis.ErrorLimits method)</a>
+</li>
       <li><a href="api.html#transitfit.io.get_filter_path">get_filter_path() (in module transitfit.io)</a>
 </li>
       <li><a href="api.html#transitfit._paramarray.ParamArray.get_flat_array">get_flat_array() (transitfit._paramarray.ParamArray method)</a>
@@ -313,6 +320,8 @@
 </li>
       <li><a href="api.html#transitfit.lightcurve.LightCurve.get_phases">get_phases() (transitfit.lightcurve.LightCurve method)</a>
 </li>
+      <li><a href="api.html#transitfit.error_analysis.get_quantiles_on_best_val">get_quantiles_on_best_val() (in module transitfit.error_analysis)</a>
+</li>
       <li><a href="api.html#transitfit._limb_darkening_handler.LimbDarkeningHandler.get_required_coefficients">get_required_coefficients() (transitfit._limb_darkening_handler.LimbDarkeningHandler method)</a>
 </li>
       <li><a href="api.html#transitfit.output_handler.OutputHandler.get_results_dict">get_results_dict() (transitfit.output_handler.OutputHandler method)</a>
@@ -324,6 +333,10 @@
 
 <h2 id="H">H</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#transitfit.error_analysis.ErrorLimits.handle_ttv">handle_ttv() (transitfit.error_analysis.ErrorLimits method)</a>
+</li>
+  </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#transitfit._utils.host_radii_to_AU">host_radii_to_AU() (in module transitfit._utils)</a>
 </li>
@@ -363,6 +376,8 @@
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#transitfit.error_analysis.make_dict">make_dict() (in module transitfit.error_analysis)</a>
+</li>
       <li><a href="api.html#transitfit.time_conversions.MJD_to_BJD">MJD_to_BJD() (in module transitfit.time_conversions)</a>
 </li>
       <li>
@@ -386,6 +401,8 @@
         <li><a href="api.html#module-transitfit.detrender">transitfit.detrender</a>
 </li>
         <li><a href="api.html#module-transitfit.detrending_funcs">transitfit.detrending_funcs</a>
+</li>
+        <li><a href="api.html#module-transitfit.error_analysis">transitfit.error_analysis</a>
 </li>
         <li><a href="api.html#module-transitfit.io">transitfit.io</a>
 </li>
@@ -437,6 +454,18 @@
       <li><a href="api.html#transitfit.io.print_results">print_results() (in module transitfit.io)</a>
 </li>
       <li><a href="api.html#transitfit.priorinfo.PriorInfo">PriorInfo (class in transitfit.priorinfo)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="Q">Q</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#transitfit.error_analysis.q_to_u">q_to_u() (in module transitfit.error_analysis)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#transitfit.error_analysis.q_to_u_err">q_to_u_err() (in module transitfit.error_analysis)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -572,6 +601,13 @@
 </li>
       </ul></li>
       <li>
+    transitfit.error_analysis
+
+      <ul>
+        <li><a href="api.html#module-transitfit.error_analysis">module</a>
+</li>
+      </ul></li>
+      <li>
     transitfit.io
 
       <ul>
@@ -618,6 +654,10 @@
 
 <h2 id="U">U</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#transitfit._params._GaussianParam.uniform_to_clipped_gaussian">uniform_to_clipped_gaussian() (transitfit._params._GaussianParam method)</a>
+</li>
+  </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#transitfit._likelihood.LikelihoodCalculator.update_params">update_params() (transitfit._likelihood.LikelihoodCalculator method)</a>
 </li>

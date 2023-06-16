@@ -85,6 +85,12 @@ Input and output
     :private-members:
     :show-inheritance:
 
+.. automodule:: transitfit.error_analysis
+    :members:
+    :undoc-members:
+    :private-members:
+    :show-inheritance:    
+
 Parameter handling
 ==================
 

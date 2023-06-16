@@ -55,7 +55,7 @@ This file determines which physical parameters are to be fitted by ``TransitFit`
     * ``P``: Period of the orbit, in BJD
     * ``t0``: time of inferior conjunction in BJD
     * ``a`` : semi-major axis. This can be given in units of either host-radii or AU. If given in AU, then ``host_r`` must be specified in :meth:`~transitfit._pipeline.run_retrieval` to allow for a conversion to host-radii.
-    * ``inc``: inclination of the orbit in degrees (Defaults to 90 degrees if not provided)
+    * ``inc``: inclination of the orbit in degrees (Defaults to 90 degrees if not provided). TransitFit automatically sets an upper limit of 90 degrees.
     * ``ecc``: eccentricity of the orbit (defaults to 0 if not provided)
     * ``w``: longitude of periastron (in degrees) (Defaults to 90 degrees if not provided)
     * ``rp``: Planet radius in stellar radii (i.e. Rp/R\*). **Note**: if you have multiple filters that you want to fit ``rp`` for, you will have to provide a prior for *each* filter.
