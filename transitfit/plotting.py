@@ -31,7 +31,7 @@ def plot_individual_lightcurves(lightcurves, priorinfo, results,
         than time on x axis. This is useful for folded curves.
     t0 : float, optional
         The value of t0 that the lightcurves are folded to. This is treated as
-        phase 0.5 (centred in plot).
+        phase 0 (centred in plot).
     period : float, optional
         The period that lightcurves are folded with.
     '''
@@ -301,7 +301,7 @@ def quick_plot(lightcurve, fname, folder_path, t0=None, period=None):
     ax.errorbar(x_vals, lightcurve.flux, lightcurve.errors, zorder=1,
         linestyle='', marker='x', color='dimgrey', elinewidth=0.8, alpha=0.6)
 
-    ax.axvline(0.5, linestyle='dashed', color='gray',
+    ax.axvline(0, linestyle='dashed', color='gray',
                linewidth=1, zorder=1)
 
     ax.set_xlabel(x_label)

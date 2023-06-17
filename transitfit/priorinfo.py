@@ -164,6 +164,9 @@ class PriorInfo:
             negative_allowed = False
         else:
             negative_allowed = True
+        
+        if name in ['inc']:
+            high_lim = 90
 
         self.priors[name].add_uniform_fit_param(low_lim, high_lim,
                                                 telescope_idx, filter_idx,
@@ -189,10 +192,15 @@ class PriorInfo:
             negative_allowed = False
         else:
             negative_allowed = True
+        
+        if name in 'inc':
+            clipped_gaussian=True
+        else:
+            clipped_gaussian=False
 
         self.priors[name].add_gaussian_fit_param(mean, stdev,
                                                  telescope_idx, filter_idx,
-                                                 epoch_idx, negative_allowed)
+                                                 epoch_idx, negative_allowed, clipped_gaussian)
 
         # Store some info for later
         if self.fitting_params is None:
@@ -458,7 +466,18 @@ class PriorInfo:
 
         for i, param_info in enumerate(self.fitting_params):
             name, tidx, fidx, eidx = param_info
-            new_cube[i] = self.priors[name].from_unit_interval(cube[i], tidx, fidx, eidx)
+
+            if name == 'inc':
+                idx = self.priors[name]._generate_idx(tidx, fidx, eidx)
+
+                if hasattr(self.priors[name].array[idx], "uniform_to_clipped_gaussian"):
+                    new_cube[i] = self.priors[name].clipped_gaussian_transform(cube[i], tidx, fidx, eidx)
+
+                else:
+                    new_cube[i] = self.priors[name].from_unit_interval(cube[i], tidx, fidx, eidx)
+
+            else:
+                new_cube[i] = self.priors[name].from_unit_interval(cube[i], tidx, fidx, eidx)
 
         return new_cube
 
@@ -541,14 +560,16 @@ class PriorInfo:
         return print_str
     
     def get_latex_friendly_labels(self):
-        """Adds a \ in front of underscored to make the latex displays work"""
+        """Adds a $ around the underscored text to make the latex displays work"""
         labels = []
         for param in self.fitting_params[:,0]:
             if "_" in param:
                 new_label = ''
                 for s in param.split("_")[:-1]:
-                    new_label += s + "\_"
-                new_label += param.split("_")[-1]
+                    new_label += s + "$_"
+                new_label += param.split("_")[-1]+"$"
+            elif param[-1].isdigit() or param =='rp':
+                new_label = param[:-1]+'$_'+param[-1]+'$'
             else:
                 new_label = param
             labels.append(new_label)

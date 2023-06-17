@@ -25,9 +25,9 @@ To install the most recent stable version, run::
 
     pip install transitfit
 
-Alternatively, you can install it direct from the source by downloading the project from the `GitHub page <https://github.com/joshjchayes/TransitFit>`_ and running::
+Alternatively, you can install it direct from the source by downloading the project from the `GitHub page <https://github.com/SPEARNET/TransitFit>`_ and running::
 
-    python setup.py install
+    pip install -e .
 
 
 Citing
@@ -39,8 +39,8 @@ If you find ``TransitFit`` useful in your work, please cite the `accompanying pa
             title = "{TransitFit: combined multi-instrument exoplanet transit fitting for JWST, HST and ground-based transmission spectroscopy studies}",
           journal = {arXiv e-prints},
          keywords = {Astrophysics - Earth and Planetary Astrophysics, Astrophysics - Instrumentation and Methods for Astrophysics},
-             year = 2023,
-            month = feb,
+             year = 2021,
+            month = mar,
               eid = {arXiv:2103.12139},
             pages = {arXiv:2103.12139},
     archivePrefix = {arXiv},

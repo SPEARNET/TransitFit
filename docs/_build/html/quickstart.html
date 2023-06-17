@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Getting Started &mdash; TransitFit 3.0.3 documentation</title>
+  <title>Getting Started &mdash; TransitFit 3.0.8 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -179,12 +179,13 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">'complete_output.csv'</span></code> - this contains the complete final results of the entire retrieval, collating results from all <a class="reference internal" href="manyparams.html#fitting-large-number-of-parameters"><span class="std std-ref">stages of retrieval</span></a> if required.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">summary_output_file</span></code> - this contains the best fit results from a specific stage of retrieval (e.g. if in <a class="reference internal" href="manyparams.html#folded-fitting"><span class="std std-ref">‘folded mode’</span></a>, this would be the results for a specific filter (stage 1) or the results for fitting the folded curves (stage 2)). The name of this file can be specified with the <code class="docutils literal notranslate"><span class="pre">summary_file</span></code> argument of <a class="reference internal" href="api.html#transitfit._pipeline.run_retrieval" title="transitfit._pipeline.run_retrieval"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_retrieval()</span></code></a> and defaults to <code class="docutils literal notranslate"><span class="pre">'summary_output.csv'</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">full_output_file</span></code> - This contains every output from a given batched run, including indication of which batch the results come from. The name of this file can be specified with the <code class="docutils literal notranslate"><span class="pre">full_output_file</span></code> argument of <a class="reference internal" href="api.html#transitfit._pipeline.run_retrieval" title="transitfit._pipeline.run_retrieval"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_retrieval()</span></code></a> and defaults to <code class="docutils literal notranslate"><span class="pre">'full_output.csv'</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">modified_output.csv</span></code> - This contains different upper and lower bound of errors on the best fit values. It is recommended to use these results as it handles the asymmetric distribution of sampled parameters parameters. We define upper limit on the best fit value as the 68.27 quantile of the weighted samples beyond the best fit value, and the lower limit as 31.73 quantile of weighted samples below the best fit.</p></li>
 </ul>
 </dd>
 <dt>Fitted light curves</dt><dd><p>These are .csv files for each input light curve, containing the normalised and detrended light curves, along with phase values and best-fit models. The columns for these are</p>
 <ol class="arabic simple">
 <li><p><strong>Time</strong> - The time of observation</p></li>
-<li><p><strong>Phase</strong> - The phase of observation, setting mid-transit to a phase of 0.5.</p></li>
+<li><p><strong>Phase</strong> - The phase of observation, setting mid-transit to a phase of 0.</p></li>
 <li><p><strong>Normalised flux</strong> - The detrended and normalised flux values</p></li>
 <li><p><strong>Flux uncertainty</strong> - The uncertainty on the normalised flux</p></li>
 <li><p><strong>Best fit curve</strong> - The normalised best-fit light curve.</p></li>

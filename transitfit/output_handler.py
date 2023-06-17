@@ -23,6 +23,7 @@ from .retriever import global_params, filter_dependent_params, lightcurve_depend
 from ._utils import weighted_avg_and_std, host_radii_to_AU, get_normalised_weights, get_covariance_matrix
 from ._paramarray import ParamArray
 from .lightcurve import LightCurve
+from .error_analysis import ErrorLimits, get_quantiles_on_best_val
 
 
 class OutputHandler:
@@ -205,7 +206,7 @@ class OutputHandler:
                 # get model phase:
                 n = (model_times - (self.best_model['t0'][i][0] - 0.5 * self.best_model['P'][i][0]))//self.best_model['P'][i][0]
 
-                model_phase = (model_times - self.best_model['t0'][i][0])/self.best_model['P'][i][0] - n #+ 0.5
+                model_phase = (model_times - self.best_model['t0'][i][0])/self.best_model['P'][i][0] - n# + 0.5
 
                 # Get the residual
                 residuals = flux - time_wise_best_curve
@@ -260,7 +261,8 @@ class OutputHandler:
                     # get model phase:
                     n = (model_times - (self.best_model['t0'][i][0] - 0.5 * self.best_model['P'][i][0]))//self.best_model['P'][i][0]
 
-                    lc_model_phase = (model_times - self.best_model['t0'][i][0])/self.best_model['P'][i][0] - n #+ 0.5
+                    lc_model_phase = (model_times - self.best_model['t0'][i][0])/self.best_model['P'][i][0] - n# + 0.5
+
 
                     lc_residuals = lc_flux - time_wise_best_curve
 
@@ -319,6 +321,9 @@ class OutputHandler:
         print('Saving final results')
 
         self._save_results_dict(self.best_model, os.path.join(output_folder, 'Complete_results.csv'), False)
+
+        el = ErrorLimits(output_folder)
+        el.get_errors()
 
     def save_results(self, results, priors, lightcurves,
                      output_folder='./output_parameters',
@@ -1021,29 +1026,40 @@ class OutputHandler:
         '''
         samples = result.samples
         best = result.best
+        weights = result.weights
         ndim = len(best)
         #labels = prior.fitting_params[:,0]
         labels= prior.get_latex_friendly_labels()
 
-        fig = corner.corner(samples, labels=labels, quantiles=[0.16, 0.5, 0.84],
-                       show_titles=True, title_kwargs={"fontsize": 12})
+        titles=[] 
+        for i in range(ndim):
+            _l,_u = get_quantiles_on_best_val(samples[:,i], weights, best[i])
+            _title = r'param = best$_{_l}^{_u}$'
+            _title = _title.replace('param', labels[i])
+            _title = _title.replace('best', f"{result.best[i]:.6f}")
+            _title = _title.replace('_l', f"{_l:.6f}")
+            _title = _title.replace('_u', f"{_u:.6f}")
+            titles+=[_title]
 
+        fig = corner.corner(samples, labels=labels, titles=titles,
+                       show_titles=True, title_fmt=None, title_kwargs={"fontsize": 12})
+        corner.overplot_lines(fig, best, color='green')
 
         # Add in the best value plots
         # Extract the axes
-        axes = np.array(fig.axes).reshape((ndim, ndim))
+        #axes = np.array(fig.axes).reshape((ndim, ndim))
         # Loop over the diagonal
-        for i in range(ndim):
-            ax = axes[i, i]
-            ax.axvline(best[i], color="g")
+        #for i in range(ndim):
+        #    ax = axes[i, i]
+        #    ax.axvline(best[i], color="g")
 
         # Loop over the histograms
-        for yi in range(ndim):
+        """for yi in range(ndim):
             for xi in range(yi):
-                ax = axes[yi, xi]
-                ax.axvline(best[xi], color="g")
-                ax.axhline(best[yi], color="g")
-                ax.plot(best[xi], best[yi], "sg")
+                #ax = axes[yi, xi]
+                #ax.axvline(best[xi], color="g")
+                #ax.axhline(best[yi], color="g")
+                #ax.plot(best[xi], best[yi], "sg")"""
 
         fig.tight_layout()
 

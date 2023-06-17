@@ -208,6 +208,14 @@ class Retriever:
                 self.all_lightcurves[i].flux = self.all_lightcurves[i].flux/scale
                 self.all_lightcurves[i].errors = self.all_lightcurves[i].errors/scale
         
+        if median_normalisation:
+            print("Normalising lightcurves...")
+            #normalise_limits=[0.95,1.05]
+            for i in np.ndindex(self.all_lightcurves.shape):
+                scale=np.median(self.all_lightcurves[i].flux)
+                self.all_lightcurves[i].flux = self.all_lightcurves[i].flux/scale
+                self.all_lightcurves[i].errors = self.all_lightcurves[i].errors/scale
+        
         if detrend:
             # intialise detrending in each light curve
             for i, lc in np.ndenumerate(self.all_lightcurves):
@@ -574,6 +582,8 @@ class Retriever:
                 slices,
                 output_folder,
                 filter_idx,
+                #summary_file,
+                #full_output_file,
             ]
             for bi, batch in enumerate(batches)
         ]
@@ -1031,6 +1041,11 @@ class Retriever:
             binned_color=binned_color,
             
         )
+
+        if fitting_mode.lower() == "batched":
+            print("'batched' mode was used to fit TransitFit lightcurves.")
+            print("If this was the first run, it is suggested to rerun TransitFit for the model.")
+            print("For wavelength independent parameters, use output from this run as priors.")
 
     ##########################################################
     #            PRIOR MANIPULATION                          #
@@ -1935,5 +1950,6 @@ def _run_batch(x):
     output_handler._quicksave_result(
         results, batch_prior, batch_lightcurves, output_folder, filter_idx, bi
     )
+
     #print('The shapes are:',np.shape(results),np.shape(batch_prior),np.shape(batch_lightcurves))
     return results, batch_prior, batch_lightcurves

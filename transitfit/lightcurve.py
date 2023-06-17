@@ -336,7 +336,7 @@ class LightCurve:
 
         n = (self.times - (t0 - 0.5*period))//period
 
-        times = base_t0 + period * (phase + n - 0.5)
+        times = base_t0 + period * (phase + n)# - 0.5)
 
         return LightCurve(times, self.flux, self.errors, self.telescope_idx,
                           self.filter_idx, self.epoch_idx, self.curve_labels,
@@ -513,11 +513,13 @@ class LightCurve:
 
     def get_phases(self, t0, P):
         '''
-        Converts times into phase given t0 and P values, with t0 at phase=0.5
+        Converts times into phase given t0 and P values, with t0 at phase=0
         '''
         n = (self.times - (t0 - 0.5*P))//P
 
-        return (self.times-t0)/P - n #+ 0.5
+
+        return (self.times-t0)/P - n# + 0.5
+
 
     def bin(self, cadence, residuals=None):
         '''

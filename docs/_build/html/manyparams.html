@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fitting large number of parameters &mdash; TransitFit 3.0.3 documentation</title>
+  <title>Fitting large number of parameters &mdash; TransitFit 3.0.8 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -88,6 +88,7 @@
 <h2>‘Batched’ fitting<a class="headerlink" href="#batched-fitting" title="Permalink to this heading">¶</a></h2>
 <p>This mode groups the light curves by filter, and then splits the retrieval into multi-filter ‘batches,’ fitting each of these batches one at a time. The batches are chosen to allow a maximum number of parameters to be fitted simultaneously, which can be controlled with the <code class="docutils literal notranslate"><span class="pre">max_batch_parameters</span></code> argument of <a class="reference internal" href="api.html#transitfit._pipeline.run_retrieval" title="transitfit._pipeline.run_retrieval"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_retrieval()</span></code></a>. Final best-fit values are then calculated from weighted means of the best-fit values from each batch.</p>
 <p>The batches are generally constructed to have at least one filter in common with at least one other batch. This ensures that there is still some coupling of information between the batches. The exception to this is when there is one filter in particular which has a very high number of observations. In this case, we recommend using the <code class="docutils literal notranslate"><span class="pre">'folded'</span></code> mode.</p>
+<p>It is suggested to run the model twice if using ‘batched’ mode. For the second run, use the output from first run as the priors for the wavelength independent parameters (P, t0, a, inc). The error limits, standard deviation on these priors should be narrowed down to not allow for much variation in individual batches/lightcurves.</p>
 </section>
 <section id="folded-fitting">
 <h2>‘Folded’ fitting<a class="headerlink" href="#folded-fitting" title="Permalink to this heading">¶</a></h2>
