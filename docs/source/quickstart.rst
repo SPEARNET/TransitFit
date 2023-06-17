@@ -102,13 +102,13 @@ Output files
 
     * ``full_output_file`` - This contains every output from a given batched run, including indication of which batch the results come from. The name of this file can be specified with the ``full_output_file`` argument of :meth:`~transitfit._pipeline.run_retrieval` and defaults to ``'full_output.csv'``.
 
-    * ``modified_output.csv`` - This contains different upper and lower bound of errors on the best fit values. It is recommended to use these results as it handles the asymmetric distribution of sampled parameters. fit parameters. We define upper limit on the best fit value as the 68.27 quantile of the weighted samples beyond the best fit value, and the lower limit as 31.73 quantile of weighted samples below the best fit.
+    * ``modified_output.csv`` - This contains different upper and lower bound of errors on the best fit values. It is recommended to use these results as it handles the asymmetric distribution of sampled parameters parameters. We define upper limit on the best fit value as the 68.27 quantile of the weighted samples beyond the best fit value, and the lower limit as 31.73 quantile of weighted samples below the best fit.
 
 Fitted light curves
     These are .csv files for each input light curve, containing the normalised and detrended light curves, along with phase values and best-fit models. The columns for these are
 
     1. **Time** - The time of observation
-    2. **Phase** - The phase of observation, setting mid-transit to a phase of 0.5.
+    2. **Phase** - The phase of observation, setting mid-transit to a phase of 0.
     3. **Normalised flux** - The detrended and normalised flux values
     4. **Flux uncertainty** - The uncertainty on the normalised flux
     5. **Best fit curve** - The normalised best-fit light curve.
