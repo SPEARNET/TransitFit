@@ -263,6 +263,7 @@ class OutputHandler:
 
                     lc_model_phase = (model_times - self.best_model['t0'][i][0])/self.best_model['P'][i][0] - n# + 0.5
 
+
                     lc_residuals = lc_flux - time_wise_best_curve
 
                     # Store the values!
