@@ -56,7 +56,7 @@ def get_quantiles_on_best_val(samples, weights, best_val):
             lower_error = sorted_samples[i]-best_val
             break"""
 
-    return lower_error, upper_error
+    return -np.abs(lower_error), np.abs(upper_error)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
@@ -89,8 +89,8 @@ def q_to_u_err(q, q_err):
 
     u_err = []
     u_err.append(np.sqrt(((q[1] * q_err[0])**2)/q[0] + 4 * q[0] * q_err[1]**2))
-    u_err.append(np.sqrt(
-        (((1 - 2 * q[1]) * q_err[0])**2)/(0.25 * q[0]) + 4 * q[0] * q_err[1] ** 2))
+    u_err.append(np.abs(np.sqrt(
+        (((1 - 2 * q[1]) * q_err[0])**2)/(0.25 * q[0]) + 4 * q[0] * q_err[1] ** 2)))
 
     return u_err
 
@@ -108,12 +108,16 @@ def q_to_u(q, q_err_l, q_err_u):
         tuple: the values of u, lower bound on values, upper bound on values.
     """
 
+    q_err_l = np.abs(np.array(q_err_l,dtype=float))
+    q_err_u = np.abs(np.array(q_err_u,dtype=float))
+
+
     u = [2 * np.sqrt(q[0]) * q[1], np.sqrt(q[0]) * (1 - 2 * q[1])]
 
     u_err_l = q_to_u_err(q, q_err_l)
     u_err_u = q_to_u_err(q, q_err_u)
 
-    return u, u_err_l, u_err_u
+    return np.array(u,dtype=float), -np.abs(np.array(u_err_l,dtype=float)), np.abs(np.array(u_err_u,dtype=float))
 
 
 class ErrorLimits:
@@ -181,9 +185,16 @@ class ErrorLimits:
             self.allow_ttv = False
             self.FOLDED_MODE = False
             self.folded_params = []
+            self.priors_pkl = glob.glob(
+                self.OUTPUT_PARAMETERS_FOLDER+'/quicksaves/*priors.pkl')
+            self.priors_pkl.sort()
+            with open(self.priors_pkl[0], 'rb') as handle:
+                priors = pickle.load(handle)
 
         # The list of required parameters to analyze
         self.required_params = ['P', 't0', 'a/r*', 'inc', 'rp/r*']
+        self.limb_dark_coeffs = priors.limb_dark_coeffs#['q0','q1']#
+        self.ld_method = priors.limb_dark #'quadratic' #
         self.values = {}
 
     def handle_ttv(self):
@@ -257,14 +268,18 @@ class ErrorLimits:
                 mso.write(
                     f"{p},-,-,{self.values[param_+'_best']},{errs[0]},{errs[1]}\n")
 
-                if p in {'q0', 'q1'}:
+                if p in self.limb_dark_coeffs:
                     q.append(self.values[param_+'_best']),
                     q_low.append(errs[0])
                     q_up.append(errs[1])
+            
+            if self.ld_method=='quadratic':
+                u, u_low, u_up = q_to_u(q, q_low, q_up)
 
-            u, u_low, u_up = q_to_u(q, q_low, q_up)
-            mso.write(f"u0,-,-,{u[0]},{u_low[0]},{u_up[0]}\n")
-            mso.write(f"u1,-,-,{u[1]},{u_low[1]},{u_up[1]}\n")
+                for i, p in enumerate(self.limb_dark_coeffs):
+                    mso.write(f"u{str(i)},-,-,{u[i]},{u_low[i]},{u_up[i]}\n")
+                    #mso.write(f"u0,-,-,{u[0]},{u_low[0]},{u_up[0]}\n")
+                    #mso.write(f"u1,-,-,{u[1]},{u_low[1]},{u_up[1]}\n")
 
         print(
             f"Saved results in {self.OUTPUT_PARAMETERS_FOLDER+'/'+self.MODIFIED_SUMMARY_OUTPUT}")
@@ -322,16 +337,26 @@ class ErrorLimits:
                                   result.samples[:, index[i]])
                         make_dict(self.values, param+'_'+f +
                                   '_weights', result.weights)
-                        i = 2*i  # q0 and q1 are saved as pairs in the .pkl files
-                        make_dict(self.values, 'q0'+'_'+f,
-                                  result.samples[:, index[-1]+1+i])
-                        make_dict(self.values, 'q1'+'_'+f,
-                                  result.samples[:, index[-1]+1+i+1])
+                        
+                        for j,u in enumerate(self.limb_dark_coeffs):
+                            i = len(self.limb_dark_coeffs)*i  
+                            # limb darkenening coeffs are saved together in the .pkl files
+                            
+                            make_dict(self.values, 'q'+str(j)+'_'+f,
+                                    result.samples[:, index[-1]+1+i])
+                            make_dict(self.values, 'q'+str(j)+'_'+f +
+                                    '_weights', result.weights)
+                            
+                            #if self.ld_method=='quadratic':
+                            """make_dict(self.values, 'q0'+'_'+f,
+                                    result.samples[:, index[-1]+1+i])
+                            make_dict(self.values, 'q1'+'_'+f,
+                                    result.samples[:, index[-1]+1+i+1])
 
-                        make_dict(self.values, 'q0'+'_'+f +
-                                  '_weights', result.weights)
-                        make_dict(self.values, 'q1'+'_'+f +
-                                  '_weights', result.weights)
+                            make_dict(self.values, 'q0'+'_'+f +
+                                    '_weights', result.weights)
+                            make_dict(self.values, 'q1'+'_'+f +
+                                    '_weights', result.weights)"""
                 
                 elif selected_df['Error'].iloc[0]=='-':
                     self.required_params.remove(param)
@@ -342,16 +367,23 @@ class ErrorLimits:
                     make_dict(self.values, param+'_weights', result.weights)
 
                     if param == 'rp/r*':  # Folded mode
-                        make_dict(self.values, 'q0',
-                                  result.samples[:, index+1])
-                        make_dict(self.values, 'q1',
-                                  result.samples[:, index+2])
+                        for j,u in enumerate(self.limb_dark_coeffs):
 
-                        make_dict(self.values, 'q0'+'_weights', result.weights)
-                        make_dict(self.values, 'q1'+'_weights', result.weights)
+                            make_dict(self.values, 'q'+str(j),
+                                    result.samples[:, index+1])
+                            make_dict(self.values, 'q'+str(j)+'_weights', result.weights)
 
+                            """make_dict(self.values, 'q1',
+                                    result.samples[:, index+2])
+
+                            make_dict(self.values, 'q'+str(j)+'_weights', result.weights)
+                            make_dict(self.values, 'q1'+'_weights', result.weights)"""
+        
+        #if self.ld_method=='quadratic':
         self.required_params = self.folded_params + \
-            self.required_params+['q0', 'q1']
+            self.required_params+self.limb_dark_coeffs#['q0', 'q1']
+            
+
         filters = list(set(filters))
         filters = np.sort(np.array(filters, dtype=int))
 
@@ -376,7 +408,7 @@ class ErrorLimits:
             q_dict = {}
 
             for param in self.required_params:
-                if param in {'rp/r*', 'q0', 'q1'} and len(filters) > 0:
+                if param in ['rp/r*']+self.limb_dark_coeffs and len(filters) > 0:
                     for fil in filters:
                         param_ = param+'_'+str(int(fil))
                         errs = get_quantiles_on_best_val(
@@ -391,31 +423,37 @@ class ErrorLimits:
                     mso.write(
                         f"{param},-,{self.values[param+'_best']},{errs[0]},{errs[1]}\n")
 
-                    if param in {'q0', 'q1'}:
+                    if param in self.limb_dark_coeffs:
                         q.append(self.values[param+'_best']),
                         q_low.append(errs[0])
                         q_up.append(errs[1])
-            if len(q) > 0:
-                u, u_low, u_up = q_to_u(q, q_low, q_up)
-                mso.write(f"u0,-,{u[0]},{u_low[0]},{u_up[0]}\n")
-                mso.write(f"u1,-,{u[1]},{u_low[1]},{u_up[1]}\n")
 
-            elif len(filters) > 0:
-                for fil in filters:
-                    for param in ['q0', 'q1']:
-                        param_ = param+'_'+str(int(fil))
-                        errs = get_quantiles_on_best_val(
-                            samples=self.values[param_], weights=self.values[param_+'_weights'], best_val=self.values[param_+'_best'])
-
-                        q.append(self.values[param_+'_best']),
-                        q_low.append(errs[0])
-                        q_up.append(errs[1])
-
+            if self.ld_method=='quadratic':
+                if len(q) > 0:
                     u, u_low, u_up = q_to_u(q, q_low, q_up)
-                    mso.write(
-                        f"u0,{str(int(fil))},{u[0]},{u_low[0]},{u_up[0]}\n")
-                    mso.write(
-                        f"u1,{str(int(fil))},{u[1]},{u_low[1]},{u_up[1]}\n")
+                    
+                    for j,p in enumerate(self.limb_dark_coeffs):
+                        mso.write(f"u{str(j)},-,{u[j]},{u_low[j]},{u_up[j]}\n")
+                        #mso.write(f"u1,-,{u[1]},{u_low[1]},{u_up[1]}\n")
+
+                elif len(filters) > 0:
+                    for fil in filters:
+                        q, q_low, q_up = [], [], []
+                        for param in self.limb_dark_coeffs:
+                            param_ = param+'_'+str(int(fil))
+                            errs = get_quantiles_on_best_val(
+                                samples=self.values[param_], weights=self.values[param_+'_weights'], best_val=self.values[param_+'_best'])
+
+                            q.append(self.values[param_+'_best']),
+                            q_low.append(errs[0])
+                            q_up.append(errs[1])
+
+                        u, u_low, u_up = q_to_u(q, q_low, q_up)
+
+                        for j,p in enumerate(self.limb_dark_coeffs):
+                            mso.write(
+                                f"u{str(j)},{str(int(fil))},{u[j]},{u_low[j]},{u_up[j]}\n")
+                            #mso.write(f"u1,{str(int(fil))},{u[1]},{u_low[1]},{u_up[1]}\n")
 
         print(
             f"Saved results in {self.OUTPUT_PARAMETERS_FOLDER+'/'+self.MODIFIED_SUMMARY_OUTPUT}")
