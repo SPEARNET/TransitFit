@@ -142,7 +142,15 @@ class LikelihoodCalculator:
                 else:
                     # Work out the chi2
                     #chi2 = sum((model_flux - detrended_flux)**2 / err**2)
-                    total_chi2 += np.sum((model_flux - detrended_flux)**2 / err**2)
+
+                    if self.priors.error_scaling:
+                        # Scaling the errorbars. https://emcee.readthedocs.io/en/stable/tutorials/line/
+                        fn = params['escale'][i]
+                        sn_sq = np.power(err,2) + np.power(fn*model_flux,2)
+                        total_chi2 += np.sum((np.power((model_flux - detrended_flux),2) / sn_sq) + np.log(2*np.pi*sn_sq))
+                    
+                    else:
+                        total_chi2 += np.sum((model_flux - detrended_flux)**2 / err**2)
 
                 #all_chi2.append(chi2)
 

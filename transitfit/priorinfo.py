@@ -28,7 +28,7 @@ _all_ldcs = ['q0', 'q1', 'q2', 'q3']
 _prior_info_defaults = {'P':1, 'a':10, 'inc':90, 'rp':0.05, 't0':0, 'ecc':0,
                         'w':90, 'limb_dark':'quadratic', 'q0':0.1, 'q1':0.3,
                         'q2':None, 'q3':None, 'n_telescopes':1,  'n_filters':1,
-                        'n_epochs':1, 'norm':1}
+                        'n_epochs':1, 'norm':1,'escale':0}
 
 def setup_priors(P, t0, a, rp, inc, ecc, w, limb_dark, n_telescopes, n_filters,
                  n_epochs, q0=None, q1=None, q2=None, q3=None, allow_ttv=False,
@@ -49,7 +49,7 @@ def setup_priors(P, t0, a, rp, inc, ecc, w, limb_dark, n_telescopes, n_filters,
         q3 = [q3 for i in range(n_filters)]
 
     default_dict = {'P':P, 't0':t0, 'a':a, 'rp':rp, 'inc':inc, 'ecc':ecc,
-                    'w':w, 'q0':q0, 'q1':q1, 'q2':q2, 'q3':q3, 'norm':1}
+                    'w':w, 'q0':q0, 'q1':q1, 'q2':q2, 'q3':q3, 'norm':1,'escale':0}
 
     return PriorInfo(default_dict, limb_dark, n_telescopes, n_filters,
                       n_epochs, allow_ttv, lightcurves)
@@ -100,6 +100,8 @@ class PriorInfo:
 
         # Initialse normalisation (set to off)
         self.normalise=False
+
+        self.error_scaling = False
 
         #####################
         # Set up the priors #
@@ -167,6 +169,10 @@ class PriorInfo:
         
         if name in ['inc']:
             high_lim = 90
+        
+        if name not in self.priors and name=='escale':
+            # Need to initialise the entry in the priors dict
+            self.priors[name] = ParamArray(name, (self.n_telescopes, self.n_filters,self.n_epochs), True, True, True)
 
         self.priors[name].add_uniform_fit_param(low_lim, high_lim,
                                                 telescope_idx, filter_idx,
@@ -452,6 +458,22 @@ class PriorInfo:
                 self.add_uniform_fit_param('norm', low, high, telescope_idx, filter_idx, epoch_idx)
 
         self.normalise = True
+
+    def set_error_scaling(self,lightcurves, scaling_limits):
+        
+        for i in np.ndindex(lightcurves.shape):
+            telescope_idx, filter_idx, epoch_idx = i
+
+            if lightcurves[i] is not None:
+                # A light curve exists. Set up normalisation
+                best, low, high = lightcurves[i].set_error_scaling(scaling_limits)
+                self.add_uniform_fit_param('escale', low, high, telescope_idx, filter_idx, epoch_idx)
+
+        self.error_scaling = True
+        #key='escale'
+        #self.priors[key] = ParamArray(key, (self.n_telescopes, self.n_filters,self.n_epochs), True, True, True, 0, lightcurves=lightcurves)
+
+
 
     ###############################################################
     #             CONVERSIONS FOR FITTING ROUTINES                #

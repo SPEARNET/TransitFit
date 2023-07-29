@@ -112,6 +112,11 @@ class Retriever:
     detrending_limits : list, optional
         The bounds on detrending coefficients, given as (lower, upper) pair for
         each detrending method. If not provided, will default to ±10
+    error_scaling : bool, optional
+            If True, scales the errorbars in the lightcurves following 
+            https://emcee.readthedocs.io/en/stable/tutorials/line/
+    error_scaling_limits: list, optional
+            If error_scaling=True, this is the limit of the parameter.
     """
 
     def __init__(
@@ -139,6 +144,8 @@ class Retriever:
         normalise_limits=None,
         detrend=True,
         median_normalisation=False,
+        error_scaling=False,
+        error_scaling_limits=None,
     ):
 
         ###################
@@ -208,14 +215,15 @@ class Retriever:
                 self.all_lightcurves[i].flux = self.all_lightcurves[i].flux/scale
                 self.all_lightcurves[i].errors = self.all_lightcurves[i].errors/scale
         
-        if median_normalisation:
-            print("Normalising lightcurves...")
-            #normalise_limits=[0.95,1.05]
-            for i in np.ndindex(self.all_lightcurves.shape):
-                scale=np.median(self.all_lightcurves[i].flux)
-                self.all_lightcurves[i].flux = self.all_lightcurves[i].flux/scale
-                self.all_lightcurves[i].errors = self.all_lightcurves[i].errors/scale
-        
+        self.error_scaling = error_scaling
+        if error_scaling:
+            print('Error_scaling initialised')
+            if error_scaling_limits is None or len(error_scaling_limits)!=2:
+                self.scaling_limits = [-10,10]
+            else:
+                self.scaling_limits = error_scaling_limits
+
+
         if detrend:
             # intialise detrending in each light curve
             for i, lc in np.ndenumerate(self.all_lightcurves):
@@ -1061,6 +1069,7 @@ class Retriever:
         folded_P=None,
         folded_t0=None,
         suppress_warnings=False,
+        #error_scaling=False,
     ):
         """
         Generates a prior info for a particular run:
@@ -1217,6 +1226,9 @@ class Retriever:
         # Set up normalisation
         if normalise:
             priors.fit_normalisation(lightcurve_subset,self.normalise_limits)
+
+        if self.error_scaling:
+            priors.set_error_scaling(lightcurve_subset,self.scaling_limits)
 
         return priors, lightcurve_subset
 
@@ -1809,6 +1821,9 @@ class Retriever:
 
         # Account for normalisation
         if normalise:
+            n_params += n_lightcurves
+        
+        if self.error_scaling:
             n_params += n_lightcurves
         # Account for detrending
 

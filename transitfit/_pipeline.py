@@ -30,7 +30,7 @@ def run_retrieval(data_files, priors, filter_info=None,
                   allow_ttv=False, filter_delimiter=None,
                   detrending_limits=None, normalise_limits=None, bin_data=False, cadence=2,
                   binned_color='red', walks=100, slices=10, n_procs=1, check_batchsizes=False,
-                  median_normalisation=False,):
+                  median_normalisation=False,error_scaling=False,error_scaling_limits=None):
     '''
     Runs a full retrieval of posteriors using nested sampling on a transit
     light curve or a set of transit light curves. For more guidance on the use
@@ -305,6 +305,13 @@ def run_retrieval(data_files, priors, filter_info=None,
         Normalising lightcurves by the median of the flux value reduces the runtime in many cases.
         Default is False.
 
+    error_scaling : bool, optional
+            If True, scales the errorbars in the lightcurves following 
+            https://emcee.readthedocs.io/en/stable/tutorials/line/
+    
+    error_scaling_limits: list, optional
+            If error_scaling=True, this is the limit of the parameter.
+
     Returns
     -------
     results : dict
@@ -328,7 +335,7 @@ def run_retrieval(data_files, priors, filter_info=None,
                           host_T, host_logg, host_z, host_r, ldtk_cache,
                           ldtk_samples, do_ld_mc, data_skiprows, allow_ttv,
                           filter_delimiter, detrending_limits, normalise, 
-                          normalise_limits,detrend,median_normalisation)
+                          normalise_limits,detrend,median_normalisation,error_scaling, error_scaling_limits)
 
     # Run the retrieval!
     results = retriever.run_retrieval(ld_fit_method, fitting_mode,

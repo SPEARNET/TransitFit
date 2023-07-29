@@ -190,6 +190,35 @@ class LightCurve:
                 return self.estimate_normalisation_limits()
         else:
                 return np.average(normalise_limits), normalise_limits[0], normalise_limits[1]
+        
+    def set_error_scaling(self,scaling_limits):
+        '''
+        Turns on normalisation. Also estimates limits and a best initial guess.
+
+        Parameters
+        ----------
+        default_low : float, optional
+            The lowest value to consider as a multiplicative normalisation
+            constant. Default is 0.1.
+
+        Returns
+        -------
+        median_factor : float
+            The initial best guess factor
+        low_factor : float
+            The low limit on the normalisation factor
+        high_factor : float
+            The high limit on the normalisation factor
+
+        Notes
+        -----
+        We use
+            ``0.5/f_max <= c_n <= 1.5/f_min``
+        as the default range, where f_median is the median flux value.
+        '''
+        self.error_scaling = True
+
+        return np.average(scaling_limits), scaling_limits[0], scaling_limits[1]
 
     def estimate_normalisation_limits(self):
         '''
