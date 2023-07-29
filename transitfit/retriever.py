@@ -219,7 +219,7 @@ class Retriever:
         if error_scaling:
             print('Error_scaling initialised')
             if error_scaling_limits is None or len(error_scaling_limits)!=2:
-                self.scaling_limits = [-10,10]
+                self.scaling_limits = [0.01,10]
             else:
                 self.scaling_limits = error_scaling_limits
 
