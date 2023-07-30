@@ -474,8 +474,8 @@ class PriorInfo:
                 self.add_uniform_fit_param('escale', low, high, telescope_idx, filter_idx, epoch_idx)
 
         self.error_scaling = True
-        key='escale'
-        self.priors[key] = ParamArray(key, (self.n_telescopes, self.n_filters,self.n_epochs), True, True, True, 0, lightcurves=lightcurves)
+        #key='escale'
+        #self.priors[key] = ParamArray(key, (self.n_telescopes, self.n_filters,self.n_epochs), True, True, True, 0, lightcurves=lightcurves)
 
 
 
