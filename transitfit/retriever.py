@@ -217,10 +217,13 @@ class Retriever:
         
         self.error_scaling = error_scaling
         if error_scaling:
-            print('Error_scaling initialised')
+            print('Scaling of errors initialised')
             if error_scaling_limits is None or len(error_scaling_limits)!=2:
-                self.scaling_limits = [0.01,10]
+                self.scaling_limits = [1e-7,10]
             else:
+                error_scaling_limits = np.sort(np.abs(error_scaling_limits))
+                if error_scaling_limits[0]<=0: 
+                    error_scaling_limits[0] = 1e-7
                 self.scaling_limits = error_scaling_limits
 
 
@@ -384,7 +387,7 @@ class Retriever:
             print(f"Running dynesty on {self.dynesty_procs} cores for this batch.")
             dynesty_pool = mp.Pool(self.dynesty_procs)
             sampler = NestedSampler(
-                likelihood_calc.find_likelihood_new,
+                likelihood_calc.find_likelihood_parallel_processed,
                 priors._convert_unit_cube,
                 n_dims,
                 bound=bound,

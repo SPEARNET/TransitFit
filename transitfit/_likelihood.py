@@ -71,11 +71,12 @@ class LikelihoodCalculator:
                 self.batman_models.set_value(model, tidx, fidx, eidx)
     
     # New function to handle multiple processes in the same batch.  
-    def find_likelihood_new(self, params):
-            #params = priors._interpret_param_array(cube)
+    def find_likelihood_parallel_processed(self, cube):
+            priors = self.priors
+            params = priors._interpret_param_array(cube)
 
             ln_likelihood = self.find_likelihood(params)
-            priors = self.priors
+            
             if priors.fit_ld and not priors.ld_fit_method == "independent":
                 # Pull out the q values and convert them
                 u = []
