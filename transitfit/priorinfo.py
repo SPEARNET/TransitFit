@@ -32,7 +32,7 @@ _prior_info_defaults = {'P':1, 'a':10, 'inc':90, 'rp':0.05, 't0':0, 'ecc':0,
 
 def setup_priors(P, t0, a, rp, inc, ecc, w, limb_dark, n_telescopes, n_filters,
                  n_epochs, q0=None, q1=None, q2=None, q3=None, allow_ttv=False,
-                 lightcurves=None):
+                 lightcurves=None, error_scaling=False):
     '''
     Factory function to initialise a PriorInfo object
 
@@ -49,6 +49,10 @@ def setup_priors(P, t0, a, rp, inc, ecc, w, limb_dark, n_telescopes, n_filters,
         q3 = [q3 for i in range(n_filters)]
 
     default_dict = {'P':P, 't0':t0, 'a':a, 'rp':rp, 'inc':inc, 'ecc':ecc,
+                    'w':w, 'q0':q0, 'q1':q1, 'q2':q2, 'q3':q3, 'norm':1}#,'escale':0}
+
+    if error_scaling:
+        default_dict = {'P':P, 't0':t0, 'a':a, 'rp':rp, 'inc':inc, 'ecc':ecc,
                     'w':w, 'q0':q0, 'q1':q1, 'q2':q2, 'q3':q3, 'norm':1,'escale':0}
 
     return PriorInfo(default_dict, limb_dark, n_telescopes, n_filters,
@@ -470,8 +474,8 @@ class PriorInfo:
                 self.add_uniform_fit_param('escale', low, high, telescope_idx, filter_idx, epoch_idx)
 
         self.error_scaling = True
-        #key='escale'
-        #self.priors[key] = ParamArray(key, (self.n_telescopes, self.n_filters,self.n_epochs), True, True, True, 0, lightcurves=lightcurves)
+        key='escale'
+        self.priors[key] = ParamArray(key, (self.n_telescopes, self.n_filters,self.n_epochs), True, True, True, 0, lightcurves=lightcurves)
 
 
 

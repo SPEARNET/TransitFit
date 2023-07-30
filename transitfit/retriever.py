@@ -1211,6 +1211,7 @@ class Retriever:
                 self.allow_ttv,
                 lightcurve_subset,
                 suppress_warnings,
+                self.error_scaling,
             )
         else:
             # Reading in from a list
@@ -1228,6 +1229,7 @@ class Retriever:
                 self.allow_ttv,
                 lightcurve_subset,
                 suppress_warnings,
+                self.error_scaling,
             )
 
         # Set up limb darkening

@@ -19,7 +19,8 @@ import os
 def read_priors_file(path, n_telescopes, n_filters, n_epochs,
                      limb_dark='quadratic', filter_indices=None, folded=False,
                      folded_P=None, folded_t0=None, host_radius=None,
-                     allow_ttv=None, lightcurves=None, suppress_warnings=False):
+                     allow_ttv=None, lightcurves=None, suppress_warnings=False, 
+                     error_scaling=False):
     '''
     If given a csv file containing priors, will produce a PriorInfo object
     based off the given values
@@ -86,12 +87,13 @@ def read_priors_file(path, n_telescopes, n_filters, n_epochs,
     '''
     priors_list = pd.read_csv(path).values
 
-    return parse_priors_list(priors_list, n_telescopes, n_filters, n_epochs, limb_dark, filter_indices, folded, folded_P, folded_t0, host_radius, allow_ttv, lightcurves, suppress_warnings)
+    return parse_priors_list(priors_list, n_telescopes, n_filters, n_epochs, limb_dark, filter_indices, folded, folded_P, folded_t0, host_radius, allow_ttv, lightcurves, suppress_warnings, error_scaling)
 
 def parse_priors_list(priors_list, n_telescopes, n_filters,
                       n_epochs, ld_model, filter_indices=None, folded=False,
                       folded_P=None, folded_t0=None, host_radius=None,
-                      allow_ttv=False, lightcurves=None, suppress_warnings=False):
+                      allow_ttv=False, lightcurves=None, suppress_warnings=False,
+                      error_scaling=False):
     '''
     Parses a list of priors to produce a PriorInfo with all fitting parameters
     initialised.
@@ -210,7 +212,7 @@ def parse_priors_list(priors_list, n_telescopes, n_filters,
                           priors_dict['q1'][0],
                           priors_dict['q2'][0],
                           priors_dict['q3'][0],
-                          allow_ttv, lightcurves)
+                          allow_ttv, lightcurves, error_scaling)
 
     ##########################
     # Initialise the fitting #
