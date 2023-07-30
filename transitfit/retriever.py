@@ -370,7 +370,7 @@ class Retriever:
         #######################################################################
 
         # Now we can set up and run the sampler!
-        """sampler = NestedSampler(
+        sampler = NestedSampler(
             lnlike,
             prior_transform,
             n_dims,
@@ -379,7 +379,8 @@ class Retriever:
             nlive=nlive,
             walks=walks,
             slices=slices,
-        )"""
+        )
+        """
         # Modification to include multiprocessing in single batches. 
         # If the n_procs is less than batches, then each batch gets additional 
         # processors to .
@@ -409,7 +410,7 @@ class Retriever:
                 nlive=nlive,
                 walks=walks,
                 slices=slices,
-            )
+            )"""
 
         try:
             sampler.run_nested(maxiter=maxiter, maxcall=maxcall, dlogz=dlogz)
