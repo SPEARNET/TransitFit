@@ -367,7 +367,7 @@ class Retriever:
         #######################################################################
 
         # Now we can set up and run the sampler!
-        sampler = NestedSampler(
+        """sampler = NestedSampler(
             lnlike,
             prior_transform,
             n_dims,
@@ -376,7 +376,37 @@ class Retriever:
             nlive=nlive,
             walks=walks,
             slices=slices,
-        )
+        )"""
+        # Modification to include multiprocessing in single batches. 
+        # If the n_procs is less than batches, then each batch gets additional 
+        # processors to .
+        if self.dynesty_procs>1:
+            print(f"Running dynesty on {self.dynesty_procs} cores for this batch.")
+            dynesty_pool = mp.Pool(self.dynesty_procs)
+            sampler = NestedSampler(
+                likelihood_calc.find_likelihood_new,
+                priors._convert_unit_cube,
+                n_dims,
+                bound=bound,
+                sample=sample,  # update_interval=float(n_dims),
+                nlive=nlive,
+                walks=walks,
+                slices=slices,
+                pool=dynesty_pool,
+                queue_size=self.dynesty_procs
+            )
+        
+        else:
+            sampler = NestedSampler(
+                lnlike,
+                prior_transform,
+                n_dims,
+                bound=bound,
+                sample=sample,  # update_interval=float(n_dims),
+                nlive=nlive,
+                walks=walks,
+                slices=slices,
+            )
 
         try:
             sampler.run_nested(maxiter=maxiter, maxcall=maxcall, dlogz=dlogz)
@@ -598,6 +628,15 @@ class Retriever:
 
         # with mp.Pool(processes=n_procs) as pool:
         # Cap n_procs so as not to exceed the number of cpus needed or the max number available, whichever is smaller
+        # Modification to speed up processes when num-batches<n_procs.
+        n_procs = np.amin([n_procs,mp.cpu_count()])
+        # If the number of batches is smaller than the number of cores
+        # to be used, it provides the additional cores to dynesty for 
+        # multiprocessing
+        if len(batches)<n_procs:
+            self.dynesty_procs = n_procs//len(batches)
+        else:
+            self.dynesty_procs = 1
         n_procs = np.amin([n_procs,len(batches),mp.cpu_count()])
         if n_procs > 1:
             print('TransitFit is spawning n_procs = {:d} processes. Dynesty output might look scrambled!'.format(n_procs))
