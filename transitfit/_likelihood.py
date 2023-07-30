@@ -69,7 +69,24 @@ class LikelihoodCalculator:
                 # Now make the models
                 model = batman.TransitModel(default_params, self.lightcurves[i].times)
                 self.batman_models.set_value(model, tidx, fidx, eidx)
+    
+    # New function to handle multiple processes in the same batch.  
+    def find_likelihood_new(self, params):
+            #params = priors._interpret_param_array(cube)
 
+            ln_likelihood = self.find_likelihood(params)
+            priors = self.priors
+            if priors.fit_ld and not priors.ld_fit_method == "independent":
+                # Pull out the q values and convert them
+                u = []
+                for fi in range(priors.n_filters):
+                    q = [params[qX][0, fi, 0] for qX in priors.limb_dark_coeffs]
+                    u.append(priors.ld_handler.convert_qtou(*q))
+                return ln_likelihood + priors.ld_handler.ldtk_lnlike(
+                    u, priors.limb_dark
+                )
+            else:
+                return ln_likelihood
 
     def find_likelihood(self, params):
         '''
