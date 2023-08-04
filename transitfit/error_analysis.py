@@ -135,7 +135,7 @@ class ErrorLimits:
         self.OUTPUT_PARAMETERS_FOLDER = output_parmeters
 
         # This will be the name of the output file
-        self.MODIFIED_SUMMARY_OUTPUT = 'modifed_output.csv'
+        self.MODIFIED_SUMMARY_OUTPUT = 'modified_output.csv'
 
         # Summary_output file
         self.summary_output = glob.glob(
@@ -328,8 +328,8 @@ class ErrorLimits:
                     # To account for a/AU parameter present in the
                     # summary_output files.
                     index = index-1
-
-                if len(selected_df) > 1:
+                
+                if selected_df['Filter'].to_list()!=['-']:
                     batch_filters = selected_df['Filter'].to_list()
                     filters += batch_filters
                     for i, f in enumerate(batch_filters):
