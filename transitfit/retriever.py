@@ -117,6 +117,11 @@ class Retriever:
             https://emcee.readthedocs.io/en/stable/tutorials/line/
     error_scaling_limits: list, optional
             If error_scaling=True, this is the limit of the parameter.
+    ldtk_uncertainty_multiplier: float, optional
+            (From LDTK:) The uncertainty multiplier ϵ is a subjective factor
+            that defines how strongly the LD profile (or the prior created
+            from it) constrains the final analysis (that is, how much we
+            trust the stellar atmosphere models used to create the profiles.)
     """
 
     def __init__(
@@ -146,6 +151,7 @@ class Retriever:
         median_normalisation=False,
         error_scaling=False,
         error_scaling_limits=None,
+        ldtk_uncertainty_multiplier=1.,
     ):
 
         ###################
@@ -190,6 +196,7 @@ class Retriever:
         self.n_ld_samples = n_ld_samples
         self.do_ld_mc = do_ld_mc
         self.ldtk_cache = ldtk_cache
+        self.ldtk_uncertainty_multiplier = ldtk_uncertainty_multiplier
 
         ###########################################################################
         # Now read in things from files to get Filters, full priors, full lc data #
@@ -645,7 +652,7 @@ class Retriever:
         if n_procs > 1:
             print('TransitFit is spawning n_procs = {:d} processes. Dynesty output might look scrambled!'.format(n_procs))
 
-            pool = mp.Pool(n_procs)
+            pool = mp.Pool(n_procs,maxtasksperchild=1000)
             # Run the pool!
             # batch_run_results = [pool.map_async(_run_batch, i) for i in mp_input]
             batch_run_results = pool.map(_run_batch, mp_input)
@@ -1254,6 +1261,7 @@ class Retriever:
                     self.n_ld_samples,
                     self.do_ld_mc,
                     self.ldtk_cache,
+                    self.ldtk_uncertainty_multiplier,
                 )
             else:
                 raise ValueError(

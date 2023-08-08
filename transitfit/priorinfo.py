@@ -351,7 +351,8 @@ class PriorInfo:
     def fit_limb_darkening(self, fit_method='independent',
                            host_T=None, host_logg=None,
                            host_z=None, filters=None,
-                           n_samples=20000, do_mc=False, cache_path=None):
+                           n_samples=20000, do_mc=False, cache_path=None,
+                           ldtk_uncertainty_multiplier=1.):
         '''
         Initialises fitting of limb darkening parameters, either independently
         or coupled across wavebands.
@@ -401,6 +402,11 @@ class PriorInfo:
         cache_path : str, optional
             This is the path to cache LDTK files to. If not specified, will
             default to the LDTK default
+        ldtk_uncertainty_multiplier: float, optional
+            (From LDTK:) The uncertainty multiplier ϵ is a subjective factor
+            that defines how strongly the LD profile (or the prior created
+            from it) constrains the final analysis (that is, how much we
+            trust the stellar atmosphere models used to create the profiles.)
         '''
         # Sanity checks
         if fit_method not in ['coupled', 'single', 'independent']:
@@ -434,7 +440,8 @@ class PriorInfo:
             # Now if we are coupling across wavelength we must initialise PyLDTK
             self.ld_handler.initialise_ldtk(host_T, host_logg, host_z, filters,
                                             self.limb_dark,
-                                            n_samples, do_mc, cache_path)
+                                            n_samples, do_mc, cache_path,
+                                            ldtk_uncertainty_multiplier)
 
     def fit_normalisation(self, lightcurves,normalise_limits):
         '''

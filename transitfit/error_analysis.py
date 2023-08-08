@@ -329,7 +329,7 @@ class ErrorLimits:
                     # summary_output files.
                     index = index-1
                 
-                if selected_df['Filter'].to_list()!=['-']:
+                if '-' not in selected_df['Filter'].to_list():
                     batch_filters = selected_df['Filter'].to_list()
                     filters += batch_filters
                     for i, f in enumerate(batch_filters):
@@ -392,11 +392,12 @@ class ErrorLimits:
         # Getting the best_values from the summary_output.csv file
         for p in self.required_params:
             selected_df = df_so.loc[df_so['Parameter'] == p]
-            if len(selected_df) == 1:
+            batch_filters = selected_df['Filter']
+            if len(selected_df) == 1 and '-' not in batch_filters:
                 self.values[p+'_best'] = float(selected_df['Best'])
 
             else:
-                batch_filters = selected_df['Filter']
+                #batch_filters = selected_df['Filter']
                 bestvals = selected_df['Best'].to_numpy(dtype=float)
                 for i, f in enumerate(batch_filters):
                     self.values[p+'_'+str(f)+'_best'] = float(bestvals[i])
@@ -406,6 +407,7 @@ class ErrorLimits:
             mso.write('Parameter,Filter,Best,Lower_error,Upper_error\n')
             q, q_low, q_up = [], [], []
             q_dict = {}
+            print(self.values)
 
             for param in self.required_params:
                 if param in ['rp/r*']+self.limb_dark_coeffs and len(filters) > 0:

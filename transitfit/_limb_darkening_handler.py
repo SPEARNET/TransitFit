@@ -230,7 +230,7 @@ class LimbDarkeningHandler:
 
     def initialise_ldtk(self, host_T, host_logg, host_z, filters,
                         model=None, n_samples=20000, do_mc=False,
-                        cache_path=None):
+                        cache_path=None, ldtk_uncertainty_multiplier=1.):
         '''
         Sets up an LDTKHandler to deal with interfacing between ldtk and
         TransitFit
@@ -263,6 +263,11 @@ class LimbDarkeningHandler:
         cache_path : str, optional
             This is the path to cache LDTK files to. If not specified, will
             default to the LDTK default
+        ldtk_uncertainty_multiplier: float, optional
+            (From LDTK:) The uncertainty multiplier ϵ is a subjective factor
+            that defines how strongly the LD profile (or the prior created
+            from it) constrains the final analysis (that is, how much we
+            trust the stellar atmosphere models used to create the profiles.)
         '''
         if model is None:
             model = self.default_model
@@ -272,7 +277,8 @@ class LimbDarkeningHandler:
         self.host_z = host_z
 
         self.ldtk_handler = LDTKHandler(host_T, host_logg, host_z, filters,
-                                        model, n_samples, do_mc, cache_path)
+                                        model, n_samples, do_mc, cache_path,
+                                        ldtk_uncertainty_multiplier)
 
 
     def ldtk_lnlike(self, coeffs, model=None):
