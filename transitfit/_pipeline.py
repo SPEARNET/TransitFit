@@ -28,9 +28,11 @@ def run_retrieval(data_files, priors, filter_info=None,
                   marker_color='dimgrey', line_color='black', ldtk_cache=None,
                   ldtk_samples=20000, do_ld_mc=False, data_skiprows=0,
                   allow_ttv=False, filter_delimiter=None,
-                  detrending_limits=None, normalise_limits=None, bin_data=False, cadence=2,
-                  binned_color='red', walks=100, slices=10, n_procs=1, check_batchsizes=False,
-                  median_normalisation=False,error_scaling=False,error_scaling_limits=None):
+                  detrending_limits=None, normalise_limits=None, bin_data=False,
+                  cadence=2, binned_color='red', walks=100, slices=10, 
+                  n_procs=1, check_batchsizes=False, median_normalisation=False,
+                  error_scaling=False, error_scaling_limits=None, 
+                  ldtk_uncertainty_multiplier=1.):
     '''
     Runs a full retrieval of posteriors using nested sampling on a transit
     light curve or a set of transit light curves. For more guidance on the use
@@ -311,6 +313,12 @@ def run_retrieval(data_files, priors, filter_info=None,
     
     error_scaling_limits: list, optional
             If error_scaling=True, this is the limit of the parameter.
+    
+    ldtk_uncertainty_multiplier: float, optional
+        (From LDTK:) The uncertainty multiplier ϵ is a subjective factor
+        that defines how strongly the LD profile (or the prior created
+        from it) constrains the final analysis (that is, how much we
+        trust the stellar atmosphere models used to create the profiles.)
 
     Returns
     -------
@@ -335,7 +343,9 @@ def run_retrieval(data_files, priors, filter_info=None,
                           host_T, host_logg, host_z, host_r, ldtk_cache,
                           ldtk_samples, do_ld_mc, data_skiprows, allow_ttv,
                           filter_delimiter, detrending_limits, normalise, 
-                          normalise_limits,detrend,median_normalisation,error_scaling, error_scaling_limits)
+                          normalise_limits,detrend,median_normalisation,
+                          error_scaling, error_scaling_limits, 
+                          ldtk_uncertainty_multiplier)
 
     # Run the retrieval!
     results = retriever.run_retrieval(ld_fit_method, fitting_mode,
