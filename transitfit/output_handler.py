@@ -322,8 +322,8 @@ class OutputHandler:
 
         self._save_results_dict(self.best_model, os.path.join(output_folder, 'Complete_results.csv'), False)
 
-        el = ErrorLimits(output_folder)
-        el.get_errors()
+        #el = ErrorLimits(output_folder)
+        #el.get_errors()
 
     def save_results(self, results, priors, lightcurves,
                      output_folder='./output_parameters',
@@ -429,6 +429,11 @@ class OutputHandler:
 
             # Check that the parameter has been initialised in the dict
             results_dict = self._initialise_dict_entry(results_dict, param_name)
+            if param_name=='norm':
+                self.full_idx_escale=full_idx
+            if param_name=='escale':
+                full_idx=self.full_idx_escale
+            #print(results_dict,param_name,full_idx)
             if results_dict[param_name][full_idx] is None:
                 # Initialise a list
                 results_dict[param_name][full_idx] = []

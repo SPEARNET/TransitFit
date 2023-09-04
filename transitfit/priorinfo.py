@@ -174,9 +174,9 @@ class PriorInfo:
         if name in ['inc']:
             high_lim = 90
         
-        if name not in self.priors and name=='escale':
-            # Need to initialise the entry in the priors dict
-            self.priors[name] = ParamArray(name, (self.n_telescopes, self.n_filters,self.n_epochs), True, True, True)
+        #if name not in self.priors and name=='escale':
+        #    # Need to initialise the entry in the priors dict
+        #    self.priors[name] = ParamArray(name, (self.n_telescopes, self.n_filters,self.n_epochs), True, True, True)
 
         self.priors[name].add_uniform_fit_param(low_lim, high_lim,
                                                 telescope_idx, filter_idx,
