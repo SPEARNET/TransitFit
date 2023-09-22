@@ -470,14 +470,24 @@ class PriorInfo:
 
         self.normalise = True
 
-    def set_error_scaling(self,lightcurves, scaling_limits):
+    def set_error_scaling(self,lightcurves, scaling_limits, telescope_idx=None):
         
         for i in np.ndindex(lightcurves.shape):
             telescope_idx, filter_idx, epoch_idx = i
 
+            if isinstance(scaling_limits[telescope_idx], Iterable):
+                # The limits for each parameter have been set
+                # individually
+                #low_lim = scaling_limits[telescope_idx][0]
+                #high_lim = scaling_limits[telescope_idx][1]
+                scaling_limits_iter = scaling_limits[telescope_idx]
+
+            else:
+                scaling_limits_iter = scaling_limits
+
             if lightcurves[i] is not None:
-                # A light curve exists. Set up normalisation
-                best, low, high = lightcurves[i].set_error_scaling(scaling_limits)
+                # A light curve exists. Set up error scaling
+                best, low, high = lightcurves[i].set_error_scaling(scaling_limits_iter)
                 self.add_uniform_fit_param('escale', low, high, telescope_idx, filter_idx, epoch_idx)
 
         self.error_scaling = True

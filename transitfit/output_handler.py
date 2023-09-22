@@ -83,7 +83,8 @@ class OutputHandler:
             # Each entry should be a list containing all the detrending
             # coefficients for the light curve.
             for i in np.ndindex(d.shape):
-                for coeff in np.ravel(global_prior.detrending_coeffs):                   
+                det_coeff_flattened = sum([det for det in global_prior.detrending_coeffs], [])
+                for coeff in det_coeff_flattened: #np.ravel(global_prior.detrending_coeffs):                   
                     if type(coeff) is not list:
                         if self.best_model[coeff][i] is not None:
                             if d[i] is None:
@@ -164,7 +165,8 @@ class OutputHandler:
             # Each entry should be a list containing all the detrending
             # coefficients for the light curve.
             for i in np.ndindex(d.shape):
-                for coeff in np.ravel(global_prior.detrending_coeffs):
+                det_coeff_flattened = sum([det for det in global_prior.detrending_coeffs], [])
+                for coeff in det_coeff_flattened: #np.ravel(global_prior.detrending_coeffs):
                     if type(coeff) is not list:
                         if self.best_model[coeff][i] is not None:
                             if d[i] is None:
@@ -431,8 +433,8 @@ class OutputHandler:
             results_dict = self._initialise_dict_entry(results_dict, param_name)
             if param_name=='norm':
                 self.full_idx_escale=full_idx
-            if param_name=='escale':
-                full_idx=self.full_idx_escale
+            #if param_name=='escale':
+            #    full_idx=self.full_idx_escale
             #print(results_dict,param_name,full_idx)
             if results_dict[param_name][full_idx] is None:
                 # Initialise a list

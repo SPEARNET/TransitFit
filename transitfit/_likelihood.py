@@ -6,6 +6,8 @@ import numpy as np
 import batman
 from copy import deepcopy
 from ._paramarray import ParamArray
+#from collections.abc import Iterable
+
 
 
 class LikelihoodCalculator:
@@ -163,6 +165,7 @@ class LikelihoodCalculator:
 
                     if self.priors.error_scaling:
                         # Scaling the errorbars. https://emcee.readthedocs.io/en/stable/tutorials/line/
+                        #if isinstance(params['escale'], Iterable):
                         fn = params['escale'][i]
                         sn_sq = np.power(err,2) + np.power(fn*model_flux,2)
                         total_chi2 += np.sum((np.power((model_flux - detrended_flux),2) / sn_sq) + np.log(2*np.pi*sn_sq))

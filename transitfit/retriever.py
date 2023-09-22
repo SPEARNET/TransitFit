@@ -9,6 +9,7 @@ import os, csv
 import traceback
 import multiprocessing as mp
 import pandas as pd
+from collections.abc import Iterable
 
 import io
 
@@ -228,10 +229,18 @@ class Retriever:
             if error_scaling_limits is None or len(error_scaling_limits)!=2:
                 self.scaling_limits = [1e-7,10]
             else:
-                error_scaling_limits = np.sort(np.abs(error_scaling_limits))
-                if error_scaling_limits[0]<=0: 
-                    error_scaling_limits[0] = 1e-7
-                self.scaling_limits = error_scaling_limits
+                if isinstance(error_scaling_limits[0], Iterable):
+                    for esl in range(len(error_scaling_limits)):
+                        error_scaling_limits[esl] = np.sort(np.abs(error_scaling_limits[esl]))
+                        if error_scaling_limits[esl][0]<=0: 
+                            error_scaling_limits[esl][0] = 1e-7
+                    self.scaling_limits = error_scaling_limits
+
+                else:
+                    error_scaling_limits = np.sort(np.abs(error_scaling_limits))
+                    if error_scaling_limits[0]<=0: 
+                        error_scaling_limits[0] = 1e-7
+                    self.scaling_limits = error_scaling_limits
 
 
         if detrend:
