@@ -475,7 +475,7 @@ class PriorInfo:
         for i in np.ndindex(lightcurves.shape):
             telescope_idx, filter_idx, epoch_idx = i
 
-            if isinstance(scaling_limits[telescope_idx], Iterable):
+            if isinstance(scaling_limits[0], Iterable):
                 # The limits for each parameter have been set
                 # individually
                 #low_lim = scaling_limits[telescope_idx][0]
