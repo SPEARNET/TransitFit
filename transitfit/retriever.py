@@ -817,6 +817,7 @@ class Retriever:
 
         # Get the batches, and remember that now we are not detrending or
         # normalising since that was done in the first stage
+        self.error_scaling = False
         folded_batches = self._get_non_folding_batches(
             folded_curves,
             max_parameters,
@@ -824,6 +825,7 @@ class Retriever:
             detrend=False,
             normalise=False,
             overlap=overlap,
+            error_scaling=False,
         )
 
         print("Running folded retrievals...")
@@ -1710,7 +1712,7 @@ class Retriever:
         return all_batches
 
     def _get_non_folding_batches(
-        self, lightcurves, max_parameters, ld_fit_method, detrend, normalise, overlap=2
+        self, lightcurves, max_parameters, ld_fit_method, detrend, normalise, overlap=2, error_scaling=False,
     ):
         """
         Splits lightcurves into batches by filter, attempting to ensure that

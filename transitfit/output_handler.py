@@ -433,7 +433,7 @@ class OutputHandler:
             results_dict = self._initialise_dict_entry(results_dict, param_name)
             if param_name=='norm':
                 self.full_idx_escale=full_idx
-            breakpoint()
+            #breakpoint()
             #if param_name=='escale':
             #    full_idx=self.full_idx_escale
             #print(results_dict,param_name,full_idx)
