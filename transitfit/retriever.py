@@ -1429,10 +1429,19 @@ class Retriever:
                     )[0]
                 else:
                     norm = 1
+                
+                if self._full_prior.error_scaling:
+                    escale = weighted_avg_and_std(
+                        combined_results["escale"][li][:, 0],
+                        combined_results["escale"][li][:, -1],
+                        single_val=True,
+                    )[0]
+                else:
+                    escale = None 
 
                 # Make the detrended light curve and fold to the final t0
                 #detrended_curve = lc.create_detrended_LightCurve(best_d, norm)
-                detrended_curve = lc.create_detrended_LightCurve(best_d_new, norm)
+                detrended_curve = lc.create_detrended_LightCurve(best_d_new, norm, escale)
 
                 # Fold the curve using the best t0 for the epoch and P
                 # We are folding each curve to be centred on best_t0[0]

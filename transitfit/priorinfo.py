@@ -470,7 +470,7 @@ class PriorInfo:
 
         self.normalise = True
 
-    def set_error_scaling(self,lightcurves, scaling_limits, telescope_idx=None):
+    def set_error_scaling(self,lightcurves, scaling_limits):#, telescope_idx=None):
         
         for i in np.ndindex(lightcurves.shape):
             telescope_idx, filter_idx, epoch_idx = i

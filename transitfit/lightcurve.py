@@ -331,11 +331,15 @@ class LightCurve:
                           self._telescope_array, self._filter_array,
                           self._epoch_array)"""
 
-    def create_detrended_LightCurve(self, d_new, norm):
+    def create_detrended_LightCurve(self, d_new, norm, escale=None):
         '''
         Creates a detrended LightCurve using detrend_flux() and returns it
         '''
         detrended_flux, detrended_errors = self.detrend_flux(d_new, norm)
+        
+        if escale is not None:
+            
+            detrended_errors = np.sqrt(np.power(detrended_errors,2) + np.power(escale*detrended_flux,2))
 
         return LightCurve(self.times, detrended_flux, detrended_errors,
                           self.telescope_idx, self.filter_idx,
