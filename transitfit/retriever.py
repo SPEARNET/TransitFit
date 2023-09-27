@@ -1292,7 +1292,7 @@ class Retriever:
             priors.fit_normalisation(lightcurve_subset,self.normalise_limits)
 
         if self.error_scaling:
-            priors.set_error_scaling(lightcurve_subset,self.scaling_limits)
+            priors.set_error_scaling(lightcurve_subset,self.scaling_limits, detrending_indices)
 
         return priors, lightcurve_subset
 
