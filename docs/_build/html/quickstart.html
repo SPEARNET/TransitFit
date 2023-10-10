@@ -4,16 +4,16 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Getting Started &mdash; TransitFit 3.3.6 documentation</title>
+  <title>Getting Started &mdash; TransitFit 3.4.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
+        <script src="_static/documentation_options.js?v=6f24eca1"></script>
+        <script src="_static/doctools.js?v=92e14aea"></script>
+        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -49,6 +49,8 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#transitfit-outputs"><code class="docutils literal notranslate"><span class="pre">TransitFit</span></code> outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#error-scaling"><code class="docutils literal notranslate"><span class="pre">Error</span> <span class="pre">Scaling</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#median-normalisation"><code class="docutils literal notranslate"><span class="pre">Median</span> <span class="pre">Normalisation</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="configfiles.html">Config Files</a></li>
@@ -85,16 +87,16 @@
            <div itemprop="articleBody">
              
   <section id="getting-started">
-<h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this heading">¶</a></h1>
+<h1>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading">¶</a></h1>
 <p><code class="docutils literal notranslate"><span class="pre">TransitFit</span></code> operation is based around three <a class="reference internal" href="configfiles.html#config-files"><span class="std std-ref">config files</span></a> (the <em>data path file</em>, the <em>priors file</em> and the <em>filter info file</em>) and a single Python wrapper function (<a class="reference internal" href="api.html#transitfit._pipeline.run_retrieval" title="transitfit._pipeline.run_retrieval"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_retrieval()</span></code></a>). There’s a lot more going on under the hood but, for everyday use, you don’t need to worry about that.</p>
 <section id="a-note-on-time-standards">
-<h2>A note on time standards<a class="headerlink" href="#a-note-on-time-standards" title="Permalink to this heading">¶</a></h2>
+<h2>A note on time standards<a class="headerlink" href="#a-note-on-time-standards" title="Link to this heading">¶</a></h2>
 <p><strong>TransitFit assumes that all time values are in BJD</strong>. If you are using BJD-2450000, or any variation on this, you will be okay as long as you are consistent. Using HJD, local time, or any time system that is not based on BJD will end in incorrect results and probably tears.</p>
 </section>
 <section id="an-illustration">
-<h2>An illustration<a class="headerlink" href="#an-illustration" title="Permalink to this heading">¶</a></h2>
+<h2>An illustration<a class="headerlink" href="#an-illustration" title="Link to this heading">¶</a></h2>
 <section id="some-toy-observations">
-<h3>Some toy observations<a class="headerlink" href="#some-toy-observations" title="Permalink to this heading">¶</a></h3>
+<h3>Some toy observations<a class="headerlink" href="#some-toy-observations" title="Link to this heading">¶</a></h3>
 <p>Let’s assume we have observations of 3 transits of a planet with a 6-day period:</p>
 <dl class="simple">
 <dt><em>Observation 1</em></dt><dd><p>Taken with telescope A, using an R-band filter, on Day 0.</p>
@@ -137,7 +139,7 @@
 <p>See <a class="reference internal" href="configfiles.html#config-files"><span class="std std-ref">here</span></a> for more information on exactly what these mean and how to set them up.</p>
 </section>
 <section id="running-transitfit-on-these-data">
-<h3>Running <code class="docutils literal notranslate"><span class="pre">TransitFit</span></code> on these data<a class="headerlink" href="#running-transitfit-on-these-data" title="Permalink to this heading">¶</a></h3>
+<h3>Running <code class="docutils literal notranslate"><span class="pre">TransitFit</span></code> on these data<a class="headerlink" href="#running-transitfit-on-these-data" title="Link to this heading">¶</a></h3>
 <p>Once we have the config files set up, it is incredibly easy to retrieve a best-fit model using <code class="docutils literal notranslate"><span class="pre">TransitFit</span></code>.</p>
 <p>To fit these observations with basic linear detrending and a bog-standard quadratic limb darkening model without using the <a class="reference internal" href="limb_darkening.html#limb-darkening"><span class="std std-ref">LDC coupling offered by</span></a> <code class="docutils literal notranslate"><span class="pre">TransitFit</span></code>, run:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transitfit</span> <span class="kn">import</span> <span class="n">run_retrieval</span>
@@ -170,7 +172,7 @@
 </section>
 </section>
 <section id="transitfit-outputs">
-<h2><code class="docutils literal notranslate"><span class="pre">TransitFit</span></code> outputs<a class="headerlink" href="#transitfit-outputs" title="Permalink to this heading">¶</a></h2>
+<h2><code class="docutils literal notranslate"><span class="pre">TransitFit</span></code> outputs<a class="headerlink" href="#transitfit-outputs" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">TransitFit</span></code> provides a variety of outputs. These are:</p>
 <dl>
 <dt>Output files</dt><dd><p>These are .csv files which record the best fit value and uncertainty for each parameter fitted. The base folder in which they are saved is controlled by the <code class="docutils literal notranslate"><span class="pre">results_output_folder</span></code> argument of <a class="reference internal" href="api.html#transitfit._pipeline.run_retrieval" title="transitfit._pipeline.run_retrieval"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_retrieval()</span></code></a>.</p>
@@ -203,6 +205,18 @@
 </dl>
 </dd>
 </dl>
+</section>
+<section id="error-scaling">
+<h2><code class="docutils literal notranslate"><span class="pre">Error</span> <span class="pre">Scaling</span></code><a class="headerlink" href="#error-scaling" title="Link to this heading">¶</a></h2>
+<blockquote>
+<div><p>The likelihood function for the fitting includes an additional error-rescaling term as described in the <a class="reference external" href="https://emcee.readthedocs.io/en/stable/tutorials/line/">online documentation</a> for EMCEE2 (Foreman-Mackey et al. 2013). This allows for cases where the flux errors might be underestimated. This can be specified by adding ‘error_scaling’ while calling <a class="reference internal" href="api.html#transitfit._pipeline.run_retrieval" title="transitfit._pipeline.run_retrieval"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_retrieval()</span></code></a>. The limits of this parameter can also be specified by adding ‘error_scaling_limits’.</p>
+</div></blockquote>
+</section>
+<section id="median-normalisation">
+<h2><code class="docutils literal notranslate"><span class="pre">Median</span> <span class="pre">Normalisation</span></code><a class="headerlink" href="#median-normalisation" title="Link to this heading">¶</a></h2>
+<blockquote>
+<div><p>In some cases, users may benefit from using median-normalisation. This can be specified by adding ‘median_normalisation’ while calling <a class="reference internal" href="api.html#transitfit._pipeline.run_retrieval" title="transitfit._pipeline.run_retrieval"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_retrieval()</span></code></a>. This normalises the raw lightcurves by the median value before attempting any fitting.</p>
+</div></blockquote>
 </section>
 </section>
 

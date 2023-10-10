@@ -4,16 +4,16 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Limb-darkening &mdash; TransitFit 3.3.6 documentation</title>
+  <title>Limb-darkening &mdash; TransitFit 3.4.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
+        <script src="_static/documentation_options.js?v=6f24eca1"></script>
+        <script src="_static/doctools.js?v=92e14aea"></script>
+        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -84,11 +84,11 @@
            <div itemprop="articleBody">
              
   <section id="limb-darkening">
-<h1>Limb-darkening<a class="headerlink" href="#limb-darkening" title="Permalink to this heading">¶</a></h1>
+<h1>Limb-darkening<a class="headerlink" href="#limb-darkening" title="Link to this heading">¶</a></h1>
 <p><code class="docutils literal notranslate"><span class="pre">TransitFit</span></code> was built with two primary motivations. First, to facilitate transmission spectroscopy surveys using observations from heterogeneous telescopes, and second, to allow the user to fit light curves while accounting for the effects that filter profiles and host parameters have on the LDCs, which we refer to as ‘coupling’ the LDCs. We will discuss the latter here.</p>
 <p>The full justification for and impacts of this approach can be found in the <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2021arXiv210312139H">accompanying paper</a> but, in short, not including host parameters and filter profiles in likelihood calculations of LDCs can lead to biases in your measurements of <span class="math notranslate nohighlight">\(R_p/R_\star\)</span> of tens of percent. By including this, <code class="docutils literal notranslate"><span class="pre">TransitFit</span></code> has made it easy to conduct robust transmission spectroscopy studies using observations from heterogeneous sources.</p>
 <section id="calculating-ldc-likelihoods">
-<h2>Calculating LDC likelihoods<a class="headerlink" href="#calculating-ldc-likelihoods" title="Permalink to this heading">¶</a></h2>
+<h2>Calculating LDC likelihoods<a class="headerlink" href="#calculating-ldc-likelihoods" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">TransitFit</span></code> uses the <a class="reference external" href="https://github.com/hpparvi/ldtk">Limb Darkening Toolkit (LDTk)</a> to calculate the likelihood values of sets of LDCs given the host characteristics and filter profiles. These values are then included in the likelihood calculations of transit models during retrieval.</p>
 <p>In order to use this feature, the user must provide the following:</p>
 <blockquote>
@@ -101,7 +101,7 @@
 <p>The first three are provided as arguments to <a class="reference internal" href="api.html#transitfit._pipeline.run_retrieval" title="transitfit._pipeline.run_retrieval"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_retrieval()</span></code></a>, and the filter profiles are specified using the <a class="reference internal" href="configfiles.html#filter-profiles"><span class="std std-ref">filter profiles input file</span></a>.</p>
 </div></blockquote>
 <section id="available-limb-darkening-models">
-<h3>Available  limb-darkening models<a class="headerlink" href="#available-limb-darkening-models" title="Permalink to this heading">¶</a></h3>
+<h3>Available  limb-darkening models<a class="headerlink" href="#available-limb-darkening-models" title="Link to this heading">¶</a></h3>
 <p>Typically, stellar intensity profiles are described by analytical functions <span class="math notranslate nohighlight">\(I_\lambda\left(\mu\right)\)</span>, where <span class="math notranslate nohighlight">\(\mu\)</span> is the cosine of the angle between the line of sight and the emergent intensity. <span class="math notranslate nohighlight">\(\mu\)</span> can also be expressed as <span class="math notranslate nohighlight">\(\mu = \sqrt{1-r^2}\)</span> where <span class="math notranslate nohighlight">\(r\)</span> is the unit-normalised radial coordinate on the stellar disk, and as such, all limb-darkening models must be valid for <span class="math notranslate nohighlight">\(0 \le \mu &lt; 1\)</span>.</p>
 <p>There are 5 limb darkening models provided by <code class="docutils literal notranslate"><span class="pre">TransitFit</span></code>, which can be selected using the <code class="docutils literal notranslate"><span class="pre">limb_darkening_model</span></code> argument in <a class="reference internal" href="api.html#transitfit._pipeline.run_retrieval" title="transitfit._pipeline.run_retrieval"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_retrieval()</span></code></a>. These are:</p>
 <blockquote>
@@ -144,7 +144,7 @@
 <p>where each of <span class="math notranslate nohighlight">\(u_0\)</span>, <span class="math notranslate nohighlight">\(u_1\)</span>, <span class="math notranslate nohighlight">\(u_2\)</span>, and <span class="math notranslate nohighlight">\(u_3\)</span> are the limb-darkening coefficients to be fitted. With the exception of the non-linear law, all of these models are constrained to physically-allowed values by the method in <a class="reference external" href="https://arxiv.org/abs/1308.0009">Kipping (2013)</a>, which we have extended to include the power-2 law.</p>
 </section>
 <section id="ldc-fitting-modes">
-<h3>LDC Fitting modes<a class="headerlink" href="#ldc-fitting-modes" title="Permalink to this heading">¶</a></h3>
+<h3>LDC Fitting modes<a class="headerlink" href="#ldc-fitting-modes" title="Link to this heading">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">TransitFit</span></code> offers three modes for LDC fitting, which can be selected using the <code class="docutils literal notranslate"><span class="pre">ld_fit_method</span></code> argument in <a class="reference internal" href="api.html#transitfit._pipeline.run_retrieval" title="transitfit._pipeline.run_retrieval"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_retrieval()</span></code></a>.:</p>
 <ul>
 <li><dl class="simple">
@@ -153,7 +153,7 @@
 </dl>
 </li>
 <li><dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">'coupled'</span></code></dt><dd><p>Using the Kipping parameterisations, each LDC is fitted as a free parameter, with LDTk being used to estimate the likelihood of sets of LDCs, using information on the host star and the observation filters. To use the coupled mode, the filter response file should have atleast 4 individual datapoints.</p>
+<dt><code class="docutils literal notranslate"><span class="pre">'coupled'</span></code></dt><dd><p>Using the Kipping parameterisations, each LDC is fitted as a free parameter, with LDTk being used to estimate the likelihood of sets of LDCs, using information on the host star and the observation filters. To use the coupled mode, the filter response file should have atleast 4 individual datapoints. TransitFit also provides the functionality to use the uncertainty multiplier from LDTk. This can be specified by adding ‘ldtk_uncertainty_multiplier’ while calling <a class="reference internal" href="api.html#transitfit._pipeline.run_retrieval" title="transitfit._pipeline.run_retrieval"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_retrieval()</span></code></a>.</p>
 </dd>
 </dl>
 </li>

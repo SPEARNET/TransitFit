@@ -126,3 +126,11 @@ Plots
 
     *Quick-look folded curves*
         Since running in :ref:`'folded mode' <'Folded' fitting>` can take some time, ``TransitFit`` provides a 'quick-look' plot for each filter after folding. This is there mostly so that you can be satisfied that the folding makes sense, rather than having to wait until the end to find out something has gone wrong.
+
+``Error Scaling``
+^^^^^^^^^^^^^^^^^
+    The likelihood function for the fitting includes an additional error-rescaling term as described in the `online documentation <https://emcee.readthedocs.io/en/stable/tutorials/line/>`_ for EMCEE2 (Foreman-Mackey et al. 2013). This allows for cases where the flux errors might be underestimated. This can be specified by adding 'error_scaling' while calling :meth:`~transitfit._pipeline.run_retrieval`. The limits of this parameter can also be specified by adding 'error_scaling_limits'.
+
+``Median Normalisation``
+^^^^^^^^^^^^^^^^^
+    In some cases, users may benefit from using median-normalisation. This can be specified by adding 'median_normalisation' while calling :meth:`~transitfit._pipeline.run_retrieval`. This normalises the raw lightcurves by the median value before attempting any fitting. 

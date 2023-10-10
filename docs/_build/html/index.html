@@ -4,16 +4,16 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome to TransitFit! &mdash; TransitFit 3.3.6 documentation</title>
+  <title>Welcome to TransitFit! &mdash; TransitFit 3.4.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
+        <script src="_static/documentation_options.js?v=6f24eca1"></script>
+        <script src="_static/doctools.js?v=92e14aea"></script>
+        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -75,13 +75,13 @@
            <div itemprop="articleBody">
              
   <section id="welcome-to-transitfit">
-<h1>Welcome to TransitFit!<a class="headerlink" href="#welcome-to-transitfit" title="Permalink to this heading">¶</a></h1>
+<h1>Welcome to TransitFit!<a class="headerlink" href="#welcome-to-transitfit" title="Link to this heading">¶</a></h1>
 <p><code class="docutils literal notranslate"><span class="pre">TransitFit</span></code> is a Python 3.X package for fitting multi-telescope, multi-filter, and multi-epoch exoplanetary transit observations. It uses the <a class="reference external" href="https://www.cfa.harvard.edu/~lkreidberg/batman/index.html">batman</a> transit model and nested sampling routines from <a class="reference external" href="https://dynesty.readthedocs.io/en/latest/index.html">dynesty</a>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">TransitFit</span></code> can include in its likelihood calculations the effect of host star characteristics and observation filter profiles on limb-darkening coefficients (LDCs), which we refer to as <a class="reference internal" href="limb_darkening.html#limb-darkening"><span class="std std-ref">‘coupling’ the LDCs</span></a>. It can also perform per-telescope detrending simultaneously with the fitting of other parameters.</p>
 <p>See <a class="reference internal" href="quickstart.html#getting-started"><span class="std std-ref">Getting Started</span></a> for instructions on how to use <code class="docutils literal notranslate"><span class="pre">TransitFit</span></code>. You can also find more information in the <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2021arXiv210312139H/abstract">TransitFit paper</a></p>
 </section>
 <section id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">¶</a></h1>
+<h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h1>
 <p><code class="docutils literal notranslate"><span class="pre">TransitFit</span></code> is compatible with Python 3.X installations. To run, <code class="docutils literal notranslate"><span class="pre">TransitFit</span></code> requires the following packages:</p>
 <ul class="simple">
 <li><p>numpy</p></li>
@@ -103,7 +103,7 @@
 </div>
 </section>
 <section id="citing">
-<h1>Citing<a class="headerlink" href="#citing" title="Permalink to this heading">¶</a></h1>
+<h1>Citing<a class="headerlink" href="#citing" title="Link to this heading">¶</a></h1>
 <p>If you find <code class="docutils literal notranslate"><span class="pre">TransitFit</span></code> useful in your work, please cite the <a class="reference external" href="https://ui.adsabs.harvard.edu/abs/2021arXiv210312139H">accompanying paper</a>. If you are using BibTeX, you can use the following citation in your .bib file:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@ARTICLE</span><span class="p">{</span><span class="mi">2021</span><span class="n">arXiv210312139H</span><span class="p">,</span>
        <span class="n">author</span> <span class="o">=</span> <span class="p">{{</span><span class="n">Hayes</span><span class="p">},</span> <span class="n">J</span><span class="o">.~</span><span class="n">J</span><span class="o">.~</span><span class="n">C</span><span class="o">.</span> <span class="ow">and</span> <span class="p">{</span><span class="n">Priyadarshi</span><span class="p">},</span> <span class="n">A</span><span class="o">.</span> <span class="ow">and</span> <span class="p">{</span><span class="n">Kerins</span><span class="p">},</span> <span class="n">E</span><span class="o">.</span> <span class="ow">and</span> <span class="p">{</span><span class="n">Awiphan</span><span class="p">},</span> <span class="n">S</span><span class="o">.</span> <span class="ow">and</span> <span class="p">{</span><span class="n">McDonald</span><span class="p">},</span> <span class="n">I</span><span class="o">.</span> <span class="ow">and</span> <span class="p">{</span><span class="n">A</span><span class="o">-</span><span class="n">thano</span><span class="p">},</span> <span class="n">N</span><span class="o">.</span> <span class="ow">and</span> <span class="p">{</span><span class="n">Morgan</span><span class="p">},</span> <span class="n">J</span><span class="o">.~</span><span class="n">S</span><span class="o">.</span> <span class="ow">and</span> <span class="p">{</span><span class="n">Humpage</span><span class="p">},</span> <span class="n">A</span><span class="o">.</span> <span class="ow">and</span>  <span class="p">{</span><span class="n">Charles</span><span class="o">-</span><span class="n">Mindoza</span><span class="p">},</span> <span class="n">S</span><span class="o">.</span> <span class="ow">and</span> <span class="p">{</span><span class="n">Wright</span><span class="p">},</span> <span class="n">M</span><span class="o">.</span> <span class="ow">and</span> <span class="p">{</span><span class="n">Joshi</span><span class="p">},</span> <span class="n">Y</span><span class="o">.</span> <span class="ow">and</span> <span class="p">{</span><span class="n">Jiang</span><span class="p">},</span> <span class="n">I</span><span class="o">.~</span><span class="n">G</span><span class="o">.</span> <span class="ow">and</span> <span class="p">{</span><span class="n">Inyanya</span><span class="p">},</span> <span class="n">T</span><span class="o">.</span> <span class="ow">and</span> <span class="p">{</span><span class="n">Padjaroen</span><span class="p">},</span> <span class="n">T</span><span class="o">.</span> <span class="ow">and</span> <span class="p">{</span><span class="n">Munsaket</span><span class="p">},</span> <span class="n">P</span><span class="o">.</span> <span class="ow">and</span> <span class="p">{</span><span class="n">Chuanraksasat</span><span class="p">},</span> <span class="n">P</span><span class="o">.</span> <span class="ow">and</span> <span class="p">{</span><span class="n">Komonjinda</span><span class="p">},</span> <span class="n">S</span><span class="o">.</span> <span class="ow">and</span> <span class="p">{</span><span class="n">Kittara</span><span class="p">},</span> <span class="n">P</span><span class="o">.</span> <span class="ow">and</span> <span class="p">{</span><span class="n">Dhillon</span><span class="p">},</span> <span class="n">V</span><span class="o">.~</span><span class="n">S</span><span class="o">.</span> <span class="ow">and</span> <span class="p">{</span><span class="n">Marsh</span><span class="p">},</span> <span class="n">T</span><span class="o">.~</span><span class="n">R</span><span class="o">.</span> <span class="ow">and</span> <span class="p">{</span><span class="n">Reichart</span><span class="p">},</span> <span class="n">D</span><span class="o">.~</span><span class="n">E</span><span class="o">.</span> <span class="ow">and</span> <span class="p">{</span><span class="n">Poshyachinda</span><span class="p">},</span> <span class="n">S</span><span class="o">.</span><span class="p">},</span>

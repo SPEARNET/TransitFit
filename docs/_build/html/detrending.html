@@ -4,16 +4,16 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Detrending &mdash; TransitFit 3.3.6 documentation</title>
+  <title>Detrending &mdash; TransitFit 3.4.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
+        <script src="_static/documentation_options.js?v=6f24eca1"></script>
+        <script src="_static/doctools.js?v=92e14aea"></script>
+        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -85,7 +85,7 @@
            <div itemprop="articleBody">
              
   <section id="detrending">
-<h1>Detrending<a class="headerlink" href="#detrending" title="Permalink to this heading">¶</a></h1>
+<h1>Detrending<a class="headerlink" href="#detrending" title="Link to this heading">¶</a></h1>
 <p><code class="docutils literal notranslate"><span class="pre">TransitFit</span></code> has the capability to detrend light curves simultaneously with fitting physical parameters, and can handle using both nth-order polynomial and user-specified detrending functions. It is able to fit multiple detrending models for different observations at once, which is particularly useful when combining observations from different telescopes which have known systematic properties.</p>
 <p>For nth-order detrending, we assume that the detrending is additive, and that the detrended flux, <span class="math notranslate nohighlight">\(\mathbf{D}(\mathbf{t})\)</span>, is given by</p>
 <div class="math notranslate nohighlight">
@@ -93,10 +93,10 @@
 <p>where <span class="math notranslate nohighlight">\(\mathbf{F}(\mathbf{t})\)</span> is the raw flux and <span class="math notranslate nohighlight">\(\mathbf{d}(\mathbf{t})\)</span> is the detrending function. However, if you have a more complicated detrending function which has multiplicative elements, or value which depend on the actual flux, <code class="docutils literal notranslate"><span class="pre">TransitFit</span></code> can use a custom model to do this.</p>
 <p>We will look here at how to get <code class="docutils literal notranslate"><span class="pre">TransitFit</span></code> to use the different types of detrending, and show a simple example of setting up a custom detrending function.</p>
 <section id="basic-detrending-syntax">
-<h2>Basic detrending syntax<a class="headerlink" href="#basic-detrending-syntax" title="Permalink to this heading">¶</a></h2>
+<h2>Basic detrending syntax<a class="headerlink" href="#basic-detrending-syntax" title="Link to this heading">¶</a></h2>
 <p>Setting up <code class="docutils literal notranslate"><span class="pre">TransitFit</span></code> to use different detrending models is simple and uses the <code class="docutils literal notranslate"><span class="pre">detrending_list</span></code> kwarg in <a class="reference internal" href="api.html#transitfit._pipeline.run_retrieval" title="transitfit._pipeline.run_retrieval"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_retrieval()</span></code></a>. This is a list of the different detrending methods to be used, along with any required details. The <a class="reference internal" href="configfiles.html#indexing"><span class="std std-ref">detrending indices</span></a> given in the <a class="reference internal" href="configfiles.html#data-input-file"><span class="std std-ref">data input file</span></a> refer to the index of the methods in this list.</p>
 <section id="detrending-methods">
-<h3>Detrending methods<a class="headerlink" href="#detrending-methods" title="Permalink to this heading">¶</a></h3>
+<h3>Detrending methods<a class="headerlink" href="#detrending-methods" title="Link to this heading">¶</a></h3>
 <p>The available types of detrending are:</p>
 <dl>
 <dt><em>Nth order</em></dt><dd><p>To use a polynomial of order <code class="docutils literal notranslate"><span class="pre">n</span></code>, the entry to <code class="docutils literal notranslate"><span class="pre">detrending_list</span></code> should be given as <code class="docutils literal notranslate"><span class="pre">['nth</span> <span class="pre">order',</span> <span class="pre">n]</span></code>. The nth order polynomials used by <code class="docutils literal notranslate"><span class="pre">TransitFit</span></code> are designed to be flux-conserving at the time of conjunction, and are of the form</p>
@@ -137,12 +137,12 @@
 </dl>
 </section>
 <section id="setting-limits-on-detrending-coefficients">
-<h3>Setting limits on detrending coefficients<a class="headerlink" href="#setting-limits-on-detrending-coefficients" title="Permalink to this heading">¶</a></h3>
+<h3>Setting limits on detrending coefficients<a class="headerlink" href="#setting-limits-on-detrending-coefficients" title="Link to this heading">¶</a></h3>
 <p>By default, all detrending coefficients are fitted using a uniform prior of <span class="math notranslate nohighlight">\(\pm10\)</span>. Obviously this is not always ideal, so you can specify the range over which these priors should be fitted using the <code class="docutils literal notranslate"><span class="pre">detrending_limits</span></code> argument in <a class="reference internal" href="api.html#transitfit._pipeline.run_retrieval" title="transitfit._pipeline.run_retrieval"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_retrieval()</span></code></a>. <strong>Note</strong>: all the detrending coefficients in a given model will be bound to the same range.</p>
 <p>To use custom ranges in your detrending models, you use a list where each entry is <code class="docutils literal notranslate"><span class="pre">[lower,</span> <span class="pre">upper]</span></code> for the detrending methods.</p>
 </section>
 <section id="an-example">
-<h3>An example<a class="headerlink" href="#an-example" title="Permalink to this heading">¶</a></h3>
+<h3>An example<a class="headerlink" href="#an-example" title="Link to this heading">¶</a></h3>
 <p>Let’s again consider our <a class="reference internal" href="quickstart.html#some-toy-observations"><span class="std std-ref">toy model</span></a> with three observations. We shall assume that we want to apply a quadratic detrending model to one, the custom detrending model above to another, and that the last one has already been detrended in pre-processing. We will also change the coefficient bounds. We first need to edit our <code class="docutils literal notranslate"><span class="pre">'input_data.csv'</span></code> to:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Path</span><span class="p">,</span>                   <span class="n">Telescope</span><span class="p">,</span>  <span class="n">Filter</span><span class="p">,</span>     <span class="n">Epoch</span><span class="p">,</span>      <span class="n">Detrending</span>
 <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">observation1</span><span class="p">,</span>  <span class="mi">0</span><span class="p">,</span>          <span class="mi">0</span><span class="p">,</span>          <span class="mi">0</span><span class="p">,</span>          <span class="mi">0</span>
