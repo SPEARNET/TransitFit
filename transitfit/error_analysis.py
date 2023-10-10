@@ -413,11 +413,19 @@ class ErrorLimits:
                 if param in ['rp/r*']+self.limb_dark_coeffs and len(filters) > 0:
                     for fil in filters:
                         param_ = param+'_'+str(int(fil))
+                        try:
+                            best_val=self.values[param_+'_best']
+                            #errs = get_quantiles_on_best_val(
+                            #    samples=self.values[param_], weights=self.values[param_+'_weights'], best_val=self.values[param_+'_best'])
+                        except KeyError:
+                            best_val=self.values[param+'_best']
+                        
                         errs = get_quantiles_on_best_val(
-                            samples=self.values[param_], weights=self.values[param_+'_weights'], best_val=self.values[param_+'_best'])
+                            samples=self.values[param_], weights=self.values[param_+'_weights'], best_val=best_val)
+
                         # (model.mean)
                         mso.write(
-                            f"{param},{fil},{self.values[param_+'_best']},{errs[0]},{errs[1]}\n")
+                            f"{param},{fil},{best_val},{errs[0]},{errs[1]}\n")
 
                 else:
                     errs = get_quantiles_on_best_val(
@@ -443,10 +451,14 @@ class ErrorLimits:
                         q, q_low, q_up = [], [], []
                         for param in self.limb_dark_coeffs:
                             param_ = param+'_'+str(int(fil))
+                            try:
+                                best_val=self.values[param_+'_best']
+                            except:
+                                best_val=self.values[param+'_best']
                             errs = get_quantiles_on_best_val(
-                                samples=self.values[param_], weights=self.values[param_+'_weights'], best_val=self.values[param_+'_best'])
+                                samples=self.values[param_], weights=self.values[param_+'_weights'], best_val=best_val)
 
-                            q.append(self.values[param_+'_best']),
+                            q.append(best_val),
                             q_low.append(errs[0])
                             q_up.append(errs[1])
 

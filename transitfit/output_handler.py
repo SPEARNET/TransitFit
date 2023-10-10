@@ -324,8 +324,12 @@ class OutputHandler:
 
         self._save_results_dict(self.best_model, os.path.join(output_folder, 'Complete_results.csv'), False)
 
-        #el = ErrorLimits(output_folder)
-        #el.get_errors()
+        try:
+            el = ErrorLimits(output_folder)
+            el.get_errors()
+        except:
+            print("An exception occurred while trying to get asymmetric errors!")
+
 
     def save_results(self, results, priors, lightcurves,
                      output_folder='./output_parameters',
@@ -850,6 +854,7 @@ class OutputHandler:
                             # has failed.
                             failed_key.append(key)
                             failed_index.append(i)
+                    #elif key[0] == 'norm':
                     else:
                         failed_key.append(key)
                         failed_index.append(i)
