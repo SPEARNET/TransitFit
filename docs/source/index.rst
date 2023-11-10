@@ -5,7 +5,7 @@ Welcome to TransitFit!
 
 ``TransitFit`` can include in its likelihood calculations the effect of host star characteristics and observation filter profiles on limb-darkening coefficients (LDCs), which we refer to as :ref:`'coupling' the LDCs <Limb-darkening>`. It can also perform per-telescope detrending simultaneously with the fitting of other parameters.
 
-See :ref:`Getting Started` for instructions on how to use ``TransitFit``. You can also find more information in the `TransitFit paper <https://ui.adsabs.harvard.edu/abs/2021arXiv210312139H/abstract>`_
+See :ref:`Getting Started` for instructions on how to use ``TransitFit``. You can also find more information in the `TransitFit paper <https://doi.org/10.1093/mnras/stad3353>`_
 
 
 Installation
@@ -25,14 +25,14 @@ To install the most recent stable version, run::
 
     pip install transitfit
 
-Alternatively, you can install it direct from the source by downloading the project from the `GitHub page <https://github.com/joshjchayes/TransitFit>`_ and running::
+Alternatively, you can install it direct from the source by downloading the project from the `GitHub page <https://github.com/SPEARNET/TransitFit>`_ and running::
 
     pip install -e .
 
 
 Citing
 ======
-If you find ``TransitFit`` useful in your work, please cite the `accompanying paper <https://ui.adsabs.harvard.edu/abs/2021arXiv210312139H>`_. If you are using BibTeX, you can use the following citation in your .bib file::
+If you find ``TransitFit`` useful in your work, please cite the `accompanying paper <https://doi.org/10.1093/mnras/stad3353>`_. If you are using BibTeX, you can use the following citation in your .bib file::
 
     @article{10.1093/mnras/stad3353,
     author = {Hayes, J J C and Priyadarshi, A and Kerins, E and Awiphan, S and McDonald, I and A-thano, N and Morgan, J S and Humpage, A and Charles, S and Wright, M and Joshi, Y C and Jiang, Ing-Guey and Inyanya, T and Padjaroen, T and Munsaket, P and Chuanraksasat, P and Komonjinda, S and Kittara, P and Dhillon, V S and Marsh, T R and Reichart, D E and Poshyachinda, S and The SPEARNET Collaboration},
