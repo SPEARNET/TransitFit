@@ -30,7 +30,7 @@ The documentation for TransitFit can be found [here](https://transitfit.readthed
 
 <a name="citing"></a>
 ## Citing TransitFit
-If you have used TransitFit in your work, please cite the [accompanying paper](https://ui.adsabs.harvard.edu/abs/2021arXiv210312139H/abstract). If you are using BibTeX, you can add the following to your .bib file:
+If you have used TransitFit in your work, please cite the [accompanying paper](https://doi.org/10.1093/mnras/stad3353). If you are using BibTeX, you can add the following to your .bib file:
 
 ```
 @article{10.1093/mnras/stad3353,
