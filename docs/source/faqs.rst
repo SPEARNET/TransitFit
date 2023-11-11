@@ -28,6 +28,9 @@ How do I cite ``TransitFit``?
 
 
 
+
+
+
 Why have you only included nested sampling? Why can't I use MCMC?
     This comes down partly to the personal preference of the development team, but mostly because ``TransitFit`` often has to deal with high-dimensioned fitting problems. MCMC routines often struggle in this situation, especially when the posterior space can be fairly degenerate or spiky. Nested sampling can handle these situations in a more stable way.
 
