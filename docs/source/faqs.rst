@@ -8,8 +8,7 @@ Why do I have to use config files? Isn't that a bit outdated?
     Fair point. We've based this around config files because when being used on hundreds of light curves at once, typing all the inputs into a list becomes very difficult to read and keep track of. In future updates, we might work on streamlining the API to allow inputs to be set directly within the code by the user.
 
 How do I cite ``TransitFit``?
-    If you have found ``TransitFit`` useful in your work, please cite `the accompanying paper <https://doi.org/10.1093/mnras/stad3353>`_. If you're using BibTeX, you can copy the following into your .bib file::
-
+    If you find ``TransitFit`` useful in your work, please cite the `accompanying paper <https://doi.org/10.1093/mnras/stad3353>`_. If you are using BibTeX, you can use the following citation in your .bib file::
 
     @article{10.1093/mnras/stad3353,
     author = {Hayes, J J C and Priyadarshi, A and Kerins, E and Awiphan, S and McDonald, I and A-thano, N and Morgan, J S and Humpage, A and Charles, S and Wright, M and Joshi, Y C and Jiang, Ing-Guey and Inyanya, T and Padjaroen, T and Munsaket, P and Chuanraksasat, P and Komonjinda, S and Kittara, P and Dhillon, V S and Marsh, T R and Reichart, D E and Poshyachinda, S and The SPEARNET Collaboration},
@@ -24,6 +23,8 @@ How do I cite ``TransitFit``?
     url = {https://doi.org/10.1093/mnras/stad3353},
     eprint = {https://academic.oup.com/mnras/advance-article-pdf/doi/10.1093/mnras/stad3353/52799695/stad3353.pdf},
 }
+
+
 
 
 
