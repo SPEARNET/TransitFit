@@ -10,6 +10,7 @@ Why do I have to use config files? Isn't that a bit outdated?
 How do I cite ``TransitFit``?
     If you have found ``TransitFit`` useful in your work, please cite `the accompanying paper <https://doi.org/10.1093/mnras/stad3353>`_. If you're using BibTeX, you can copy the following into your .bib file::
 
+
     @article{10.1093/mnras/stad3353,
     author = {Hayes, J J C and Priyadarshi, A and Kerins, E and Awiphan, S and McDonald, I and A-thano, N and Morgan, J S and Humpage, A and Charles, S and Wright, M and Joshi, Y C and Jiang, Ing-Guey and Inyanya, T and Padjaroen, T and Munsaket, P and Chuanraksasat, P and Komonjinda, S and Kittara, P and Dhillon, V S and Marsh, T R and Reichart, D E and Poshyachinda, S and The SPEARNET Collaboration},
     title = "{TransitFit: combined multi-instrument exoplanet transit fitting for JWST, HST and ground-based transmission spectroscopy studies}",
@@ -23,6 +24,8 @@ How do I cite ``TransitFit``?
     url = {https://doi.org/10.1093/mnras/stad3353},
     eprint = {https://academic.oup.com/mnras/advance-article-pdf/doi/10.1093/mnras/stad3353/52799695/stad3353.pdf},
 }
+
+
 
 Why have you only included nested sampling? Why can't I use MCMC?
     This comes down partly to the personal preference of the development team, but mostly because ``TransitFit`` often has to deal with high-dimensioned fitting problems. MCMC routines often struggle in this situation, especially when the posterior space can be fairly degenerate or spiky. Nested sampling can handle these situations in a more stable way.
