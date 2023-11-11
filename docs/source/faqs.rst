@@ -10,7 +10,7 @@ Why do I have to use config files? Isn't that a bit outdated?
 How do I cite ``TransitFit``?
     If you have found ``TransitFit`` useful in your work, please cite `the accompanying paper <https://doi.org/10.1093/mnras/stad3353>`_. If you're using BibTeX, you can copy the following into your .bib file::
 
-        @article{10.1093/mnras/stad3353,
+    @article{10.1093/mnras/stad3353,
     author = {Hayes, J J C and Priyadarshi, A and Kerins, E and Awiphan, S and McDonald, I and A-thano, N and Morgan, J S and Humpage, A and Charles, S and Wright, M and Joshi, Y C and Jiang, Ing-Guey and Inyanya, T and Padjaroen, T and Munsaket, P and Chuanraksasat, P and Komonjinda, S and Kittara, P and Dhillon, V S and Marsh, T R and Reichart, D E and Poshyachinda, S and The SPEARNET Collaboration},
     title = "{TransitFit: combined multi-instrument exoplanet transit fitting for JWST, HST and ground-based transmission spectroscopy studies}",
     journal = {Monthly Notices of the Royal Astronomical Society},
