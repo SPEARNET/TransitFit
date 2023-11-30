@@ -48,6 +48,11 @@ If you find ``TransitFit`` useful in your work, please cite the `accompanying pa
     eprint = {https://academic.oup.com/mnras/advance-article-pdf/doi/10.1093/mnras/stad3353/52799695/stad3353.pdf},
 }
 
+Observational Data
+==================
+
+The observational data of WASP-127b obtained by SPEARNET and the TRANSITFIT transmission spectrum of WASP-96b can be downloaded from `here <https://cdsarc.cds.unistra.fr/viz-bin/cat/J/MNRAS/527/4936>`_ and `here <https://vizier.cds.unistra.fr/viz-bin/VizieR?-source=J/MNRAS/527/4936>`_.
+
 
 .. toctree::
     :hidden:
