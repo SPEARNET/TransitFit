@@ -601,7 +601,7 @@ class OutputHandler:
                         filter_q[b,1,qi] = combined_dict[q][i][b][-1]
 
                 # indexing is best_filter_q[val/err, qX]
-                best_filter_q = np.vstack((best_dict[q][i] for q in self.ld_coeffs)).T
+                best_filter_q = np.vstack([best_dict[q][i] for q in self.ld_coeffs]).T
 
                 # Convert the q values. First up the combined dict:
                 for b in range(n_batches):
