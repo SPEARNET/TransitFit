@@ -141,7 +141,7 @@ class ErrorLimits:
         self.summary_output = glob.glob(
             self.OUTPUT_PARAMETERS_FOLDER+'/*summary_output.csv')
         if len(self.summary_output) == 0:
-            print('')
+            #print('')
             raise RuntimeError(
                 'Please check the pathname, it may not be correct.')
 
@@ -407,7 +407,7 @@ class ErrorLimits:
             mso.write('Parameter,Filter,Best,Lower_error,Upper_error\n')
             q, q_low, q_up = [], [], []
             q_dict = {}
-            print(self.values)
+            #print(self.values)
 
             for param in self.required_params:
                 if param in ['rp/r*']+self.limb_dark_coeffs and len(filters) > 0:
