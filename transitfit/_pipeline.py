@@ -117,6 +117,7 @@ def run_retrieval(data_files, priors, filter_info=None,
             - ``'off'`` : no limb darkening fitting will occurr. If using this
               mode, it it strongly recommended to set values for the
               Kipping q parameters using the priors file.
+            -```'custom'``` : The user can provide priors for limb darkening
         Default is `'independent'`
 
     fitting_mode : {``'auto'``, ``'all'``, ``'2_stage'``, ``'folded'``, ``'batched'``}, optional

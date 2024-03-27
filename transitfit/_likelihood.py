@@ -79,7 +79,7 @@ class LikelihoodCalculator:
 
             ln_likelihood = self.find_likelihood(params)
             
-            if priors.fit_ld and not priors.ld_fit_method == "independent":
+            if priors.fit_ld and priors.ld_fit_method not in ["independent","custom"]:
                 # Pull out the q values and convert them
                 u = []
                 for fi in range(priors.n_filters):

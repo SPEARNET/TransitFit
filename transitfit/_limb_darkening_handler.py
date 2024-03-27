@@ -149,7 +149,7 @@ class LimbDarkeningHandler:
 
         if model == 'linear':
             # coefficient is limited to 0<A<1 by Kipping criteria
-            return [q[0]]
+            return [u[0]]
 
         if model == 'quadratic':
             return (u[0] + u[1]) ** 2, u[0]/(2 * (u[0] + u[1]))
@@ -164,11 +164,11 @@ class LimbDarkeningHandler:
 
             if u[0] < 0:
                 # negative quadrant
-                return u1, 1 - (u[1]/self.low)
+                return u[1], 1 - (u[1]/self.low)
 
             else:
                 # positive quadrant
-                return u1, u[1]/self.high
+                return u[1], u[1]/self.high
 
         if model == 'nonlinear':
             # This is an 'outstanding and formidable problem' to apply the
@@ -226,7 +226,68 @@ class LimbDarkeningHandler:
             u_err = [abs(self.high - self.low) * err for err in q_err]
 
             return u, u_err
+    
+    def convert_utoq_with_errors(self, u, u_err):
+        '''
+        Takes actual values of the LD coefficients and converts them to a
+        value q between [0,1].
 
+        Conversions for quadratic, square root, and logarithmic are from
+        Kipping 2013 https://arxiv.org/abs/1308.0009 for two-parameter limb
+        darkening methods
+
+        Notes
+        -----
+        This is the inverse of convert_qtou
+        '''
+        #if model is None:
+        model = self.default_model
+        #breakpoint()
+        q = list(self.convert_utoq(*u, ))
+
+        if model == 'linear':
+            # coefficient is limited to 0<A<1 by Kipping criteria
+            return q, u_err
+
+        if model == 'quadratic':
+            q_err = []
+            q_err.append(2*(u[0]+u[1])*np.sqrt(u_err[0]**2 + u_err[1]**2))
+            q_err.append(np.sqrt(np.power(u[1]*u_err[0]/(2*(u[0]+u[1])**2),2)+np.power(u[0]*u_err[1]/(2*(u[0]+u[1])**2),2)))
+
+            #q_err.append(np.sqrt(((u[1] * u_err[0])**2)/u[0] + 4 * u[0] * u_err[1]**2))
+            return q, q_err
+
+        if model == 'squareroot':
+            raise NotImplementedError('Error propagation for squareroot model not implemented yet')
+
+        if model == 'power2':
+            raise NotImplementedError('Error propagation for power2 model not implemented yet')
+            # This parameterisation has been derived for TransitFit and is
+            # explained in the paper
+            q1 = (u[0] - self.low)/(1 - self.low)
+
+            if u[0] < 0:
+                # negative quadrant
+                return u[1], 1 - (u[1]/self.low)
+
+            else:
+                # positive quadrant
+                return u[1], u[1]/self.high
+
+        if model == 'nonlinear':
+            raise NotImplementedError('Error propagation for nonlinear model not implemented yet')
+            # This is an 'outstanding and formidable problem' to apply the
+            # Kipping (2013) method to (see Kipping 2016) and as such, we can
+            # only fit for free parameters, without reparameterising to allow
+            # only physically valid combinations.
+            q0 = (u[0] - self.low) /  (self.high - self.low)
+            q1 = (u[1] - self.low) /  (self.high - self.low)
+            q2 = (u[2] - self.low) /  (self.high - self.low)
+            q3 = (u[3] - self.low) /  (self.high - self.low)
+
+            return q0, q1, q2, q3
+
+        raise ValueError('Unrecognised model {}'.format(model))
 
     def initialise_ldtk(self, host_T, host_logg, host_z, filters,
                         model=None, n_samples=20000, do_mc=False,

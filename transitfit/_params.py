@@ -41,7 +41,7 @@ class _UniformParam(_Param):
         return abs(val)
 
 class _GaussianParam(_Param):
-    def __init__(self, best, sigma, negative_allowed=True, clipped_gaussian=False):
+    def __init__(self, best, sigma, negative_allowed=True, clipped_gaussian=False, custom_ldcs=False):
         '''
         A GaussianParam is one which is fitted using a Gaussian prior (normal)
         distribution.
@@ -51,9 +51,13 @@ class _GaussianParam(_Param):
         self.mean = best
         self.stdev = sigma
         self.negative_allowed = negative_allowed
+        self.custom_ldcs=custom_ldcs
 
         if clipped_gaussian:
             self.factor_for_clipping=(erf((90 - self.mean)/(self.stdev * np.sqrt(2))) + 1)/2 
+        
+        if custom_ldcs:
+            self.ldcs_lims=(erf((0 - self.mean)/(self.stdev * np.sqrt(2))) + 1)/2 ,(erf((1 - self.mean)/(self.stdev * np.sqrt(2))) + 1)/2
         
 
     def from_unit_interval(self, u):
@@ -63,6 +67,9 @@ class _GaussianParam(_Param):
         '''
         if u > 1 or u < 0:
             raise ValueError('u must satisfy 0 < u < 1')
+
+        if self.custom_ldcs:
+            u = u * (self.ldcs_lims[1] - self.ldcs_lims[0]) + self.ldcs_lims[0]
 
         val = self.mean + self.stdev * np.sqrt(2) * erfinv(2 * u - 1)
         if self.negative_allowed:

@@ -370,7 +370,7 @@ class Retriever:
 
             ln_likelihood= likelihood_calc.find_likelihood(params)
 
-            if priors.fit_ld and not priors.ld_fit_method == "independent":
+            if priors.fit_ld and priors.ld_fit_method not in["independent","custom"]:
                 # Pull out the q values and convert them
                 u = []
                 for fi in range(priors.n_filters):
@@ -894,7 +894,7 @@ class Retriever:
 
         Parameters
         ----------
-        ld_fit_method : {`'coupled'`, `'single'`, `'independent'`, `'off'`}, optional
+        ld_fit_method : {`'coupled'`, `'single'`, `'independent'`, `'off'`,`'custom'`}, optional
             Determines the mode of fitting of limb darkening parameters. The
             available modes are:
                 - `'coupled'` : all limb darkening parameters are fitted
@@ -909,6 +909,7 @@ class Retriever:
                 - `'independent'` : Each LD coefficient is fitted separately for
                   each filter, with no coupling to the ldtk models.
                 - `'off'` : Will use the fixed value provided in the input file
+                -```'custom'``` : The user can provide priors for limb darkening
             Default is `'independent'`
         fitting_mode : {'auto', 'all', 'folded', 'batched'}, optional
             Determines if the fitting algorithm is limited by max_parameters.
@@ -1140,7 +1141,7 @@ class Retriever:
         lightcurves : array_like
             An array of the light curves which will be golbally considered for
             fitting.
-        ld_fit_method : {'independent', 'single', 'coupled', 'off'}
+        ld_fit_method : {'independent', 'single', 'coupled', 'off','custom'}
             The mode to fit limb darkening coefficients with.
         indices : tuple or None
             If None, will fit all light curves. Otherwise, supply relevant
@@ -1254,6 +1255,8 @@ class Retriever:
         if not ld_fit_method.lower() == "off":
             if ld_fit_method.lower() == "independent":
                 priors.fit_limb_darkening(ld_fit_method)
+            elif ld_fit_method.lower() == "custom":
+                priors.fit_custom_limb_darkening(self._prior_input)
             elif ld_fit_method.lower() in ["coupled", "single"]:
                 if self._filter_input is None:
                     raise ValueError(
@@ -1887,7 +1890,7 @@ class Retriever:
             n_params += n_epochs
 
         # Account for filter-specific parameters - rp and LD coeffs
-        if ld_fit_method in ["independent", "coupled"]:
+        if ld_fit_method in ["independent", "coupled", "custom"]:
             n_params += n_filters * (1 + self.n_ld_params)
         else:  # single fitting mode being used
             n_params += n_filters + self.n_ld_params

@@ -85,7 +85,13 @@ def read_priors_file(path, n_telescopes, n_filters, n_epochs,
     Detrending currently cannot be initialised in the prior file. It will be
     available as a kwarg in the pipeline function
     '''
-    priors_list = pd.read_csv(path).values
+    priors_list = pd.read_csv(path)
+    # Parameters u0 and u1 are used only when fitting limb darkening coefficients from user defined custom priors. 
+    priors_list = priors_list.drop(priors_list[priors_list['Parameter'].isin(['u0', 'u1','q0', 'q1'])].index)
+    priors_list = priors_list.values
+
+    #priors_list = pd.read_csv(path).values
+    
 
     return parse_priors_list(priors_list, n_telescopes, n_filters, n_epochs, limb_dark, filter_indices, folded, folded_P, folded_t0, host_radius, allow_ttv, lightcurves, suppress_warnings, error_scaling)
 
@@ -675,7 +681,7 @@ def print_results(results, priorinfo, n_dof):
             #    param = param +'_{}'.format(int(priorinfo._epoch_idx[i]))
             elif (param in priorinfo.detrending_coeffs + ['norm']) or (param in['t0'] and priorinfo.allow_ttv):
                 param = param + '_t{}_f{}_e{}:'.format(int(tidx),int(fidx), int(eidx))
-            elif param in priorinfo.limb_dark_coeffs and priorinfo.ld_fit_method in ['independent', 'coupled']:
+            elif param in priorinfo.limb_dark_coeffs and priorinfo.ld_fit_method in ['independent', 'coupled','custom']:
                 # All the LD coeffs are fitted separately and will write out
                 param = param +'_{}:\t'.format(int(fidx))
             else:

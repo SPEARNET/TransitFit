@@ -98,11 +98,11 @@ class ParamArray:
     def add_gaussian_fit_param(self, mean, stdev, telescope_idx=None,
                                filter_idx=None, epoch_idx=None,
                                negative_allowed=True,
-                               clipped_gaussian=False):
+                               clipped_gaussian=False, custom_ldcs=False):
         '''
         Adds a gaussian sampled fitting parameter
         '''
-        self.set_value(_GaussianParam(mean, stdev, negative_allowed, clipped_gaussian),
+        self.set_value(_GaussianParam(mean, stdev, negative_allowed, clipped_gaussian, custom_ldcs),
                        telescope_idx, filter_idx, epoch_idx)
 
     def from_unit_interval(self, u, telescope_idx=None, filter_idx=None,
