@@ -1,0 +1,3 @@
+This folder "exoctk" has been extracted from open source Python package exoctk, the Exoplanet Characterization Toolkit (Bourque et al, 2021). (https://github.com/ExoCTK/exoctk)
+
+A few changes have been made mainly to utils.download_exoctk_data, throughputs.Throughput, and modelgrid.ModelGrid.customize in order to suit our needs. Some file checks have been removed/changed from utils.py and throughputs.py.

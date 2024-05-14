@@ -153,6 +153,7 @@ class Retriever:
         error_scaling=False,
         error_scaling_limits=None,
         ldtk_uncertainty_multiplier=1.,
+        ld_fit_method='independent',
     ):
 
         ###################
@@ -209,6 +210,9 @@ class Retriever:
             self.filters = read_filter_info(self._filter_input, filter_delimiter)
         else:
             self.filters = parse_filter_list(self._filter_input, filter_delimiter)
+        if ld_fit_method == 'exoctk':
+            from .exoctk_handler import change_priors
+            self._prior_input=change_priors(self._filter_input,self.filters,host_T,host_logg, host_z, n_ld_samples,ldtk_uncertainty_multiplier,priors)
 
         # Load in the full LightCurve data and detrending index array
         self.all_lightcurves, self.detrending_index_array = read_input_file(
@@ -219,9 +223,10 @@ class Retriever:
             print("Normalising lightcurves...")
             #normalise_limits=[0.95,1.05]
             for i in np.ndindex(self.all_lightcurves.shape):
-                scale=np.median(self.all_lightcurves[i].flux)
-                self.all_lightcurves[i].flux = self.all_lightcurves[i].flux/scale
-                self.all_lightcurves[i].errors = self.all_lightcurves[i].errors/scale
+                if self.all_lightcurves[i] is not None:
+                    scale=np.median(self.all_lightcurves[i].flux)
+                    self.all_lightcurves[i].flux = self.all_lightcurves[i].flux/scale
+                    self.all_lightcurves[i].errors = self.all_lightcurves[i].errors/scale
         
         self.error_scaling = error_scaling
         if error_scaling:
@@ -1256,7 +1261,7 @@ class Retriever:
             if ld_fit_method.lower() == "independent":
                 priors.fit_limb_darkening(ld_fit_method)
             elif ld_fit_method.lower() == "custom":
-                priors.fit_custom_limb_darkening(self._prior_input)
+                priors.fit_custom_limb_darkening(self._prior_input, self.ldtk_uncertainty_multiplier)
             elif ld_fit_method.lower() in ["coupled", "single"]:
                 if self._filter_input is None:
                     raise ValueError(

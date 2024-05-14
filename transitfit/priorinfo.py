@@ -615,7 +615,7 @@ class PriorInfo:
                 ldtk_uncertainty_multiplier,
             )
 
-    def fit_custom_limb_darkening(self, priors_file):
+    def fit_custom_limb_darkening(self, priors_file, ldtk_uncertainty_multiplier=1):
         """
         Initialises fitting of limb darkening parameters, either independently
         or coupled across wavebands.
@@ -677,7 +677,7 @@ class PriorInfo:
                     self.add_gaussian_fit_param(
                         name,
                         ldc_vals["Input_A"].iloc[ldc],
-                        ldc_vals["Input_B"].iloc[ldc],
+                        ldc_vals["Input_B"].iloc[ldc]*ldtk_uncertainty_multiplier,
                         filter_idx=i,
                     )
             else:

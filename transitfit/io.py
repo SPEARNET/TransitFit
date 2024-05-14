@@ -327,6 +327,7 @@ def _read_data_csv(path, usecols=None):
 
     '''
     # Read in with pandas
+    #breakpoint()
     data = pd.read_csv(path, usecols=usecols)
 
     # Extract the arrays

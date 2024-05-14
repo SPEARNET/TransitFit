@@ -200,8 +200,8 @@ class LimbDarkeningHandler:
 
         if model  == 'quadratic':
             u_err = []
-            u_err.append(np.sqrt(((q[1] * q_err[0])**2)/q[0] + 4 * q[0] * q_err[1]**2))
-            u_err.append(np.sqrt((((1- 2 * q[1]) * q_err[0])**2)/(4 * q[0]) + 4 * q[0] * q_err[1] ** 2))
+            u_err.append(np.sqrt((((q[1] * q_err[0])**2)/q[0]) + (4 * q[0] * (q_err[1]**2))))
+            u_err.append(np.sqrt((((1- (2 * q[1])) * q_err[0])**2)/(4 * q[0]) + (4 * q[0] * (q_err[1] ** 2))))
 
             return u, u_err
 
@@ -252,7 +252,7 @@ class LimbDarkeningHandler:
         if model == 'quadratic':
             q_err = []
             q_err.append(2*(u[0]+u[1])*np.sqrt(u_err[0]**2 + u_err[1]**2))
-            q_err.append((1/(2*(u[0]+u[1])**2))*np.sqrt((u[0]*u_err[1])**2 + (u[1]*u_err[0])**2))
+            q_err.append((1/(2*((u[0]+u[1])**2)))*np.sqrt((u[0]*u_err[1])**2 + (u[1]*u_err[0])**2))
             #q_err.append(np.sqrt(np.power(u[1]*u_err[0]/(2*(u[0]+u[1])**2),2)+np.power(u[0]*u_err[1]/(2*(u[0]+u[1])**2),2)))
 
             #q_err.append(np.sqrt(((u[1] * u_err[0])**2)/u[0] + 4 * u[0] * u_err[1]**2))

@@ -118,6 +118,7 @@ def run_retrieval(data_files, priors, filter_info=None,
               mode, it it strongly recommended to set values for the
               Kipping q parameters using the priors file.
             -```'custom'``` : The user can provide priors for limb darkening
+            -```'exoctk'``` : LDCs are calculated using exoctk model. Which is then used as priors for limb darkening.
         Default is `'independent'`
 
     fitting_mode : {``'auto'``, ``'all'``, ``'2_stage'``, ``'folded'``, ``'batched'``}, optional
@@ -346,7 +347,11 @@ def run_retrieval(data_files, priors, filter_info=None,
                           filter_delimiter, detrending_limits, normalise, 
                           normalise_limits,detrend,median_normalisation,
                           error_scaling, error_scaling_limits, 
-                          ldtk_uncertainty_multiplier)
+                          ldtk_uncertainty_multiplier,ld_fit_method)
+
+    # This part has been handled by the Retriever
+    if ld_fit_method=='exoctk':
+        ld_fit_method='custom'
 
     # Run the retrieval!
     results = retriever.run_retrieval(ld_fit_method, fitting_mode,
