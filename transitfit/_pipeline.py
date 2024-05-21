@@ -119,6 +119,7 @@ def run_retrieval(data_files, priors, filter_info=None,
               Kipping q parameters using the priors file.
             -```'custom'``` : The user can provide priors for limb darkening
             -```'exoctk'``` : LDCs are calculated using exoctk model. Which is then used as priors for limb darkening. If using this mode, it is recommended to set the number of ldtk_samples parameter to be around 10, as this step is time consuming.
+            -```'exotik'``` : LDCs are calculated using exotik model. Which is then used as priors for limb darkening.
         Default is `'independent'`
 
     fitting_mode : {``'auto'``, ``'all'``, ``'2_stage'``, ``'folded'``, ``'batched'``}, optional
@@ -350,7 +351,7 @@ def run_retrieval(data_files, priors, filter_info=None,
                           ldtk_uncertainty_multiplier,ld_fit_method)
 
     # This part has been handled by the Retriever
-    if ld_fit_method=='exoctk':
+    if ld_fit_method in ['exoctk','exotik']:
         ld_fit_method='custom'
 
     # Run the retrieval!

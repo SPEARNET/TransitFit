@@ -3,6 +3,7 @@ from scipy.special import erf, erfinv
 from collections.abc import Iterable
 import pandas as pd
 from exotic_ld import StellarLimbDarkening
+from pathlib import Path
 
 # Path to folder containing kurucz and Sensitivity_files folders
 ld_data_path = '/home/a/Documents/GitHub/exotic'
@@ -81,7 +82,6 @@ class LDC:
         
 
 def change_priors(_filter_input,filters,host_T,host_logg, host_z, n_ld_samples,ldtk_uncertainty_multiplier,priors):
-    from pathlib import Path
     _path = Path(_filter_input)
     _path=_path.parent.absolute()
     dfp=pd.read_csv(priors)
