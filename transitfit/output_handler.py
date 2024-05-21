@@ -1055,7 +1055,7 @@ class OutputHandler:
             titles+=[_title]
 
         fig = corner.corner(samples, labels=labels, titles=titles,
-                       show_titles=True, title_fmt=None, title_kwargs={"fontsize": 12})
+                       show_titles=True, title_fmt=None, title_kwargs={"fontsize": 12},quiet=True,)
         corner.overplot_lines(fig, best, color='green')
 
         # Add in the best value plots
