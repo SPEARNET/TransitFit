@@ -4,7 +4,7 @@ from collections.abc import Iterable
 import pandas as pd
 from exotic_ld import StellarLimbDarkening
 
-
+# Path to folder containing kurucz and Sensitivity_files folders
 ld_data_path = '/home/a/Documents/GitHub/exotic'
 
 def get_average(results):

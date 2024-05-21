@@ -225,6 +225,7 @@ def change_priors_take_extremes(_filter_input,filters,host_T,host_logg, host_z, 
     _path = Path(_filter_input)
     _path=_path.parent.absolute()
     dfp=pd.read_csv(priors)
+    dfp = dfp[~dfp['Parameter'].isin(['u0', 'u1', 'q0', 'q1'])]
 
     for i,fil in enumerate(filters):
         df = pd.DataFrame({'Column1': fil[0]/1000, 'Column2': fil[1]})

@@ -43,7 +43,7 @@ setuptools.setup(
     python_requires='>=3.6',
     install_requires=['numpy','batman-package', 'dynesty',  'matplotlib',
                       'pandas', 'ldtk>=1.5.0', 'corner', 
-                      'semantic_version', 'scipy', 'statsmodels'],
+                      'semantic_version', 'scipy', 'statsmodels','exotic-ld'],
     zip_safe=False,
     package_data={'transitfit' : ['../filters/*.csv']}
 )
