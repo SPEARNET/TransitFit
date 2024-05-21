@@ -160,6 +160,11 @@ def parse_priors_list(priors_list, n_telescopes, n_filters,
     for row in priors_list:
         # First check the key and correct if possible
         row[0] = validate_variable_key(row[0])
+      
+        if row[0]=='ecc' and np.isnan(row[2]):
+            row[2] = 0.0
+        if row[0]=='w' and np.isnan(row[2]):
+            row[2] = 90.0
 
         # Now add to the priors_dict
         if row[0] in ['rp']:
