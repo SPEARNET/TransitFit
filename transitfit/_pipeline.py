@@ -118,7 +118,7 @@ def run_retrieval(data_files, priors, filter_info=None,
               mode, it it strongly recommended to set values for the
               Kipping q parameters using the priors file.
             -```'custom'``` : The user can provide priors for limb darkening
-            -```'exoctk'``` : LDCs are calculated using exoctk model. Which is then used as priors for limb darkening.
+            -```'exoctk'``` : LDCs are calculated using exoctk model. Which is then used as priors for limb darkening. If using this mode, it is recommended to set the number of ldtk_samples parameter to be around 10, as this step is time consuming.
         Default is `'independent'`
 
     fitting_mode : {``'auto'``, ``'all'``, ``'2_stage'``, ``'folded'``, ``'batched'``}, optional
@@ -267,7 +267,7 @@ def run_retrieval(data_files, priors, filter_info=None,
     ldtk_samples : int, optional
         Controls the number of samples taken by PyLDTk when calculating LDCs
         when using ``'coupled'`` or ``'single'`` modes for limb darkening
-        fitting. Default is ``20000``
+        fitting. Default is ``20000``. When using 'exoctk' mode, set this to 10. 
 
     do_ld_mc : bool, optional
         If ``True``, will use MCMC sampling to more accurately estimate the

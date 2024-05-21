@@ -689,8 +689,16 @@ class OutputHandler:
                     eidx == None
                 else:
                     eidx = int(eidx)
-
-                best = float(best)
+                if best == '-':
+                    if param=='ecc':
+                        best=0.0
+                    elif param=='w':
+                        best=90.0
+                try:
+                    best = float(best)
+                except:
+                    print(os.path.join(output_folder, summary_file))
+                    print(param, tidx, fidx, eidx, best, err)
                 if err == '-':
                     err = None
                 else:
@@ -1055,7 +1063,7 @@ class OutputHandler:
             titles+=[_title]
 
         fig = corner.corner(samples, labels=labels, titles=titles,
-                       show_titles=True, title_fmt=None, title_kwargs={"fontsize": 12})
+                       show_titles=True, title_fmt=None, title_kwargs={"fontsize": 12},quiet=True,)
         corner.overplot_lines(fig, best, color='green')
 
         # Add in the best value plots

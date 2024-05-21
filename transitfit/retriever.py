@@ -211,8 +211,9 @@ class Retriever:
         else:
             self.filters = parse_filter_list(self._filter_input, filter_delimiter)
         if ld_fit_method == 'exoctk':
-            from .exoctk_handler import change_priors
-            self._prior_input=change_priors(self._filter_input,self.filters,host_T,host_logg, host_z, n_ld_samples,ldtk_uncertainty_multiplier,priors)
+            from .exoctk_handler import change_priors_take_extremes
+            #from .exotik_handler import change_priors
+            self._prior_input=change_priors_take_extremes(self._filter_input,self.filters,host_T,host_logg, host_z, n_ld_samples,ldtk_uncertainty_multiplier,priors)
 
         # Load in the full LightCurve data and detrending index array
         self.all_lightcurves, self.detrending_index_array = read_input_file(
