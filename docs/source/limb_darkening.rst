@@ -72,3 +72,14 @@ LDC Fitting modes
         c_{i, f} = u_i \times \frac{\langle c_{i, f}\rangle}{\langle u_{i}\rangle}
 
     where :math:`u_i` is the sampled value of the :math:`i`-th LDC in the actively fitted filter, and :math:`\langle c_{i, f}\rangle` and :math:`\langle u_{i}\rangle` are the maximum likelihood values initially suggested by LDTk.
+
+In cases when the wavelength or the stellar parameters are not in the range supported by LDTk, we have the following options: 
+
+* ``'custom'``
+    The user can provide priors for limb darkening coefficients in the priors file. This should be provided for u0 and u1 parameters or q0 and q1 parameters. Currently this supports only quadratic model. 
+
+* ``'exotic'``
+    TransitFit can also generate LDC priors from exotic package (Grant and Wakeford 2022). 
+
+* ``'exoctk'``
+    TransitFit can also generate LDC priors from exoctk package, the Exoplanet Characterization Toolkit (Bourque et al, 2021). 
