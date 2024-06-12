@@ -7,6 +7,8 @@ import numpy as np
 from ldtk import LDPSetCreator, BoxcarFilter, TabulatedFilter
 import os
 from collections.abc import Iterable
+from tenacity import retry, wait_fixed, stop_after_attempt, retry_if_exception_type, stop_after_delay
+
 
 _implemented_ld_models = ['linear', 'quadratic', 'nonlinear', 'power2', 'squareroot']
 
@@ -80,10 +82,18 @@ class LDTKHandler:
         if cache_path is not None:
             os.makedirs(cache_path, exist_ok=True)
         #print('Making LD parameter set creator.')
-        #print('This may take some time as we may need to download files...')
-        set_creator = LDPSetCreator(teff=host_T, logg=host_logg, z=host_z,
-                                    filters=ldtk_filters, cache=cache_path,
-                                    dataset='visir-lowres')
+        print('This may take some time as we may need to download files...')
+        print('If this does not work, please try running the code again without coupled mode.')
+
+        @retry(stop=(stop_after_delay(180) | stop_after_attempt(3)))
+        def download_files():
+            set_creator = LDPSetCreator(teff=host_T, logg=host_logg, z=host_z,
+                                        filters=ldtk_filters, cache=cache_path,
+                                        dataset='visir-lowres')
+            print('Downloading complete.')
+            return set_creator
+        
+        set_creator = download_files()
 
         # Get the LD profiles from the set creator
         #print('Obtaining LD profiles')

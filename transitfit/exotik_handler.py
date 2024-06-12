@@ -4,9 +4,12 @@ from collections.abc import Iterable
 import pandas as pd
 from exotic_ld import StellarLimbDarkening
 from pathlib import Path
+import transitfit
+import os
 
+transitfit_path=os.path.dirname(transitfit.__file__)
 # Path to folder containing kurucz and Sensitivity_files folders
-ld_data_path = '/home/a/Documents/GitHub/exotic'
+ld_data_path = transitfit_path[:-10]+'exotic_files/' #'exotik_files'
 
 def get_average(results):
     u0,u0_err,u1,u1_err=results#ldc_calc.get_ld()
@@ -101,3 +104,47 @@ def change_priors(_filter_input,filters,host_T,host_logg, host_z, n_ld_samples,l
     Path(_priors).unlink(missing_ok=True)
     dfp.to_csv(_priors,index=None)
     return _priors
+
+
+def download_files():
+    import wget
+    from pathlib import Path
+    import shutil
+
+    path_to_store_files=ld_data_path
+
+    sensitivity_link='https://zenodo.org/records/7874921/files/Sensitivity_files.zip?download=1'
+    kurucz_link='https://zenodo.org/records/7874921/files/kurucz.zip?download=1'
+    mps='https://zenodo.org/records/7874921/files/mps1.zip?download=1'
+    mps2='https://zenodo.org/records/7874921/files/mps2.zip?download=1'
+    stagger='https://zenodo.org/records/7874921/files/stagger.zip?download=1'
+
+    # if you want to download more files, add the links and names to the lists below
+    links=[sensitivity_link, kurucz_link]#, mps, mps2, stagger]
+    names=['Sensitivity_files', 'kurucz']#, 'mps1', 'mps2', 'stagger']
+
+    if path_to_store_files[-1]!='/':
+        path_to_store_files+='/'
+
+    print('Downloading files to '+path_to_store_files)
+    for link,name in zip(links,names):
+        if Path(path_to_store_files+name).exists():
+            print(name+' files already exist')
+            continue
+
+        filepath=wget.download(link,out=path_to_store_files)
+
+        parent_path = str(Path(filepath).resolve().parent)
+        filename = Path(filepath).name
+
+        if name=='kurucz':
+            shutil.unpack_archive(filepath, parent_path+'/', 'zip')
+        else:
+            shutil.unpack_archive(filepath, parent_path+'/'+filename[:-4], 'zip')
+        
+        print('Downloaded and extracted '+name+' files')
+
+        file_path = Path(filepath)
+        file_path.unlink()
+
+    print('All files downloaded and extracted')
