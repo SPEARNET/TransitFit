@@ -112,6 +112,8 @@ class OutputHandler:
                 except TypeError:
                     d_new=[d[i],self.best_model['t0'][i][0], self.best_model['P'][i][0]]
                 #flux, flux_err = lc.detrend_flux(d[i], self.best_model['norm'][i][0], force_normalise=True)
+                if not isinstance(self.best_model['norm'][i][0], (int,float)) and not self.full_prior.normalise:
+                    self.best_model['norm'][i][0]=1.0
                 flux, flux_err = lc.detrend_flux(d_new, self.best_model['norm'][i][0], force_normalise=True)
 
                 # Get phase
@@ -388,7 +390,7 @@ class OutputHandler:
                     self._plot_samples(ri, priors[i], f'batch_{i}_samples.png', sample_folder)
                 except Exception as e:
                     print(e)
-        best_vals, combined_results = self.get_best_vals(results_dicts, fit_ld)
+        best_vals, combined_results = self.get_best_vals(results_dicts, fit_ld=fit_ld)
 
         print(f'Saving summary results to {os.path.join(output_folder, summary_file)}')
         self._save_results_dict(best_vals, os.path.join(output_folder, summary_file), False)
@@ -465,7 +467,7 @@ class OutputHandler:
                         results_dict[param_name][i].append(result_entry)
         return results_dict
 
-    def get_best_vals(self, results_dicts, priors, fit_ld=True, return_combined=True):
+    def get_best_vals(self, results_dicts, fit_ld=True, return_combined=True):
         '''
         Gets the best values for a set of runs from the given results dicts
 
@@ -842,7 +844,7 @@ class OutputHandler:
             Array containing the global set of light curves
         '''
         if self.best_model is None:
-            raise ValueError('best-fit model is not intiialised.')
+            raise ValueError('best-fit model is not initialised.')
 
         if self.batman_initialised:
             return
@@ -850,6 +852,7 @@ class OutputHandler:
         # Check that best model initialisation worked
         failed_key = []
         failed_index = []
+
         for key in self.best_model.keys():
             for i, lc in np.ndenumerate(all_lightcurves):
                 if self.best_model[key][i] is None and lc is not None:
@@ -862,7 +865,31 @@ class OutputHandler:
                             # has failed.
                             failed_key.append(key)
                             failed_index.append(i)
-                    #elif key[0] == 'norm':
+                    elif key[0] =='u':
+                        # If the key is a limb darkening coeff, then we need to
+                        # check that the corresponding q value is not None
+                        q_key = 'q{}'.format(key[-1])
+                        if self.best_model[q_key][i] is None:
+                            failed_key.append(key)
+                            failed_index.append(i)
+                        else:
+                            u_keys=['u{}'.format(qX[-1]) for qX in self.full_prior.limb_dark_coeffs]
+
+                            # Convert the LDC q values to u:
+                            q_vals=[self.best_model[qX][i][0] for qX in self.full_prior.limb_dark_coeffs]
+                            u_vals = self.full_prior.ld_handler.convert_qtou(*q_vals)
+                            
+                            for uX, u_val in zip(u_keys, u_vals):
+                                self.best_model[uX][i]=[u_val,0]
+
+
+
+                    elif key=='norm':
+                        if self.full_prior.normalise:
+                            failed_key.append(key)
+                            failed_index.append(i)
+                        else:
+                            self.best_model[key][i]=[1.0,0]
                     else:
                         failed_key.append(key)
                         failed_index.append(i)
