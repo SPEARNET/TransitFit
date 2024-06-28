@@ -1087,7 +1087,7 @@ class OutputHandler:
             _title = _title.replace('param', labels[i])
             _title = _title.replace('best', f"{result.best[i]:.6f}")
             _title = _title.replace('_l', f"{_l:.6f}")
-            _title = _title.replace('_u', f"{_u:.6f}")
+            _title = _title.replace('_u', f"+{_u:.6f}")
             titles+=[_title]
             lower_error=np.concatenate((lower_error,[_l]))
             upper_error=np.concatenate((upper_error,[_u]))
@@ -1121,6 +1121,9 @@ class OutputHandler:
 
         fig.savefig(os.path.join(folder, fname), bbox_inches='tight', dpi=100)
         plt.close()
+
+        results_with_asymmetric_errors = pd.DataFrame({'Parameter':prior.fitting_params[:, 0],'Best':best,'Lower_error':lower_error,'Upper_error':upper_error})
+        results_with_asymmetric_errors.to_csv(os.path.join(folder, fname.replace('.png','_results_with_asymmetric_errors.csv')),index=False)
 
     def _plot_data(self, phase, flux, flux_err, model_phase, model_curve,
                        residuals, fname, title=None, folder='./plots',
