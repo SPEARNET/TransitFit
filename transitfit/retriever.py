@@ -1241,6 +1241,7 @@ class Retriever:
                 lightcurve_subset,
                 suppress_warnings,
                 self.error_scaling,
+                ld_fit_method,
             )
         else:
             # Reading in from a list

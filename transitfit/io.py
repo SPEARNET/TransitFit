@@ -20,7 +20,9 @@ def read_priors_file(path, n_telescopes, n_filters, n_epochs,
                      limb_dark='quadratic', filter_indices=None, folded=False,
                      folded_P=None, folded_t0=None, host_radius=None,
                      allow_ttv=None, lightcurves=None, suppress_warnings=False, 
-                     error_scaling=False):
+                     error_scaling=False,
+                     ld_fit_method='independent',
+                     ):
     '''
     If given a csv file containing priors, will produce a PriorInfo object
     based off the given values
@@ -87,12 +89,12 @@ def read_priors_file(path, n_telescopes, n_filters, n_epochs,
     '''
     priors_list = pd.read_csv(path)
     # Parameters u0 and u1 are used only when fitting limb darkening coefficients from user defined custom priors. 
-    priors_list = priors_list.drop(priors_list[priors_list['Parameter'].isin(['u0', 'u1','q0', 'q1'])].index)
+    if ld_fit_method!='off':
+        priors_list = priors_list.drop(priors_list[priors_list['Parameter'].isin(['u0', 'u1','q0', 'q1'])].index)
     priors_list = priors_list.values
 
     #priors_list = pd.read_csv(path).values
     
-
     return parse_priors_list(priors_list, n_telescopes, n_filters, n_epochs, limb_dark, filter_indices, folded, folded_P, folded_t0, host_radius, allow_ttv, lightcurves, suppress_warnings, error_scaling)
 
 def parse_priors_list(priors_list, n_telescopes, n_filters,
@@ -332,7 +334,6 @@ def _read_data_csv(path, usecols=None):
 
     '''
     # Read in with pandas
-    #breakpoint()
     data = pd.read_csv(path, usecols=usecols)
 
     # Extract the arrays

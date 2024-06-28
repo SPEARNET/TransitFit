@@ -242,7 +242,6 @@ class LimbDarkeningHandler:
         '''
         #if model is None:
         model = self.default_model
-        #breakpoint()
         q = list(self.convert_utoq(*u, ))
 
         if model == 'linear':
