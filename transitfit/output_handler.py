@@ -1080,6 +1080,8 @@ class OutputHandler:
         labels= prior.get_latex_friendly_labels()
 
         titles=[] 
+        lower_error=np.empty(0)
+        upper_error=np.empty(0)
         for i in range(ndim):
             _l,_u = get_quantiles_on_best_val(samples[:,i], weights, best[i])
             _title = r'param = best$_{_l}^{_u}$'
@@ -1088,10 +1090,14 @@ class OutputHandler:
             _title = _title.replace('_l', f"{_l:.6f}")
             _title = _title.replace('_u', f"{_u:.6f}")
             titles+=[_title]
+            lower_error=np.concatenate((lower_error,[_l]))
+            upper_error=np.concatenate((upper_error,[_u]))
 
         fig = corner.corner(samples, labels=labels, titles=titles,
                        show_titles=True, title_fmt=None, title_kwargs={"fontsize": 12},quiet=True,)
         corner.overplot_lines(fig, best, color='green')
+        corner.overplot_lines(fig, best+lower_error, color='gray',linestyle='--')
+        corner.overplot_lines(fig, best+upper_error, color='gray',linestyle='--')
 
         # Add in the best value plots
         # Extract the axes
