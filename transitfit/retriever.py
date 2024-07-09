@@ -1126,7 +1126,8 @@ class Retriever:
             print("'batched' mode was used to fit TransitFit lightcurves.")
             print("If this was the first run, it is suggested to rerun TransitFit for the model.")
             print("For wavelength independent parameters, use output from this run as priors.")
-
+        elif fitting_mode.lower() == 'all':
+            os.system(f"cp {plot_folder}/unfolded/batch_0_samples_results_with_asymmetric_errors.csv {output_folder}/results_with_asymmetric_errors.csv")
     ##########################################################
     #            PRIOR MANIPULATION                          #
     ##########################################################

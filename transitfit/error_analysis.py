@@ -277,8 +277,7 @@ class ErrorLimits:
             q, q_low, q_up = [], [], []
             for p in params:
                 param_ = p
-                errs = 
-                get_quantiles_on_best_val_unweighted(
+                errs = get_quantiles_on_best_val_unweighted(
                     samples=self.values[param_], best_val=self.values[param_+'_best'])#get_quantiles_on_best_val(
                     #samples=self.values[param_], weights=self.values[param_+'_weights'], best_val=self.values[param_+'_best'])
                 # (model.mean)
