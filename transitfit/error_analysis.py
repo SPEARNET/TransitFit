@@ -149,7 +149,7 @@ class ErrorLimits:
         self.OUTPUT_PARAMETERS_FOLDER = output_parmeters
 
         # This will be the name of the output file
-        self.MODIFIED_SUMMARY_OUTPUT = 'modified_output_asymmetric_errors.csv'
+        self.MODIFIED_SUMMARY_OUTPUT = 'results_with_asymmetric_errors.csv'
 
         # Summary_output file
         self.summary_output = glob.glob(
