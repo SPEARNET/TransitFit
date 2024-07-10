@@ -24,7 +24,7 @@ from ._utils import weighted_avg_and_std, host_radii_to_AU, get_normalised_weigh
 from ._paramarray import ParamArray
 from .lightcurve import LightCurve
 from .error_analysis import ErrorLimits, get_quantiles_on_best_val_unweighted
-
+from .new_error_analysis import get_asymmetric_errors
 
 class OutputHandler:
     '''
@@ -327,8 +327,9 @@ class OutputHandler:
         self._save_results_dict(self.best_model, os.path.join(output_folder, 'Complete_results.csv'), False)
 
         try:
-            el = ErrorLimits(output_folder)
-            el.get_errors()
+            #el = ErrorLimits(output_folder)
+            #el.get_errors()
+            get_asymmetric_errors(output_folder)
         except:
             print("An exception occurred while trying to get asymmetric errors!")
 
