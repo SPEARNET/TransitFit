@@ -27,6 +27,7 @@ from .io import (
 )
 from ._likelihood import LikelihoodCalculator
 from ._utils import  weighted_avg_and_std
+from .new_error_analysis import get_asymmetric_errors_fitting_mode_all
 
 # Parameters and if they are global, filter-specific or lightcurve-specific
 global_params = ["P", "ecc", "a", "inc", "w"]
@@ -1127,7 +1128,8 @@ class Retriever:
             print("If this was the first run, it is suggested to rerun TransitFit for the model.")
             print("For wavelength independent parameters, use output from this run as priors.")
         elif fitting_mode.lower() == 'all':
-            os.system(f"cp {plot_folder}/unfolded/batch_0_samples_results_with_asymmetric_errors.csv {output_folder}/results_with_asymmetric_errors.csv")
+            get_asymmetric_errors_fitting_mode_all(output_folder,plot_folder)
+            #os.system(f"cp {plot_folder}/unfolded/batch_0_samples_results_with_asymmetric_errors.csv {output_folder}/results_with_asymmetric_errors.csv")
     ##########################################################
     #            PRIOR MANIPULATION                          #
     ##########################################################
