@@ -171,20 +171,28 @@ def get_asymmetric_errors(folder):
 
             for p, par in enumerate(param_list):
                 if par in more_params:
-                    print(par)
+                    #print(par)
                     values=make_dict(values, par, samples[:, p])
             
     lower_errors=[]
     upper_errors=[]
     params_to_save=[]
+    telescopes=[]
+    filters=[]
+    epochs=[]
     for p in params_to_add:
         samples=values[p]
         best=values[p+'_best']
         le,ue=get_quantiles_on_best_val_unweighted(samples, best)
         lower_errors.append(le)
         upper_errors.append(ue)
-        params_to_save.append(p.replace('_',','))
+        _p=p.split('_')
 
-    data = {'Parameter,Telescope,Filter,Epoch': params_to_save, 'Best': params_best, 'Lower_error': lower_errors, 'Upper_error': upper_errors}
+        params_to_save.append("_".join(_p[0:-3]))
+        telescopes.append(_p[-3])
+        filters.append(_p[-2])
+        epochs.append(_p[-1])
+
+    data = {'Parameter': params_to_save,'Telescope':telescopes,'Filter':filters,'Epoch':epochs, 'Best': params_best, 'Lower_error': lower_errors, 'Upper_error': upper_errors}
     df = pd.DataFrame(data)
-    df.to_csv(folder+'results_with_asymmetric_errors0.csv', index=False)
+    df.to_csv(folder+'results_with_asymmetric_errors.csv', index=False)
