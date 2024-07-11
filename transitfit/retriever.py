@@ -461,6 +461,8 @@ class Retriever:
 
         try:
             sampler.run_nested(maxiter=maxiter, maxcall=maxcall, dlogz=dlogz)
+        except KeyboardInterrupt:
+            print("Keyboard interrupt received. Stopping sampler.")
         except BaseException as e:
             # Added for testing
             print(f"Exception ({type(e)}) encountered:")
