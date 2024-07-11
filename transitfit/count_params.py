@@ -18,7 +18,7 @@ def get_ldtk_params(model):
 
 def count_number_lcs(
     inputdata,
-    other_params=["a", "inc", "rp"],
+    other_params=["a", "inc", "rp", "t0"],
     limb_darkening_model="quadratic",
     ld_fit_method="coupled",
     normalise=True,
@@ -27,8 +27,24 @@ def count_number_lcs(
     max_batch_parameters=35,
     detrending_list=[["nth order", 2]],
 ):
-    total_params = 3  # "P", "P_prime", "P_dprime"
-    multipliers = {"P": 1, "P_prime": 1, "P_dprime": 1}
+    """Helps in optimising the number of lightcurves to be fitted in a batch alongwith the set of parameters to be fitted.
+
+    Args:
+        inputdata (str): path to the input data file.
+        other_params (list, optional): Parameters to be fitted apart from P, P'. Defaults to ["a", "inc", "rp", "t0"].
+        limb_darkening_model (str, optional): Defaults to "quadratic".
+        ld_fit_method (str, optional): Defaults to "coupled".
+        normalise (bool, optional): Defaults to True.
+        detrend (bool, optional): Defaults to True.
+        error_scaling (bool, optional): Defaults to True.
+        max_batch_parameters (int, optional): Defaults to 35.
+        detrending_list (list, optional): Defaults to [["nth order", 2]].
+
+    Returns:
+        int: number of lightcurves to be used in the batch.
+    """
+    total_params = 2  # "P", "P_prime"
+    multipliers = {"P": 1, "P_prime": 1,}
     if "a" in other_params:
         total_params += 1
         multipliers["a"] = 1
@@ -36,6 +52,10 @@ def count_number_lcs(
     if "inc" in other_params:
         total_params += 1
         multipliers["inc"] = 1
+    
+    if "t0" in other_params:
+        total_params += 1
+        multipliers["t0"] = 1
 
     if normalise:
         if not "norm" in other_params:
@@ -138,6 +158,3 @@ def count_number_lcs(
     else:
         print(int(number_lcs))
         return int(number_lcs)
-    
-
-     

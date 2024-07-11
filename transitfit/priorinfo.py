@@ -66,6 +66,7 @@ def setup_priors(
     allow_ttv=False,
     lightcurves=None,
     error_scaling=False,
+    fit_ttv_taylor=False,
 ):
     """
     Factory function to initialise a PriorInfo object
@@ -97,22 +98,14 @@ def setup_priors(
         "norm": 1,
     }  # ,'escale':0}
 
+    if fit_ttv_taylor:
+        default_dict = {'P':P, 'p_prime':0,'p_dprime':0,'t0':t0, 'a':a, 'rp':rp, 'inc':inc, 'ecc':ecc,
+                    'w':w, 'q0':q0, 'q1':q1, 'q2':q2, 'q3':q3, 'norm':1}
     if error_scaling:
-        default_dict = {
-            "P": P,
-            "t0": t0,
-            "a": a,
-            "rp": rp,
-            "inc": inc,
-            "ecc": ecc,
-            "w": w,
-            "q0": q0,
-            "q1": q1,
-            "q2": q2,
-            "q3": q3,
-            "norm": 1,
-            "escale": 0,
-        }
+        default_dict["escale"] = 0
+    
+
+    
 
     return PriorInfo(
         default_dict,
@@ -122,6 +115,8 @@ def setup_priors(
         n_epochs,
         allow_ttv,
         lightcurves,
+        error_scaling,
+        fit_ttv_taylor,
     )
 
 
@@ -158,6 +153,8 @@ class PriorInfo:
         n_epochs,
         allow_ttv=False,
         lightcurves=None,
+        error_scaling=False,
+        fit_ttv_taylor=False,
     ):
         # Store the basics
         self.limb_dark = limb_dark
@@ -179,13 +176,18 @@ class PriorInfo:
         # Initialse normalisation (set to off)
         self.normalise = False
 
-        self.error_scaling = False
+        self.error_scaling = error_scaling
+        self.fit_ttv_taylor = fit_ttv_taylor
 
         #####################
         # Set up the priors #
         #####################
         # Dictionary containing info on all the priors
         self.priors = {}
+
+        if self.fit_ttv_taylor:
+            _global_params.append('p_prime')
+            _global_params.append('p_dprime')
 
         for key in default_dict.keys():
             # print('Param:', key)
@@ -267,7 +269,7 @@ class PriorInfo:
         Adds a new parameter which will be fitted uniformly in the range given
         by low_lim and high_lim
         """
-        if name in ["a", "P", "rp", "inc", "ecc", "w"]:
+        if name in ["a", "P", "rp", "inc", "ecc", "w","p_prime","p_dprime"]:
             negative_allowed = False
         else:
             negative_allowed = True

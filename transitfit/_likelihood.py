@@ -6,6 +6,7 @@ import numpy as np
 import batman
 from copy import deepcopy
 from ._paramarray import ParamArray
+from .ttv_fitting import taylor_series
 #from collections.abc import Iterable
 
 
@@ -22,8 +23,11 @@ class LikelihoodCalculator:
         then the entry should be `None`.
     priors : PriorInfo
         The PriorInfo object for retrieval
+    fit_ttv_taylor: bool, optional
+        If True, will fit the TTVs using a Taylor expansion of the ephemeris
+        equation. Default is False.
     '''
-    def __init__(self, lightcurves, priors):
+    def __init__(self, lightcurves, priors,fit_ttv_taylor=False,):
         lightcurves = deepcopy(lightcurves)
         self.lightcurves = np.array(lightcurves, dtype=object)
 
@@ -34,6 +38,7 @@ class LikelihoodCalculator:
         self.num_light_curves = len(np.where(self.lightcurves.flatten() != None)[0])
 
         self.priors = priors
+        self.fit_ttv_taylor=fit_ttv_taylor
 
         # We need to make a separate TransitParams and TransitModels for each
         # light curve.
@@ -90,6 +95,60 @@ class LikelihoodCalculator:
                 )
             else:
                 return ln_likelihood
+    
+    def find_period_ttv(self,params):
+        times_last=np.empty(0)
+        #times_first=np.empty(0)
+        for i in np.ndindex(self.lightcurves.shape):
+
+            if self.lightcurves[i] is not None:
+                times_last=np.append(times_last,self.lightcurves[i].times[-1])
+                #times_first=np.append(times_first,self.lightcurves[i].times[0])
+
+        
+        self.P=params['P'][i]
+        self.p_prime=params['p_prime'][i]
+        #self.p_dprime=params['p_dprime'][i]
+        self.t0=params['t0'][i]
+
+        # We calculate t01 which is time of conjucntion for the first lightcurve. helpful when the given t0 is not the first time of conjuction.
+        self.t0_first=np.min(times_last)-((np.min(times_last)-self.t0)%self.P)
+        
+        self.times_last=times_last-self.t0_first
+        #self.initial_guess_epochs=np.array(self.times_last//self.P,dtype=int)
+        #self.initial_guess_epochs-=self.initial_guess_epochs[0]
+        #self.initial_guess_epochs+=1
+
+        period_all=np.empty(0)
+        t0_all = np.empty(0)
+
+        t_start=0
+        condition=True
+        while condition:
+
+            period_all=np.append(period_all,taylor_series(self.P, self.p_prime, 0, t_start))
+            t0_all=np.append(t0_all,t_start+self.t0_first)
+            t_start+=period_all[-1]
+            
+            if t0_all[-1]>self.times_last[-1]+self.t0_first:
+                condition=False
+        #breakpoint()
+        #if len(t0_all)<max(self.initial_guess_epochs):
+        #   return -1e9
+
+        period_all=np.append(period_all,taylor_series(self.P, self.p_prime, 0, t_start))
+        period_all=(period_all[:-1]+period_all[1:])/2
+
+        for i in np.ndindex(self.lightcurves.shape):
+
+            if self.lightcurves[i] is not None:
+                find_id=t0_all-self.lightcurves[i].times[-1]
+                id=np.argmax(find_id[find_id<=0])
+
+                params['P'][i]=period_all[id]
+                params['t0'][i]=t0_all[id]
+        
+        return params
 
     def find_likelihood(self, params):
         '''
@@ -98,6 +157,9 @@ class LikelihoodCalculator:
         all_chi2 = []
         n_data_points = 0
         total_chi2 = 0
+
+        if self.fit_ttv_taylor:
+            params = self.find_period_ttv(params)
 
         for i in np.ndindex(self.lightcurves.shape):
             tidx, fidx, eidx = i
