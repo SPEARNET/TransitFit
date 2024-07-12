@@ -62,8 +62,24 @@ def get_quantiles_on_best_val_unweighted(samples, best_val):
     Returns:
         tuple: the lower and upper error on the best value.
     """
+    errors=-np.abs(np.percentile(samples[samples<best_val], 31.73)-best_val), np.abs(np.percentile(samples[samples>best_val], 68.27)-best_val)
+    
+    return errors
 
-    return -np.abs(np.percentile(samples[samples<best_val], 31.73)-best_val), np.abs(np.percentile(samples[samples>best_val], 68.27)-best_val)
+def get_std_on_best_val_unweighted(samples, best_val):
+    """Generates lower and upper limit of errors for the best values.
+    Gets value of samples such that they encompass 68.27% of the samples on both sides of the best value.
+
+    Args:
+        samples (array): the sampled values for the parameter from dynesty
+        best_val (float): best value among the samples
+
+    Returns:
+        tuple: the lower and upper error on the best value.
+    """
+    _e=np.power(np.sum(np.power(samples-best_val,2))/len(samples),.5)
+    errors=(_e,_e)
+    return errors 
 
 def HST_detrending():
     pass
@@ -179,10 +195,15 @@ def get_asymmetric_errors(folder):
     telescopes=[]
     filters=[]
     epochs=[]
+    issue_with_priors=[]
     for p in params_to_add:
         samples=values[p]
         best=values[p+'_best']
-        le,ue=get_quantiles_on_best_val_unweighted(samples, best)
+        try:
+            le,ue=get_quantiles_on_best_val_unweighted(samples, best)
+        except:
+            issue_with_priors.append(p.replace('_',', '))
+            le,ue=get_std_on_best_val_unweighted(samples, best)
         lower_errors.append(le)
         upper_errors.append(ue)
         _p=p.split('_')
@@ -191,6 +212,11 @@ def get_asymmetric_errors(folder):
         telescopes.append(_p[-3])
         filters.append(_p[-2])
         epochs.append(_p[-1])
+
+    if len(issue_with_priors)>0:
+        print("The priors for following parameters might be too strict. Consider expanding the priors for them: \nParameter, Telescope, Filter, Epoch")
+        for i in issue_with_priors:
+            print(i)
 
     data = {'Parameter': params_to_save,'Telescope':telescopes,'Filter':filters,'Epoch':epochs, 'Best': params_best, 'Lower_error': lower_errors, 'Upper_error': upper_errors}
     df = pd.DataFrame(data)

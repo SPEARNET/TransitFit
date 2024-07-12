@@ -24,7 +24,9 @@ from ._utils import weighted_avg_and_std, host_radii_to_AU, get_normalised_weigh
 from ._paramarray import ParamArray
 from .lightcurve import LightCurve
 from .error_analysis import ErrorLimits, get_quantiles_on_best_val_unweighted
-from .new_error_analysis import get_asymmetric_errors
+from .new_error_analysis import get_asymmetric_errors, get_std_on_best_val_unweighted
+from .ttv_fitting import taylor_series
+
 
 class OutputHandler:
     '''
@@ -38,7 +40,7 @@ class OutputHandler:
         The prior for the complete light curve dataset.
 
     '''
-    def __init__(self, lightcurves, full_prior, host_r=None):
+    def __init__(self, lightcurves, full_prior, host_r=None,fit_ttv_taylor=False, error_scaling=False,ldtk_uncertainty_multiplier=1.):
 
         self.all_lightcurves = lightcurves
 
@@ -52,11 +54,64 @@ class OutputHandler:
 
         self.best_model = None
         self.batman_initialised = False
+        self.fit_ttv_taylor=fit_ttv_taylor
 
         self.global_params = []
         for i, param in enumerate(self.full_prior.fitting_params):
             if np.all(param[1:] == None):
                 self.global_params.append(param[0])
+
+    def find_period_ttv(self, all_lightcurves):
+        times_last=np.empty(0)
+        #times_first=np.empty(0)
+        for i in np.ndindex(all_lightcurves.shape):
+
+            if all_lightcurves[i] is not None:
+                times_last=np.append(times_last,all_lightcurves[i].times[-1])
+                #times_first=np.append(times_first,self.lightcurves[i].times[0])
+
+        
+        self.P=self.best_model['P'][i][0]
+        self.p_prime=self.best_model['p_prime'][i][0]
+        #self.p_dprime=self.best_model['p_dprime'][i]
+        self.t0=self.best_model['t0'][i][0]
+
+        # We calculate t01 which is time of conjucntion for the first lightcurve. helpful when the given t0 is not the first time of conjuction.
+        self.t0_first=np.min(times_last)-((np.min(times_last)-self.t0)%self.P)
+        
+        self.times_last=times_last-self.t0_first
+        #self.initial_guess_epochs=np.array(self.times_last//self.P,dtype=int)
+        #self.initial_guess_epochs-=self.initial_guess_epochs[0]
+        #self.initial_guess_epochs+=1
+
+        period_all=np.empty(0)
+        t0_all = np.empty(0)
+
+        t_start=0
+        condition=True
+        while condition:
+
+            period_all=np.append(period_all,taylor_series(self.P, self.p_prime, 0, t_start))
+            t0_all=np.append(t0_all,t_start+self.t0_first)
+            t_start+=period_all[-1]
+            
+            if t0_all[-1]>self.times_last[-1]+self.t0_first:
+                condition=False
+        #breakpoint()
+        #if len(t0_all)<max(self.initial_guess_epochs):
+        #   return -1e9
+
+        period_all=np.append(period_all,taylor_series(self.P, self.p_prime, 0, t_start))
+        period_all=(period_all[:-1]+period_all[1:])/2
+
+        for i in np.ndindex(all_lightcurves.shape):
+
+            if all_lightcurves[i] is not None:
+                find_id=t0_all-all_lightcurves[i].times[-1]
+                id=np.argmax(find_id[find_id<=0])
+
+                self.best_model['P'][i]=(period_all[id],self.best_model['P'][i][1])
+                self.best_model['t0'][i]=(t0_all[id],self.best_model['t0'][i][1])
 
     def save_final_light_curves(self, all_lightcurves, global_prior,
                                 folder='./final_light_curves', folded=False):
@@ -73,6 +128,9 @@ class OutputHandler:
         '''
         print('Saving final light curves')
         # Set up the model
+        if self.fit_ttv_taylor:
+            self.find_period_ttv(all_lightcurves)
+
         self._initialise_batman(all_lightcurves)
 
         # Put all the detrending coeffs in usable format
@@ -678,17 +736,17 @@ class OutputHandler:
                 param = param[:-3]
             if not err == '-' or mode in ['all', 'batched']:
                 if tidx == '-':
-                    tidx == None
+                    tidx = None
                 else:
                     tidx = int(tidx)
 
                 if fidx == '-':
-                    fidx == None
+                    fidx = None
                 else:
                     fidx = int(fidx)
 
                 if eidx == '-':
-                    eidx == None
+                    eidx = None
                 else:
                     eidx = int(eidx)
                 if best == '-':
@@ -735,17 +793,17 @@ class OutputHandler:
                         param = param[:-3]
 
                     if tidx == '-':
-                        tidx == None
+                        tidx = None
                     else:
                         tidx = int(tidx)
 
                     if fidx == '-':
-                        fidx == None
+                        fidx = None
                     else:
                         fidx = int(fidx)
 
                     if eidx == '-':
-                        eidx == None
+                        eidx = None
                     else:
                         eidx = int(eidx)
 
@@ -789,7 +847,7 @@ class OutputHandler:
         objects
         '''
         result_dict = self.get_results_dict(results, priors, lightcurves)
-        result_dict, _ = self.get_best_vals([result_dict], priors.fit_ld)
+        result_dict, _ = self.get_best_vals([result_dict], fit_ld=priors.fit_ld)
         base_fname = ''
         if filter is not None:
             base_fname += f'filter_{filter}_'
@@ -1083,7 +1141,10 @@ class OutputHandler:
         lower_error=np.empty(0)
         upper_error=np.empty(0)
         for i in range(ndim):
-            _l,_u = get_quantiles_on_best_val_unweighted(samples[:,i], best[i])#get_quantiles_on_best_val(samples[:,i], weights, best[i])
+            try:
+                _l,_u = get_quantiles_on_best_val_unweighted(samples[:,i], best[i])#get_quantiles_on_best_val(samples[:,i], weights, best[i])
+            except IndexError:
+                _l,_u = get_std_on_best_val_unweighted(samples[:,i], weights, best[i])
             _title = r'param = best$_{_l}^{_u}$'
             _title = _title.replace('param', labels[i])
             _title = _title.replace('best', f"{result.best[i]:.6f}")

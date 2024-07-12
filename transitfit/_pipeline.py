@@ -6,9 +6,12 @@ priors!
 from .io import read_priors_file, read_input_file, read_filter_info, parse_data_path_list, read_data_path_array, parse_priors_list, parse_filter_list
 from .retriever import Retriever
 from ._utils import check_batches
+from .count_params import count_number_lcs
 
 import numpy as np
 import os
+import pandas as pd
+from pathlib import Path
 
 
 def run_retrieval(data_files, priors, filter_info=None,
@@ -32,7 +35,8 @@ def run_retrieval(data_files, priors, filter_info=None,
                   cadence=2, binned_color='red', walks=100, slices=10, 
                   n_procs=1, check_batchsizes=False, median_normalisation=False,
                   error_scaling=False, error_scaling_limits=None, 
-                  ldtk_uncertainty_multiplier=1.):
+                  ldtk_uncertainty_multiplier=1.,
+                  fit_ttv_taylor=False):
     '''
     Runs a full retrieval of posteriors using nested sampling on a transit
     light curve or a set of transit light curves. For more guidance on the use
@@ -322,6 +326,10 @@ def run_retrieval(data_files, priors, filter_info=None,
         that defines how strongly the LD profile (or the prior created
         from it) constrains the final analysis (that is, how much we
         trust the stellar atmosphere models used to create the profiles.)
+    
+    fit_ttv_taylor: bool, optional
+        If True, will fit the TTVs using a Taylor expansion of the ephemeris
+        equation. Default is False.
 
     Returns
     -------
@@ -340,6 +348,53 @@ def run_retrieval(data_files, priors, filter_info=None,
     n_filters = lightcurves.shape[1]
     n_epochs = lightcurves.shape[2]
 
+    if fit_ttv_taylor:
+        df_priors=pd.read_csv(priors)
+
+        other_params=df_priors.loc[df_priors["Distribution"] != "fixed"]["Parameter"].to_list()
+        if "P" in other_params:
+            other_params.remove("P")
+        
+        number_lcs=count_number_lcs(
+            inputdata=data_files,
+            other_params=other_params,
+            limb_darkening_model=limb_darkening_model,
+            ld_fit_method=ld_fit_method,
+            normalise=normalise,
+            detrend=detrend,
+            error_scaling=error_scaling,
+            max_batch_parameters=max_batch_parameters,
+            detrending_list=detrending_list,
+        )
+        df_inputs = pd.read_csv(data_files)
+        if number_lcs<len(df_inputs):
+            df_inputs = df_inputs.sort_values("Epochs", ignore_index=True)
+            indices = np.unique(np.linspace(0, len(df_inputs) - 1, number_lcs, dtype=int))
+            df_inputs = df_inputs.iloc[indices]
+            Path(results_output_folder).mkdir(parents=True, exist_ok=True)
+            df_inputs.to_csv(results_output_folder+'/lightcurves_for_ttv.csv',index=False)
+            df_inputs=df_inputs.reset_index(drop=True)
+            df_inputs['Epochs']=np.arange(0,len(df_inputs))
+            
+            
+        data_files=df_inputs
+        info = data_files.values
+
+        data_path_array, detrending_index_array = parse_data_path_list(info)
+
+        lightcurves = read_data_path_array(data_path_array, skiprows=0)
+
+        lightcurves, detrending_index_array = lightcurves, detrending_index_array
+
+        # Load in the data and work out number of telescopes, filters, and epochs
+
+        n_telescopes = lightcurves.shape[0]
+        n_filters = lightcurves.shape[1]
+        n_epochs = lightcurves.shape[2]
+
+        fitting_mode = "all"
+        allow_ttv=False # This mode fits t0 for each epoch individually.
+
     # Set up the Retriever
     retriever = Retriever(data_files, priors, n_telescopes, n_filters, n_epochs,
                           filter_info, detrending_list, limb_darkening_model,
@@ -348,7 +403,7 @@ def run_retrieval(data_files, priors, filter_info=None,
                           filter_delimiter, detrending_limits, normalise, 
                           normalise_limits,detrend,median_normalisation,
                           error_scaling, error_scaling_limits, 
-                          ldtk_uncertainty_multiplier,ld_fit_method)
+                          ldtk_uncertainty_multiplier,ld_fit_method, fit_ttv_taylor)
 
     # This part has been handled by the Retriever
     if ld_fit_method in ['exoctk','exotik']:

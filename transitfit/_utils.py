@@ -40,6 +40,10 @@ def validate_variable_key(key):
         return 'q2'
     if key.lower() in ['q3']:
         return 'q3'
+    if key.lower() in ['p_prime']:
+        return 'p_prime'
+    if key.lower() in ['p_dprime']:
+        return 'p_dprime'
 
     raise KeyError('Unable to recognise variable name {}'.format(key))
 
@@ -179,9 +183,12 @@ def host_radii_to_AU(a, R, a_err=0, R_err=0, calc_err=False):
     if not calc_err:
         return (a * R * R_sun)/AU
 
-    err = np.sqrt ((R * R_sun * a_err )**2 + (a * R_err * R_sun)**2)
+    try:
+        err = np.sqrt ((R * R_sun * a_err )**2 + (a * R_err * R_sun)**2)/AU
+    except TypeError:
+        err='-'
 
-    return (a * R * R_sun)/AU, err/AU
+    return (a * R * R_sun)/AU, err
 
 
 def estimate_t14(Rp, Rs, a, P):

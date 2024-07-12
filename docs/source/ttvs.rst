@@ -11,3 +11,20 @@ When ``allow_TTV=True``, ``TransitFit`` cannot fit for the period value, and thi
 1. Run ``TransitFit`` with ``allow_TTV=False``.
 
 2. Run ``TransitFit`` with ``allow_TTV=True``, fixing the period at the best fit value from the first step.
+
+
+=================
+Fitting for P_dot
+=================
+
+To fit for the rate of change of the period, :math:`\dot{P}`, set ``fit_taylor_ttv=True`` in the arguments of :meth:`~transitfit._pipeline.run_retrieval`. This method also allows fitting for t0 simultaneously. 
+
+This method is explicitly slow when the range of priors is not well constrained. We recommend that you set the priors for :math:`\dot{P}` to be as tight as possible. An initial guess for priors can be calculated using :
+
+:meth:`~transitfit.find_ttv_priors.get_priors(input_data, P_prior, t0_prior)`.
+
+This assumes that all the lightcurves include the transit midpoint, and there are reasonable priors for Period and t0.
+
+=================
+
+While fitting for P_dot, it is necessary that all the light-curves are fitted in a single batch. To ensure this transitfit selects evenly spaced out lightcurves from the input file, to ensure that the number of parameters to be fitted is within the allowed maximum parameters in a single batch.
