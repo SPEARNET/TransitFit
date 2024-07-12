@@ -62,8 +62,13 @@ def get_quantiles_on_best_val_unweighted(samples, best_val):
     Returns:
         tuple: the lower and upper error on the best value.
     """
+    try:
+        errors=-np.abs(np.percentile(samples[samples<best_val], 31.73)-best_val), np.abs(np.percentile(samples[samples>best_val], 68.27)-best_val)
+    except IndexError:
 
-    return -np.abs(np.percentile(samples[samples<best_val], 31.73)-best_val), np.abs(np.percentile(samples[samples>best_val], 68.27)-best_val)
+        _e=np.power(np.sum(np.power(samples-best_val,2))/len(samples),.5)
+        errors=(_e,_e)
+    return errors 
 
 def HST_detrending():
     pass
