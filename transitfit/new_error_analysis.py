@@ -25,9 +25,9 @@ def check_index(index):
     """Checks if index is number or None. Returns '-' if None."""
     if index=='-':
         return index
-    if index.isnumeric():
-        return str(index)
-    if index is None or np.isnan(index):
+    try:
+        return str(int(index))
+    except:
         return '-'
     return str(index)
 
