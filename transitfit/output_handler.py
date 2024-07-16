@@ -24,7 +24,7 @@ from ._utils import weighted_avg_and_std, host_radii_to_AU, get_normalised_weigh
 from ._paramarray import ParamArray
 from .lightcurve import LightCurve
 from .error_analysis import ErrorLimits, get_quantiles_on_best_val_unweighted
-from .new_error_analysis import get_asymmetric_errors, get_std_on_best_val_unweighted
+from .new_error_analysis import get_asymmetric_errors_updated, get_std_on_best_val_unweighted
 from .ttv_fitting import taylor_series
 
 
@@ -387,7 +387,7 @@ class OutputHandler:
         try:
             #el = ErrorLimits(output_folder)
             #el.get_errors()
-            get_asymmetric_errors(output_folder)
+            get_asymmetric_errors_updated(output_folder)
         except:
             print("An exception occurred while trying to get asymmetric errors!")
 
@@ -866,6 +866,22 @@ class OutputHandler:
 
         # Quicksave full results object
         output_path = os.path.join(base_output_path, 'quicksaves', result_pickle_fname)
+
+        # Adding attributes for easier handling of errors
+        params_with_global_index=[]
+        for i, param_info in enumerate(priors.fitting_params):
+            param_name, batch_tidx, batch_fidx, batch_eidx = param_info
+
+            batch_idx = (batch_tidx, batch_fidx, batch_eidx)
+            # GET INDICES
+            # The indices here are for a particular batch. We want global
+            # values so pull them out of the LightCurves
+            global_tidx, global_fidx, global_eidx = self._batch_to_full_idx(batch_idx, param_name, lightcurves, priors.allow_ttv)
+            params_with_global_index.append([param_name, global_tidx, global_fidx, global_eidx])
+        results.fitting_params=params_with_global_index
+
+        # results.tel_filt_epoch=
+
         print(f'Quicksaving full results to {output_path}')
         with open(output_path, 'wb') as f:
             try:
@@ -1144,7 +1160,7 @@ class OutputHandler:
             try:
                 _l,_u = get_quantiles_on_best_val_unweighted(samples[:,i], best[i])#get_quantiles_on_best_val(samples[:,i], weights, best[i])
             except IndexError:
-                _l,_u = get_std_on_best_val_unweighted(samples[:,i], weights, best[i])
+                _l,_u = get_std_on_best_val_unweighted(samples[:,i], best[i])
             _title = r'param = best$_{_l}^{_u}$'
             _title = _title.replace('param', labels[i])
             _title = _title.replace('best', f"{result.best[i]:.6f}")
