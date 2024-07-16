@@ -415,9 +415,8 @@ class Retriever:
 
         #######################################################################
         #######################################################################
-
         # Now we can set up and run the sampler!
-        sampler = NestedSampler(
+        """sampler = NestedSampler(
             lnlike,
             prior_transform,
             n_dims,
@@ -426,17 +425,18 @@ class Retriever:
             nlive=nlive,
             walks=walks,
             slices=slices,
-        )
-        """
+            pool=Pool(20),
+            queue_size=20
+        )"""
         # Modification to include multiprocessing in single batches. 
-        # If the n_procs is less than batches, then each batch gets additional 
-        # processors to .
+        # If there is only 1 batch, it provides the additional cores to dynesty.
         if self.dynesty_procs>1:
+            from pathos.multiprocessing import ProcessingPool as Pool
             print(f"Running dynesty on {self.dynesty_procs} cores for this batch.")
-            dynesty_pool = mp.Pool(self.dynesty_procs)
+            dynesty_pool = Pool(self.dynesty_procs)
             sampler = NestedSampler(
-                likelihood_calc.find_likelihood_parallel_processed,
-                priors._convert_unit_cube,
+                lnlike,
+                prior_transform,
                 n_dims,
                 bound=bound,
                 sample=sample,  # update_interval=float(n_dims),
@@ -457,7 +457,7 @@ class Retriever:
                 nlive=nlive,
                 walks=walks,
                 slices=slices,
-            )"""
+            )
 
         try:
             sampler.run_nested(maxiter=maxiter, maxcall=maxcall, dlogz=dlogz)
@@ -537,11 +537,13 @@ class Retriever:
         bound="multi",
         walks=100,
         slices=10,
+        n_procs=1,
     ):
         """
         Runs full retrieval with no folding/batching etc. Just a straight
         forward dynesty run.
         """
+        self.dynesty_procs= np.amin([n_procs,mp.cpu_count()])
         priors, lightcurves = self._get_priors_and_curves(
             self.all_lightcurves,
             ld_fit_method,
@@ -686,8 +688,8 @@ class Retriever:
         # If the number of batches is smaller than the number of cores
         # to be used, it provides the additional cores to dynesty for 
         # multiprocessing
-        if len(batches)<n_procs:
-            self.dynesty_procs = n_procs//len(batches)
+        if len(batches)==1:
+            self.dynesty_procs = n_procs
         else:
             self.dynesty_procs = 1
         n_procs = np.amin([n_procs,len(batches),mp.cpu_count()])
@@ -1043,6 +1045,7 @@ class Retriever:
                 bound,
                 walks,
                 slices,
+                n_procs,
             )
 
         elif fitting_mode.lower() == "batched":

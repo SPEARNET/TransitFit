@@ -866,6 +866,22 @@ class OutputHandler:
 
         # Quicksave full results object
         output_path = os.path.join(base_output_path, 'quicksaves', result_pickle_fname)
+
+        # Adding attributes for easier handling of errors
+        params_with_global_index=[]
+        for i, param_info in enumerate(priors.fitting_params):
+            param_name, batch_tidx, batch_fidx, batch_eidx = param_info
+
+            batch_idx = (batch_tidx, batch_fidx, batch_eidx)
+            # GET INDICES
+            # The indices here are for a particular batch. We want global
+            # values so pull them out of the LightCurves
+            global_tidx, global_fidx, global_eidx = self._batch_to_full_idx(batch_idx, param_name, lightcurves, priors.allow_ttv)
+            params_with_global_index.append([param_name, global_tidx, global_fidx, global_eidx])
+        results.fitting_params=params_with_global_index
+
+        # results.tel_filt_epoch=
+
         print(f'Quicksaving full results to {output_path}')
         with open(output_path, 'wb') as f:
             try:

@@ -65,6 +65,133 @@ def get_quantiles_on_best_val_unweighted(samples, best_val):
     errors=-np.abs(np.percentile(samples[samples<best_val], 31.73)-best_val), np.abs(np.percentile(samples[samples>best_val], 68.27)-best_val)
     
     return errors
+def get_std_on_best_val_unweighted(samples, best_val):
+    """Generates lower and upper limit of errors for the best values.
+    Gets value of samples such that they encompass 68.27% of the samples on both sides of the best value.
+
+    Args:
+        samples (array): the sampled values for the parameter from dynesty
+        best_val (float): best value among the samples
+
+    Returns:
+        tuple: the lower and upper error on the best value.
+    """
+    _e=np.power(np.sum(np.power(samples-best_val,2))/len(samples),.5)
+    errors=(_e,_e)
+    return errors 
+
+def HST_detrending():
+    pass
+
+
+def check_files_for_samples(pathname_to_check, params_to_add, values):
+    files=glob.glob(pathname_to_check)
+
+    if len(files)>0:
+        print("filter files detected")
+        more_params=params_to_add
+        for file in files:
+
+            with open(file, 'rb') as handle:
+                results = pickle.load(handle)
+                samples = results.samples
+                #weights=np.exp(results.logwt - results.logwt.max())/np.sum(np.exp(results.logwt - results.logwt.max()))
+                order_of_params=results.fitting_params
+            
+            for o, order in enumerate(order_of_params):
+                if order[0] in ['a','rp']:
+                    order[0]+='/r*'
+                par=order[0]+'_'+check_index(order[1])+'_'+check_index(order[2])+'_'+check_index(order[3])
+                if par in more_params:
+                    values=make_dict(values, par, samples[:, o])
+    return values
+
+def get_asymmetric_errors_updated(folder):
+    if folder[-1]!='/':
+        folder+='/'
+    values = {}
+    complete_results=glob.glob(folder+"Complete_results.csv")
+    if len(complete_results)==0:
+        raise RuntimeError('Please check the pathname, it may not be correct.')
+    else:
+        complete_results=pd.read_csv(complete_results[0])
+        
+    params_to_add,params_best=get_params(complete_results)
+
+    for i, param in enumerate(params_to_add):
+        values[param+'_best']=params_best[i]
+
+    check_quicksaves=glob.glob(folder+"quicksaves/*results.pkl")
+
+    if len(check_quicksaves)>0:
+        
+        for file in check_quicksaves:
+
+            with open(file, 'rb') as handle:
+                results = pickle.load(handle)
+                samples = results.samples
+                #weights=np.exp(results.logwt - results.logwt.max())/np.sum(np.exp(results.logwt - results.logwt.max()))
+                order_of_params=results.fitting_params
+            
+            for o, order in enumerate(order_of_params):
+                if order[0] in ['a','rp']:
+                    order[0]+='/r*'
+                par=order[0]+'_'+check_index(order[1])+'_'+check_index(order[2])+'_'+check_index(order[3])
+                values=make_dict(values, par, samples[:, o])
+
+    # Check folded mode:
+    folded_files=glob.glob(folder+"*_parameters/quicksaves/*results.pkl")
+
+    if len(folded_files)>0:
+        print("filter files detected")
+        more_params=params_to_add-values.keys()
+        for file in folded_files:
+
+            with open(file, 'rb') as handle:
+                results = pickle.load(handle)
+                samples = results.samples
+                #weights=np.exp(results.logwt - results.logwt.max())/np.sum(np.exp(results.logwt - results.logwt.max()))
+                order_of_params=results.fitting_params
+            
+            for o, order in enumerate(order_of_params):
+                if order[0] in ['a','rp']:
+                    order[0]+='/r*'
+                par=order[0]+'_'+check_index(order[1])+'_'+check_index(order[2])+'_'+check_index(order[3])
+                if par in more_params:
+                    values=make_dict(values, par, samples[:, o])
+            
+    lower_errors=[]
+    upper_errors=[]
+    params_to_save=[]
+    telescopes=[]
+    filters=[]
+    epochs=[]
+    issue_with_priors=[]
+    for p in params_to_add:
+        samples=values[p]
+        best=values[p+'_best']
+        try:
+            le,ue=get_quantiles_on_best_val_unweighted(samples, best)
+        except:
+            issue_with_priors.append(p.replace('_',', '))
+            le,ue=get_std_on_best_val_unweighted(samples, best)
+        lower_errors.append(le)
+        upper_errors.append(ue)
+        _p=p.split('_')
+
+        params_to_save.append("_".join(_p[0:-3]))
+        telescopes.append(_p[-3])
+        filters.append(_p[-2])
+        epochs.append(_p[-1])
+
+    if len(issue_with_priors)>0:
+        print("The priors for following parameters might be too strict. Consider expanding the priors for them: \nParameter, Telescope, Filter, Epoch")
+        for i in issue_with_priors:
+            print(i)
+
+    data = {'Parameter': params_to_save,'Telescope':telescopes,'Filter':filters,'Epoch':epochs, 'Best': params_best, 'Lower_error': lower_errors, 'Upper_error': upper_errors}
+    df = pd.DataFrame(data)
+    df.to_csv(folder+'results_with_asymmetric_errors.csv', index=False)
 
 def get_std_on_best_val_unweighted(samples, best_val):
     """Generates lower and upper limit of errors for the best values.
