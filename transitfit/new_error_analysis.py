@@ -83,6 +83,23 @@ def get_std_on_best_val_unweighted(samples, best_val):
 def HST_detrending():
     pass
 
+def get_std_on_best_val_unweighted(samples, best_val):
+    """Generates lower and upper limit of errors for the best values.
+    Gets value of samples such that they encompass 68.27% of the samples on both sides of the best value.
+
+    Args:
+        samples (array): the sampled values for the parameter from dynesty
+        best_val (float): best value among the samples
+
+    Returns:
+        tuple: the lower and upper error on the best value.
+    """
+    _e=np.power(np.sum(np.power(samples-best_val,2))/len(samples),.5)
+    errors=(_e,_e)
+    return errors 
+
+def HST_detrending():
+    pass
 
 def check_files_for_samples(pathname_to_check, params_to_add, values):
     files=glob.glob(pathname_to_check)
@@ -101,7 +118,12 @@ def check_files_for_samples(pathname_to_check, params_to_add, values):
             for o, order in enumerate(order_of_params):
                 if order[0] in ['a','rp']:
                     order[0]+='/r*'
-                par=order[0]+'_'+check_index(order[1])+'_'+check_index(order[2])+'_'+check_index(order[3])
+                if order[0] in ['t0']: # t0 is only epoch dependent
+                    par=order[0]+'_-_-_'+check_index(order[3])
+                elif 'q' in order[0] or 'rp' in order[0]: # rp and LDC are only filter dependent  
+                    par=order[0]+'_-_'+check_index(order[2])+'_-'
+                else:
+                    par=order[0]+'_'+check_index(order[1])+'_'+check_index(order[2])+'_'+check_index(order[3])
                 if par in more_params:
                     values=make_dict(values, par, samples[:, o])
     return values
@@ -136,7 +158,12 @@ def get_asymmetric_errors_updated(folder):
             for o, order in enumerate(order_of_params):
                 if order[0] in ['a','rp']:
                     order[0]+='/r*'
-                par=order[0]+'_'+check_index(order[1])+'_'+check_index(order[2])+'_'+check_index(order[3])
+                if order[0] in ['t0']: # t0 is only epoch dependent
+                    par=order[0]+'_-_-_'+check_index(order[3])
+                elif 'q' in order[0] or 'rp' in order[0]: # rp and LDC are only filter dependent  
+                    par=order[0]+'_-_'+check_index(order[2])+'_-'
+                else:
+                    par=order[0]+'_'+check_index(order[1])+'_'+check_index(order[2])+'_'+check_index(order[3])
                 values=make_dict(values, par, samples[:, o])
 
     # Check folded mode:
@@ -156,7 +183,12 @@ def get_asymmetric_errors_updated(folder):
             for o, order in enumerate(order_of_params):
                 if order[0] in ['a','rp']:
                     order[0]+='/r*'
-                par=order[0]+'_'+check_index(order[1])+'_'+check_index(order[2])+'_'+check_index(order[3])
+                if order[0] in ['t0']: # t0 is only epoch dependent
+                    par=order[0]+'_-_-_'+check_index(order[3])
+                elif 'q' in order[0] or 'rp' in order[0]: # rp and LDC are only filter dependent  
+                    par=order[0]+'_-_'+check_index(order[2])+'_-'
+                else:
+                    par=order[0]+'_'+check_index(order[1])+'_'+check_index(order[2])+'_'+check_index(order[3])
                 if par in more_params:
                     values=make_dict(values, par, samples[:, o])
             
@@ -193,23 +225,6 @@ def get_asymmetric_errors_updated(folder):
     df = pd.DataFrame(data)
     df.to_csv(folder+'results_with_asymmetric_errors.csv', index=False)
 
-def get_std_on_best_val_unweighted(samples, best_val):
-    """Generates lower and upper limit of errors for the best values.
-    Gets value of samples such that they encompass 68.27% of the samples on both sides of the best value.
-
-    Args:
-        samples (array): the sampled values for the parameter from dynesty
-        best_val (float): best value among the samples
-
-    Returns:
-        tuple: the lower and upper error on the best value.
-    """
-    _e=np.power(np.sum(np.power(samples-best_val,2))/len(samples),.5)
-    errors=(_e,_e)
-    return errors 
-
-def HST_detrending():
-    pass
 
 def get_asymmetric_errors(folder):
     if folder[-1]!='/':
@@ -264,7 +279,10 @@ def get_asymmetric_errors(folder):
 
 
                     if param_list[ind] is None:
-                        param_list[ind]=param+'_'+check_index(selected_df['Telescope'].values[i])+'_'+check_index(selected_df['Filter'].values[i])+'_'+check_index(selected_df['Epoch'].values[i])
+                        if param in ['t0']:
+                            param_list[ind]=param+'_-_-_'+check_index(selected_df['Epoch'].values[i])
+                        else:
+                            param_list[ind]=param+'_'+check_index(selected_df['Telescope'].values[i])+'_'+check_index(selected_df['Filter'].values[i])+'_'+check_index(selected_df['Epoch'].values[i])
 
             for p, par in enumerate(param_list):
                 values=make_dict(values, par, samples[:, p])
@@ -309,7 +327,10 @@ def get_asymmetric_errors(folder):
                 for i,ind in enumerate(indices):
                     
                     if param_list[ind] is None:
-                        param_list[ind]=param+'_'+check_index(selected_df['Telescope'].values[i])+'_'+check_index(selected_df['Filter'].values[i])+'_'+check_index(selected_df['Epoch'].values[i])
+                        if param in ['t0']:
+                            param_list[ind]=param+'_-_-_'+check_index(selected_df['Epoch'].values[i])
+                        else:
+                            param_list[ind]=param+'_'+check_index(selected_df['Telescope'].values[i])+'_'+check_index(selected_df['Filter'].values[i])+'_'+check_index(selected_df['Epoch'].values[i])
 
             for p, par in enumerate(param_list):
                 if par in more_params:

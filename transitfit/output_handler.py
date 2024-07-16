@@ -24,7 +24,7 @@ from ._utils import weighted_avg_and_std, host_radii_to_AU, get_normalised_weigh
 from ._paramarray import ParamArray
 from .lightcurve import LightCurve
 from .error_analysis import ErrorLimits, get_quantiles_on_best_val_unweighted
-from .new_error_analysis import get_asymmetric_errors, get_std_on_best_val_unweighted
+from .new_error_analysis import get_asymmetric_errors_updated, get_std_on_best_val_unweighted
 from .ttv_fitting import taylor_series
 
 
@@ -387,7 +387,7 @@ class OutputHandler:
         try:
             #el = ErrorLimits(output_folder)
             #el.get_errors()
-            get_asymmetric_errors(output_folder)
+            get_asymmetric_errors_updated(output_folder)
         except:
             print("An exception occurred while trying to get asymmetric errors!")
 
@@ -1160,7 +1160,7 @@ class OutputHandler:
             try:
                 _l,_u = get_quantiles_on_best_val_unweighted(samples[:,i], best[i])#get_quantiles_on_best_val(samples[:,i], weights, best[i])
             except IndexError:
-                _l,_u = get_std_on_best_val_unweighted(samples[:,i], weights, best[i])
+                _l,_u = get_std_on_best_val_unweighted(samples[:,i], best[i])
             _title = r'param = best$_{_l}^{_u}$'
             _title = _title.replace('param', labels[i])
             _title = _title.replace('best', f"{result.best[i]:.6f}")
