@@ -1398,11 +1398,14 @@ class Retriever:
             # P is fixed
             best_P, best_P_err = combined_results["P"][None, None, None][0, 0], 0
         else:
-            best_P, best_P_err = weighted_avg_and_std(
-                combined_results["P"][None, None, None][:, 0],
-                combined_results["P"][None, None, None][:, -1],
-                single_val=True,
-            )
+            try:
+                best_P, best_P_err = weighted_avg_and_std(
+                    combined_results["P"][None, None, None][:, 0],
+                    combined_results["P"][None, None, None][:, -1],
+                    single_val=True,
+                )
+            except TypeError: #If Period is a fixed value.
+                best_P, best_P_err = combined_results["P"][None, None, None][0, 0], 0
 
         # Get best t0 values, allowing for ttv mode
         best_t0, best_t0_err = np.full(self.n_epochs, None), np.full(

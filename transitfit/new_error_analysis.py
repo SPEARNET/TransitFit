@@ -65,6 +65,7 @@ def get_quantiles_on_best_val_unweighted(samples, best_val):
     errors=-np.abs(np.percentile(samples[samples<best_val], 31.73)-best_val), np.abs(np.percentile(samples[samples>best_val], 68.27)-best_val)
     
     return errors
+
 def get_std_on_best_val_unweighted(samples, best_val):
     """Generates lower and upper limit of errors for the best values.
     Gets value of samples such that they encompass 68.27% of the samples on both sides of the best value.
