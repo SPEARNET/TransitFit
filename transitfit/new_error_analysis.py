@@ -380,31 +380,35 @@ def get_asymmetric_errors_fitting_mode_all(folder,plot_folder):
     df1=pd.read_csv(plot_folder+'unfolded/batch_0_samples_results_with_asymmetric_errors.csv')
     df2=pd.read_csv(folder+'Complete_results.csv')
 
-    params=df1['Parameter'].to_list()
+    try:
+        params=df1['Parameter'].to_list()
 
-    if 'rp' in params:
-        id=params.index('rp')
-        params[id]='rp/r*'
+        if 'rp' in params:
+            id=params.index('rp')
+            params[id]='rp/r*'
 
-    if 'a' in params:
-        id=params.index('a')
-        params[id]='a/r*'
-        
-    telescopes=[None]*len(params)
-    filters=[None]*len(params)
-    epochs=[None]*len(params)
-    param_list=[None]*len(params)
+        if 'a' in params:
+            id=params.index('a')
+            params[id]='a/r*'
+            
+        telescopes=[None]*len(params)
+        filters=[None]*len(params)
+        epochs=[None]*len(params)
+        param_list=[None]*len(params)
 
-    for p, param in enumerate(set(params)):    
-        indices=[x for x, y in enumerate(params) if y == param]
-        selected_df=df2[df2['Parameter']==param]
+        for p, param in enumerate(set(params)):    
+            indices=[x for x, y in enumerate(params) if y == param]
+            selected_df=df2[df2['Parameter']==param]
 
-        for i,ind in enumerate(indices):
-            telescopes[ind]=selected_df['Telescope'].values[i]
-            filters[ind]=selected_df['Filter'].values[i]
-            epochs[ind]=selected_df['Epoch'].values[i]
-            param_list[ind]=param
+            for i,ind in enumerate(indices):
+                telescopes[ind]=selected_df['Telescope'].values[i]
+                filters[ind]=selected_df['Filter'].values[i]
+                epochs[ind]=selected_df['Epoch'].values[i]
+                param_list[ind]=param
 
-    data = {'Parameter': params,'Telescope':telescopes,'Filter':filters,'Epoch':epochs, 'Best': df1['Best'].values, 'Lower_error': df1['Lower_error'].values, 'Upper_error':df1['Upper_error'].values}
-    df = pd.DataFrame(data)
-    df.to_csv(folder+'results_with_asymmetric_errors.csv', index=False)
+        data = {'Parameter': params,'Telescope':telescopes,'Filter':filters,'Epoch':epochs, 'Best': df1['Best'].values, 'Lower_error': df1['Lower_error'].values, 'Upper_error':df1['Upper_error'].values}
+        df = pd.DataFrame(data)
+        df.to_csv(folder+'results_with_asymmetric_errors.csv', index=False)
+    
+    except:
+        df1.to_csv(folder+'results_with_asymmetric_errors.csv', index=False)

@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from transitfit.ttv_fitting import taylor_series
 
-def test_priors(p_prime, p_dprime,initial_guess_epochs, times_first, times_last):
+def test_priors(p_prime, p_dprime,initial_guess_epochs, times_first, times_last,P_prior):
     period_all=np.empty(0)
     t0_all = np.empty(0)
 
@@ -39,12 +39,12 @@ def get_priors(input_data, P_prior, t0_prior):
     p_dprime=0
 
     for i,p_prime in enumerate(test_priors_pprime):
-        if test_priors(p_prime, p_dprime,initial_guess_epochs, times_first, times_last):
+        if test_priors(p_prime, p_dprime,initial_guess_epochs, times_first, times_last,P_prior):
             p_prime_max = test_priors_pprime[max(i-1,0)]
             break
 
     for i,p_prime in enumerate(test_priors_pprime):
-        if test_priors(-p_prime, p_dprime,initial_guess_epochs, times_first, times_last):
+        if test_priors(-p_prime, p_dprime,initial_guess_epochs, times_first, times_last,P_prior):
             p_prime_min = -test_priors_pprime[max(i-1,0)]
             break
 
@@ -54,12 +54,12 @@ def get_priors(input_data, P_prior, t0_prior):
     p_prime=0
 
     for i,p_dprime in enumerate(test_priors_pdprime):
-        if test_priors(p_prime, p_dprime,initial_guess_epochs, times_first, times_last):
+        if test_priors(p_prime, p_dprime,initial_guess_epochs, times_first, times_last,P_prior):
             p_dprime_max = test_priors_pdprime[max(i-1,0)]
             break
 
     for i,p_dprime in enumerate(test_priors_pdprime):
-        if test_priors(p_prime, -p_dprime,initial_guess_epochs, times_first, times_last):
+        if test_priors(p_prime, -p_dprime,initial_guess_epochs, times_first, times_last,P_prior):
             p_dprime_min = -test_priors_pdprime[max(i-1,0)]
             break
 
