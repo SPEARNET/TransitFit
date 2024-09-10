@@ -25,7 +25,7 @@ from ._paramarray import ParamArray
 from .lightcurve import LightCurve
 from .error_analysis import ErrorLimits, get_quantiles_on_best_val_unweighted
 from .new_error_analysis import get_asymmetric_errors_updated, get_std_on_best_val_unweighted
-from .ttv_fitting import taylor_series
+from .ttv_fitting import taylor_series, get_time_duration
 
 
 class OutputHandler:
@@ -60,6 +60,69 @@ class OutputHandler:
         for i, param in enumerate(self.full_prior.fitting_params):
             if np.all(param[1:] == None):
                 self.global_params.append(param[0])
+
+    def find_period_ttv_integration(self, all_lightcurves):
+        times_last=np.empty(0)
+        #times_first=np.empty(0)
+        for i in np.ndindex(all_lightcurves.shape):
+
+            if all_lightcurves[i] is not None:
+                times_last=np.append(times_last,all_lightcurves[i].times[-1])
+                #times_first=np.append(times_first,self.lightcurves[i].times[0])
+
+        
+        self.P=self.best_model['P'][i][0]
+        self.p_prime=self.best_model['p_prime'][i][0]
+        try:
+            self.p_dprime=self.best_model['p_dprime'][i][0]
+        except KeyError:
+            self.p_dprime=0
+        self.t0=self.best_model['t0'][i][0]
+
+        # We calculate t01 which is time of conjucntion for the first lightcurve. helpful when the given t0 is not the first time of conjuction.
+        self.t0_first=np.min(times_last)-((np.min(times_last)-self.t0)%self.P)
+        
+        self.times_last=times_last-self.t0_first
+        #self.initial_guess_epochs=np.array(self.times_last//self.P,dtype=int)
+        #self.initial_guess_epochs-=self.initial_guess_epochs[0]
+        #self.initial_guess_epochs+=1
+
+        period_all=np.array([self.P])
+        t0_all = np.array([self.t0_first])
+
+        t_start=0
+        condition=True
+        while condition:
+            # The time duration between the current and the next epoch
+            tau=get_time_duration(self.p_prime,self.p_dprime,self.P)
+
+            # The period at the next epoch
+            P_new=taylor_series(period_all[-1],self.p_prime,self.p_dprime,tau)
+
+            period_all=np.append(period_all,P_new)
+
+            #period_all=np.append(period_all,taylor_series(self.P, self.p_prime, 0, t_start))
+            t_start+=tau
+            t0_all=np.append(t0_all,t_start+self.t0_first)
+            
+            
+            if t0_all[-1]>self.times_last[-1]+self.t0_first:
+                condition=False
+        #breakpoint()
+        #if len(t0_all)<max(self.initial_guess_epochs):
+        #   return -1e9
+
+        #period_all=np.append(period_all,taylor_series(self.P, self.p_prime, 0, t_start))
+        #period_all=(period_all[:-1]+period_all[1:])/2
+
+        for i in np.ndindex(all_lightcurves.shape):
+
+            if all_lightcurves[i] is not None:
+                find_id=t0_all-all_lightcurves[i].times[-1]
+                id=np.argmax(find_id[find_id<=0])
+
+                self.best_model['P'][i]=(period_all[id],self.best_model['P'][i][1])
+                self.best_model['t0'][i]=(t0_all[id],self.best_model['t0'][i][1])
 
     def find_period_ttv(self, all_lightcurves):
         times_last=np.empty(0)
@@ -129,7 +192,8 @@ class OutputHandler:
         print('Saving final light curves')
         # Set up the model
         if self.fit_ttv_taylor:
-            self.find_period_ttv(all_lightcurves)
+            #self.find_period_ttv(all_lightcurves)
+            self.find_period_ttv_integration(all_lightcurves)
 
         self._initialise_batman(all_lightcurves)
 
@@ -178,6 +242,12 @@ class OutputHandler:
                 phase = lc.get_phases(self.best_model['t0'][i][0], self.best_model['P'][i][0])
 
                 # Get the best fit model depths
+                # Batman considers uniform period. So we need to shift the timestamps accordingly.
+                if self.fit_ttv_taylor:
+                    _time=self.batman_models[i].t
+                    fraction=(_time-self.batman_models[i].t0)/self.best_model['P'][i][0]
+                    shift=fraction*((self.best_model['p_prime'][i][0]/2 - 1) * fraction*_time +self.best_model['p_dprime'][i][0]/6 * (fraction*_time)**2)
+                    self.batman_models[i].t=_time-shift
                 model_curve = self.batman_models[i].light_curve(self.batman_params[i])
 
                 write_data = np.vstack((lc.times, phase, flux, flux_err, model_curve)).T
@@ -262,6 +332,12 @@ class OutputHandler:
                 # Get the best fit model depths - use linspaced times for plot
                 # and the lc times for residuals
                 model_times = np.linspace(lc.times.min(), lc.times.max(), 1000)
+                # Batman considers uniform period. So we need to shift the timestamps accordingly.
+                if self.fit_ttv_taylor:
+                    _time=model_times
+                    fraction=(_time-self.best_model['t0'][i][0])/self.best_model['P'][i][0]
+                    shift=fraction*((self.best_model['p_prime'][i][0]/2 - 1) * fraction*_time +self.best_model['p_dprime'][i][0]/6 * (fraction*_time)**2)
+                    model_times=model_times-shift
                 model = batman.TransitModel(self.batman_params[i], model_times)
                 model_curve = model.light_curve(self.batman_params[i])
                 time_wise_best_curve = self.batman_models[i].light_curve(self.batman_params[i])
@@ -483,6 +559,9 @@ class OutputHandler:
         results_dict = {}
 
         # Loop over all fitting parameters and access the results
+        indices_for_ldc=[]
+        counter_ldc=-1
+        _start_ldc='q0'
         for i, param_info in enumerate(priors.fitting_params):
             param_name, batch_tidx, batch_fidx, batch_eidx = param_info
 
@@ -491,6 +570,8 @@ class OutputHandler:
             # The indices here are for a particular batch. We want global
             # values so pull them out of the LightCurves
             full_idx = self._batch_to_full_idx(batch_idx, param_name, lightcurves, priors.allow_ttv)
+            if param_name=='rp':
+                indices_for_ldc.append(full_idx)
 
             result_entry = [results.best[i], results.median[i], results.lower_err[i], results.upper_err[i], results.uncertainties[i]]
 
@@ -516,7 +597,16 @@ class OutputHandler:
                 results_dict = self._initialise_dict_entry(results_dict, param_name)
                 for i in np.ndindex(priors.priors[param_name].shape):
                     if priors.priors[param_name][i] is not None:
-                        result_entry = [priors.priors[param_name].default_value, None, None, None, None]
+                        if priors.ld_fit_method =='off' and param_name in priors.limb_dark_coeffs:
+                            if param_name != _start_ldc:
+                                counter_ldc=-1
+                                _start_ldc=param_name
+
+                            counter_ldc+=1
+                            result_entry = [priors.priors[param_name].array[i], None, None, None, None]
+                            i=indices_for_ldc[counter_ldc]
+                        else:
+                            result_entry = [priors.priors[param_name].default_value, None, None, None, None]
 
                         if results_dict[param_name][i] is None:
                             # Initialise a list
@@ -951,6 +1041,8 @@ class OutputHandler:
 
                             # Convert the LDC q values to u:
                             q_vals=[self.best_model[qX][i][0] for qX in self.full_prior.limb_dark_coeffs]
+                            if len(np.shape(q_vals))>1 and self.full_prior.ld_fit_method=='off':
+                                q_vals=[a[0] for a in q_vals]
                             u_vals = self.full_prior.ld_handler.convert_qtou(*q_vals)
                             
                             for uX, u_val in zip(u_keys, u_vals):

@@ -96,13 +96,13 @@ def read_priors_file(path, n_telescopes, n_filters, n_epochs,
 
     #priors_list = pd.read_csv(path).values
     
-    return parse_priors_list(priors_list, n_telescopes, n_filters, n_epochs, limb_dark, filter_indices, folded, folded_P, folded_t0, host_radius, allow_ttv, lightcurves, suppress_warnings, error_scaling, fit_ttv_taylor)
+    return parse_priors_list(priors_list, n_telescopes, n_filters, n_epochs, limb_dark, filter_indices, folded, folded_P, folded_t0, host_radius, allow_ttv, lightcurves, suppress_warnings, error_scaling, fit_ttv_taylor,ld_fit_method)
 
 def parse_priors_list(priors_list, n_telescopes, n_filters,
                       n_epochs, ld_model, filter_indices=None, folded=False,
                       folded_P=None, folded_t0=None, host_radius=None,
                       allow_ttv=False, lightcurves=None, suppress_warnings=False,
-                      error_scaling=False,fit_ttv_taylor=False):
+                      error_scaling=False,fit_ttv_taylor=False,ld_fit_method='independent'):
     '''
     Parses a list of priors to produce a PriorInfo with all fitting parameters
     initialised.
@@ -165,7 +165,14 @@ def parse_priors_list(priors_list, n_telescopes, n_filters,
         filter_indices = np.arange(n_filters)
 
     rp_count = 0
+    q_count={
+        "q0":-1,
+        "q1":-1,
+        "q2":-1,
+        "q3":-1,
+            }
     used_filters = []
+    #print(priors_dict)
     for row in priors_list:
         # First check the key and correct if possible
         row[0] = validate_variable_key(row[0])
@@ -183,6 +190,12 @@ def parse_priors_list(priors_list, n_telescopes, n_filters,
                 priors_dict[row[0]] = np.append(row[2:-1], rp_count)
                 rp_count += 1
                 used_filters.append(row[-1])
+        
+        elif ld_fit_method in ['off','custom'] and row[0] in ['q0','q1','q2','q3']:
+            q_count[row[0]]+=1
+            
+            if row[-1] in filter_indices:
+                priors_dict[row[0]]=np.append(row[2:-1],q_count[row[0]])
 
         else:
             if row[0] == 'a' and host_radius is not None:
@@ -191,7 +204,8 @@ def parse_priors_list(priors_list, n_telescopes, n_filters,
                 row[3] = AU_to_host_radii(row[3], host_radius)
 
             priors_dict[row[0]] = row[2:]
-
+    #print(priors_dict)
+    #breakpoint()
     # We  have to convert between the global filter indexing and an
     # internal filter indexing here.
     filter_conversion = {ai : i for i, ai in enumerate(used_filters)}
@@ -227,10 +241,15 @@ def parse_priors_list(priors_list, n_telescopes, n_filters,
                           priors_dict['q2'][0],
                           priors_dict['q3'][0],
                           allow_ttv, lightcurves, error_scaling,fit_ttv_taylor)
-
     ##########################
     # Initialise the fitting #
     ##########################
+    q_arrays={
+        "q0":[],
+        "q1":[],
+        "q2":[],
+        "q3":[],
+            }
     for ri, row in enumerate(priors_list):
         key, mode, inputA, inputB, filt = row
         mode = mode.strip()
@@ -267,7 +286,10 @@ def parse_priors_list(priors_list, n_telescopes, n_filters,
 
             elif mode.lower() in ['fixed', 'f', 'constant', 'c']:
                 # Not being fitted. Default value was specified.
-                pass
+                if ld_fit_method in ['off','custom'] and key in ['q0','q1','q2','q3']:
+                    q_arrays[key].append([inputA])
+                else:    
+                    pass
 
             elif mode.lower() in ['uniform', 'unif', 'u']:
                 # Uniform fitting
@@ -291,7 +313,15 @@ def parse_priors_list(priors_list, n_telescopes, n_filters,
 
             else:
                 raise ValueError('Unrecognised fiting mode {} in input row {}. Must be any of "uniform", "gaussian", or "fixed"'.format(mode, ri))
-
+    if ld_fit_method in ['off','custom']:    
+        #breakpoint()
+        for key in q_arrays:
+            _arr=np.array([q_arrays[key]])
+            if _arr.size>0:
+                #priors.priors[key].default_value = _arr
+                priors.priors[key].array = _arr
+                priors.priors[key]._set_type_fixed_ldc()
+        
     return priors
 
 #############################################################
