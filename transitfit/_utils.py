@@ -140,8 +140,12 @@ def weighted_avg_and_std(values, weights, axis=-1, single_val=False):
         except:
             flat_vals = values
             flat_weights = weights
-        average = np.average(flat_vals, weights=1/(flat_weights**2))
-        uncertainty = 1 / np.sqrt(np.sum(1/(flat_weights**2)))
+        try:
+            average = np.average(flat_vals, weights=1/(flat_weights**2))
+            uncertainty = 1 / np.sqrt(np.sum(1/(flat_weights**2)))
+        except TypeError:
+            average = np.average(flat_vals)
+            uncertainty = 0
 
         return average, uncertainty
 
