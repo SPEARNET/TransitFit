@@ -25,6 +25,7 @@ Along with an installation of Python 3 (with the standard Conda distribution pac
 <a name="guide"></a>
 ## User guide
 The documentation for TransitFit can be found [here](https://transitfit.readthedocs.io/en/latest/)
+
 Example demonstration for TransitFit: https://github.com/PriyadarshiAkshay/TransitFit_demo
 
 <a name="data"></a>
