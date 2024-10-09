@@ -25,7 +25,7 @@ from ._paramarray import ParamArray
 from .lightcurve import LightCurve
 from .error_analysis import ErrorLimits, get_quantiles_on_best_val_unweighted
 from .new_error_analysis import get_asymmetric_errors_updated, get_std_on_best_val_unweighted
-from .ttv_fitting import taylor_series, get_time_duration
+from .ttv_fitting import taylor_series, get_time_duration, get_total_shift, get_shift_in_time_due_to_ttv
 
 
 class OutputHandler:
@@ -82,7 +82,7 @@ class OutputHandler:
         # We calculate t01 which is time of conjucntion for the first lightcurve. helpful when the given t0 is not the first time of conjuction.
         self.t0_first=np.min(times_last)-((np.min(times_last)-self.t0)%self.P)
         
-        self.times_last=times_last-self.t0_first
+        self.times_last=times_last#-self.t0_first
         #self.initial_guess_epochs=np.array(self.times_last//self.P,dtype=int)
         #self.initial_guess_epochs-=self.initial_guess_epochs[0]
         #self.initial_guess_epochs+=1
@@ -94,11 +94,11 @@ class OutputHandler:
         condition=True
         while condition:
             # The time duration between the current and the next epoch
-            tau=get_time_duration(self.p_prime,self.p_dprime,self.P)
+            tau=get_time_duration(self.p_prime,self.p_dprime,self.P,t_start)
 
             # The period at the next epoch
             P_new=taylor_series(period_all[-1],self.p_prime,self.p_dprime,tau)
-
+            self.P=P_new
             period_all=np.append(period_all,P_new)
 
             #period_all=np.append(period_all,taylor_series(self.P, self.p_prime, 0, t_start))
@@ -106,7 +106,7 @@ class OutputHandler:
             t0_all=np.append(t0_all,t_start+self.t0_first)
             
             
-            if t0_all[-1]>self.times_last[-1]+self.t0_first:
+            if t0_all[-1]>self.times_last[-1]:#+self.t0_first:
                 condition=False
         #breakpoint()
         #if len(t0_all)<max(self.initial_guess_epochs):
@@ -245,9 +245,11 @@ class OutputHandler:
                 # Batman considers uniform period. So we need to shift the timestamps accordingly.
                 if self.fit_ttv_taylor:
                     _time=self.batman_models[i].t
-                    fraction=(_time-self.batman_models[i].t0)/self.best_model['P'][i][0]
-                    shift=fraction*((self.best_model['p_prime'][i][0]/2 - 1) * fraction*_time +self.best_model['p_dprime'][i][0]/6 * (fraction*_time)**2)
-                    self.batman_models[i].t=_time-shift
+                    shift=get_shift_in_time_due_to_ttv(0,_time-self.batman_models[i].t0,self.best_model['p_prime'][i][0],self.best_model['p_dprime'][i][0],self.best_model['P'][i][0], self.batman_models[i].t0-self.t0_first)
+
+                    #fraction=(_time-self.batman_models[i].t0)/self.best_model['P'][i][0]
+                    #shift=fraction*((self.best_model['p_prime'][i][0]/2 - 1) * fraction*_time +self.best_model['p_dprime'][i][0]/6 * (fraction*_time)**2)
+                    #self.batman_models[i].t=_time-shift
                 model_curve = self.batman_models[i].light_curve(self.batman_params[i])
 
                 write_data = np.vstack((lc.times, phase, flux, flux_err, model_curve)).T
@@ -335,9 +337,11 @@ class OutputHandler:
                 # Batman considers uniform period. So we need to shift the timestamps accordingly.
                 if self.fit_ttv_taylor:
                     _time=model_times
-                    fraction=(_time-self.best_model['t0'][i][0])/self.best_model['P'][i][0]
-                    shift=fraction*((self.best_model['p_prime'][i][0]/2 - 1) * fraction*_time +self.best_model['p_dprime'][i][0]/6 * (fraction*_time)**2)
-                    model_times=model_times-shift
+                    shift=get_total_shift(self.best_model['t0'][i][0],_time,self.best_model['p_prime'][i][0],self.best_model['p_dprime'][i][0],self.best_model['P'][i][0], self.best_model['t0'][i][0]-self.t0_first)
+
+                    #fraction=(_time-self.best_model['t0'][i][0])/self.best_model['P'][i][0]
+                    #shift=fraction*((self.best_model['p_prime'][i][0]/2 - 1) * fraction*_time +self.best_model['p_dprime'][i][0]/6 * (fraction*_time)**2)
+                    #model_times=model_times-shift
                 model = batman.TransitModel(self.batman_params[i], model_times)
                 model_curve = model.light_curve(self.batman_params[i])
                 time_wise_best_curve = self.batman_models[i].light_curve(self.batman_params[i])
@@ -604,7 +608,8 @@ class OutputHandler:
 
                             counter_ldc+=1
                             result_entry = [priors.priors[param_name].array[i], None, None, None, None]
-                            i=indices_for_ldc[counter_ldc]
+                            if len(indices_for_ldc)>0:
+                                i=indices_for_ldc[counter_ldc]
                         else:
                             result_entry = [priors.priors[param_name].default_value, None, None, None, None]
 
@@ -1210,7 +1215,10 @@ class OutputHandler:
                     else:
                         # Loop over batches
                         for bi in range(len(results_dict[param][i])):
-                            vals_arr = np.append(vals_arr, np.array([[print_param, tidx, fidx, eidx, bi, results_dict[param][i][bi][0], results_dict[param][i][bi][-1]]]), axis=0)
+                            try:
+                                vals_arr = np.append(vals_arr, np.array([[print_param, tidx, fidx, eidx, bi, results_dict[param][i][bi][0], results_dict[param][i][bi][-1]]]), axis=0)
+                            except ValueError:
+                                vals_arr = np.append(vals_arr, np.array([[print_param, tidx, fidx, eidx, bi, results_dict[param][i][bi][0][0], results_dict[param][i][bi][-1][0]]]), axis=0)
 
                             if param == 'a' and self.host_r is not None:
                                 # Put a into AU as well

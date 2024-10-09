@@ -617,7 +617,7 @@ class PriorInfo:
                 ldtk_uncertainty_multiplier,
             )
 
-    def fit_custom_limb_darkening(self, priors_file, ldtk_uncertainty_multiplier=1):
+    def fit_custom_limb_darkening(self, priors_file,filter_indices, ldtk_uncertainty_multiplier=1):
         """
         Initialises fitting of limb darkening parameters, either independently
         or coupled across wavebands.
@@ -654,25 +654,34 @@ class PriorInfo:
         self._do_ld_mc = False
         self._ld_cache_path = None
 
-        ldc_priors = df[df["Parameter"].isin(["q0", "q1"])]
-        if len(ldc_priors) < 2:
-            ldc_priors = df[df["Parameter"].isin(["u0", "u1"])]
-            if len(ldc_priors) < 2:
+        ldc_priors = df[df["Parameter"].isin(["q0", "q1", "q2", "q3"])]
+        if len(ldc_priors)  < len(self.limb_dark_coeffs):
+            ldc_priors = df[df["Parameter"].isin(["u0", "u1","u2","u3"])]
+            if len(ldc_priors) < len(self.limb_dark_coeffs):
+                print(len(ldc_priors),len(self.limb_dark_coeffs),ldc_priors,self.limb_dark_coeffs)
+                #breakpoint()
                 raise ValueError(
                     "The priors file must contain at least q0 and q1 or u0 and u1"
                 )
 
-            for i in range(self.n_filters):
+            for i in filter_indices:
                 ldc_vals = ldc_priors[ldc_priors["Filter"] == i]
                 rows=[r for r in ldc_vals.index]
-                u_val = ldc_vals["Input_A"].to_numpy(dtype=float)
-                u_val_err = ldc_vals["Input_B"].to_numpy(dtype=float)
+                if ldc_vals["Distribution"].iloc[0] == "uniform":
+                    u_val = (ldc_vals["Input_A"].to_numpy(dtype=float)+ldc_vals["Input_B"].to_numpy(dtype=float))/2
+                    u_val_err = (ldc_vals["Input_B"].to_numpy(dtype=float)-ldc_vals["Input_A"].to_numpy(dtype=float))/2
+                    ldc_vals.at[0,"Distribution"] = "gaussian"
+                else:
+                    u_val = ldc_vals["Input_A"].to_numpy(dtype=float)
+                    u_val_err = ldc_vals["Input_B"].to_numpy(dtype=float)
                 q, q_err = self.ld_handler.convert_utoq_with_errors(u_val, u_err=u_val_err)
                 ldc_priors.loc[rows,"Input_A"] = q
                 ldc_priors.loc[rows,"Input_B"] = q_err
 
+        #breakpoint()
         # Set up fitting for each LDC
-        for i in range(self.n_filters):
+        fi=0
+        for i in filter_indices:
             ldc_vals = ldc_priors[ldc_priors["Filter"] == i]
             if ldc_vals["Distribution"].iloc[0] == "gaussian":
                 for ldc, name in enumerate(self.limb_dark_coeffs):
@@ -680,7 +689,7 @@ class PriorInfo:
                         name,
                         ldc_vals["Input_A"].iloc[ldc],
                         ldc_vals["Input_B"].iloc[ldc]*ldtk_uncertainty_multiplier,
-                        filter_idx=i,
+                        filter_idx=fi,
                     )
             else:
                 for ldc, name in enumerate(self.limb_dark_coeffs):
@@ -690,6 +699,7 @@ class PriorInfo:
                         ldc_vals["Input_B"].iloc[ldc],
                         filter_idx=i,
                     )
+            fi+=1
 
     def fit_normalisation(self, lightcurves, normalise_limits):
         """

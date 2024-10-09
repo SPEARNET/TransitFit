@@ -1297,7 +1297,8 @@ class Retriever:
             if ld_fit_method.lower() == "independent":
                 priors.fit_limb_darkening(ld_fit_method)
             elif ld_fit_method.lower() == "custom":
-                priors.fit_custom_limb_darkening(self._prior_input, self.ldtk_uncertainty_multiplier)
+                #breakpoint()
+                priors.fit_custom_limb_darkening(self._prior_input,filter_indices, self.ldtk_uncertainty_multiplier)
             elif ld_fit_method.lower() in ["coupled", "single"]:
                 if self._filter_input is None:
                     raise ValueError(

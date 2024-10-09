@@ -12,10 +12,85 @@ from ._utils import validate_variable_key, AU_to_host_radii
 from .lightcurve import LightCurve
 import batman
 import os
+from ._limb_darkening_handler import LimbDarkeningHandler
 
 #############################################################
 #                         PRIORS                            #
 #############################################################
+def check_valid_ldc_params(limb_dark, _params_found):
+    if limb_dark == 'linear':
+        allowed_params = {'u0'}
+    if limb_dark in ['quadratic','squareroot', 'power2']:
+            allowed_params = {'u0', 'u1'}
+    if limb_dark == 'nonlinear':
+            allowed_params = {'u0', 'u1', 'u2', 'u3'}
+
+    invalid_params = [param for param in _params_found if param not in allowed_params]
+    missing_params = [param for param in allowed_params if param not in _params_found]
+
+    if invalid_params:
+        raise ValueError(f"Invalid parameters found for {limb_dark} limb darkening: {invalid_params}")
+    if missing_params:
+        raise ValueError(f"Missing required parameters for {limb_dark} limb darkening: {missing_params}")
+
+
+def process_ldc_priors(priors_list,limb_dark,ld_fit_method='custom'):
+    """Handles the processing of LDC priors whenever required.
+
+    Args:
+        priors_list (list): list of priors
+
+    Returns:
+        list: list of priors with LDCs processed
+    """
+    LDH=LimbDarkeningHandler(limb_dark)
+    u_params = ['u0', 'u1', 'u2', 'u3']
+    _params_found = []
+    u_values = {}
+
+    # Collect u values and errors by filter index
+    for entry in priors_list:
+        param, dist, input_a, input_b, filter_index = entry
+        if param in u_params:
+            if param not in _params_found:
+                _params_found.append(param)
+
+            if filter_index not in u_values:
+                u_values[filter_index] = {}
+            if dist.lower() == 'uniform':
+                u_values[filter_index][param] = ((input_a+ input_b)/2, (input_b - input_a)/2)
+            u_values[filter_index][param] = (input_a, input_b)
+    if len(_params_found) == 0:
+        return priors_list
+    
+    check_valid_ldc_params(limb_dark, _params_found)
+    
+    # Convert u values to q values
+    q_values = {}
+    for filter_index, u_dict in u_values.items():
+        u = [u_dict.get(param, (0, 0))[0] for param in _params_found]
+        u_err = [u_dict.get(param, (0, 0))[1] for param in _params_found]
+        q, q_err = LDH.convert_utoq_with_errors(u, u_err)
+        q_values[filter_index] = (q, q_err)
+
+    # Create new priors list with q values
+    new_priors_list = []
+    for entry in priors_list:
+        param, dist, input_a, input_b, filter_index = entry
+        if param in _params_found and filter_index in q_values:
+            q, q_err = q_values[filter_index]
+            q_param_index = _params_found.index(param)
+            if ld_fit_method =='off':
+                new_entry = [f'q{q_param_index}', 'fixed', q[q_param_index], q_err[q_param_index], filter_index]
+            else:
+                new_entry = [f'q{q_param_index}', 'gaussian', q[q_param_index], q_err[q_param_index], filter_index]
+                
+            new_priors_list.append(new_entry)
+        else:
+            new_priors_list.append(entry)
+
+    return np.array(new_priors_list, dtype=object)
+
 def read_priors_file(path, n_telescopes, n_filters, n_epochs,
                      limb_dark='quadratic', filter_indices=None, folded=False,
                      folded_P=None, folded_t0=None, host_radius=None,
@@ -90,12 +165,14 @@ def read_priors_file(path, n_telescopes, n_filters, n_epochs,
     '''
     priors_list = pd.read_csv(path)
     # Parameters u0 and u1 are used only when fitting limb darkening coefficients from user defined custom priors. 
-    if ld_fit_method!='off':
-        priors_list = priors_list.drop(priors_list[priors_list['Parameter'].isin(['u0', 'u1','q0', 'q1'])].index)
+    if ld_fit_method not in ['off','custom']:
+
+        priors_list = priors_list.drop(priors_list[priors_list['Parameter'].isin(['u0', 'u1','u2','u3','u4','q0', 'q1','q2','q3','q4'])].index)
     priors_list = priors_list.values
 
-    #priors_list = pd.read_csv(path).values
-    
+    if ld_fit_method in ['off','custom']:
+        priors_list=process_ldc_priors(priors_list,limb_dark, ld_fit_method=ld_fit_method)
+
     return parse_priors_list(priors_list, n_telescopes, n_filters, n_epochs, limb_dark, filter_indices, folded, folded_P, folded_t0, host_radius, allow_ttv, lightcurves, suppress_warnings, error_scaling, fit_ttv_taylor,ld_fit_method)
 
 def parse_priors_list(priors_list, n_telescopes, n_filters,
@@ -321,7 +398,6 @@ def parse_priors_list(priors_list, n_telescopes, n_filters,
                 #priors.priors[key].default_value = _arr
                 priors.priors[key].array = _arr
                 priors.priors[key]._set_type_fixed_ldc()
-        
     return priors
 
 #############################################################
