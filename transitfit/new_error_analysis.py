@@ -2,10 +2,48 @@ import numpy as np
 import glob
 import pandas as pd
 import pickle
+from statsmodels.stats import weightstats
+
+def find_avg_binned_likelihood(x, y, num_bins=100):
+    """
+    Find the upper envelope points without smoothing.
+    
+    Parameters:
+    x, y: arrays of data points
+    num_bins: number of bins to divide x-axis into
+    
+    Returns:
+    bin_centers, max_points: arrays of x and y coordinates for the envelope
+    """
+    # Create bins along x-axis
+    bins = np.linspace(min(x), max(x), num_bins + 1)
+    all_li=np.zeros(len(x))
+
+    
+    # Find maximum y value in each bin
+    max_points = []
+    bin_centers = []
+    li=[]
+    likelihood_new=y-max(y)
+    
+    for i in range(len(bins)-1):
+        mask = (x >= bins[i]) & (x < bins[i+1])
+        if np.any(mask):  # Only include bins that contain points
+            max_points.append(np.max(y[mask]))
+            bin_centers.append((bins[i] + bins[i+1]) / 2)
+            li.append(np.sum(y[mask])/len(y[mask]))
+            all_li[mask]=np.sum(np.exp(likelihood_new[mask]))/len(likelihood_new[mask])
+    
+    return all_li
+
+def get_error_from_binned_lkl(chosen_sample, best,logl):
+    all_li=find_avg_binned_likelihood(chosen_sample, logl,num_bins=1000)
+
+    err=np.sqrt(np.sum(np.power((chosen_sample-best),2)*all_li)/np.sum(all_li))#*err_weight
+    return err, err
 
 
-
-def make_dict(val_dict, key, vals):
+def make_dict(val_dict, key, vals, logl=None):
     """makes dictionary using the given values. if the key already 
     exists, then the values get appended. 
 
@@ -16,8 +54,13 @@ def make_dict(val_dict, key, vals):
     """
     if key in val_dict:
         val_dict[key] = np.ndarray.flatten(np.append(val_dict[key], vals))
+        if logl is not None:
+            val_dict[key+'_logl'] = np.ndarray.flatten(np.append(val_dict[key+'_logl'], logl))
     else:
         val_dict[key] = np.ndarray.flatten(vals)
+        if logl is not None:
+            val_dict[key+'_logl'] = np.ndarray.flatten(logl)
+
     
     return val_dict
 
@@ -66,23 +109,55 @@ def get_quantiles_on_best_val_unweighted(samples, best_val):
     
     return errors
 
-def get_std_on_best_val_unweighted(samples, best_val):
+def get_quantiles_on_best_val(samples, weights, best_val):
     """Generates lower and upper limit of errors for the best values.
-    Gets value of samples such that they encompass 68.27% of the samples on both sides of the best value.
+    Sorts the samples and corresponding weights. 
+    Gets value of samples such that they encompass 68.27% of the samples
+    by weight on both sides of the best value.
 
     Args:
         samples (array): the sampled values for the parameter from dynesty
+        weights (array): weights of the samples
         best_val (float): best value among the samples
 
     Returns:
         tuple: the lower and upper error on the best value.
     """
-    _e=np.power(np.sum(np.power(samples-best_val,2))/len(samples),.5)
-    errors=(_e,_e)
-    return errors 
 
-def HST_detrending():
-    pass
+    weights = weights/np.sum(weights)
+    sorter_sample = np.argsort(samples)
+
+    sorted_weights = weights[sorter_sample]
+    sorted_samples = samples[sorter_sample]
+
+    best_val_idx = np.argmin(np.abs(sorted_samples-float(best_val)))
+
+    # Faster method
+    best_percentile = np.sum(sorted_weights[:best_val_idx])
+    model = weightstats.DescrStatsW(sorted_samples, sorted_weights)
+    lower_error, upper_error = model.quantile([(1-.6827)*best_percentile, best_percentile+(.6827*(
+        1-best_percentile))], return_pandas=False)-sorted_samples[best_val_idx]
+
+    """
+    # Previous method (slower)
+    # Shows more detail on how we are getting the errors
+    
+    total_sum = 0
+    for i in range(best_val_idx, len(sorted_weights)):
+        total_sum += sorted_weights[i]
+        if total_sum >= .6827*np.sum(sorted_weights[best_val_idx:]):
+            upper_error = sorted_samples[i]-best_val
+            break
+
+    total_sum = 0
+    for i in range(best_val_idx, 0, -1):
+        total_sum += sorted_weights[i]
+        if total_sum >= .6827*np.sum(sorted_weights[:best_val_idx]):
+            lower_error = sorted_samples[i]-best_val
+            break"""
+
+    return -np.abs(lower_error), np.abs(upper_error)
+
 
 def get_std_on_best_val_unweighted(samples, best_val):
     """Generates lower and upper limit of errors for the best values.
@@ -153,6 +228,7 @@ def get_asymmetric_errors_updated(folder):
             with open(file, 'rb') as handle:
                 results = pickle.load(handle)
                 samples = results.samples
+                logl=results.logl
                 #weights=np.exp(results.logwt - results.logwt.max())/np.sum(np.exp(results.logwt - results.logwt.max()))
                 order_of_params=results.fitting_params
             
@@ -165,7 +241,7 @@ def get_asymmetric_errors_updated(folder):
                     par=order[0]+'_-_'+check_index(order[2])+'_-'
                 else:
                     par=order[0]+'_'+check_index(order[1])+'_'+check_index(order[2])+'_'+check_index(order[3])
-                values=make_dict(values, par, samples[:, o])
+                values=make_dict(values, par, samples[:, o], logl)
 
     # Check folded mode:
     folded_files=glob.glob(folder+"*_parameters/quicksaves/*results.pkl")
@@ -178,6 +254,7 @@ def get_asymmetric_errors_updated(folder):
             with open(file, 'rb') as handle:
                 results = pickle.load(handle)
                 samples = results.samples
+                logl=results.logl
                 #weights=np.exp(results.logwt - results.logwt.max())/np.sum(np.exp(results.logwt - results.logwt.max()))
                 order_of_params=results.fitting_params
             
@@ -191,7 +268,7 @@ def get_asymmetric_errors_updated(folder):
                 else:
                     par=order[0]+'_'+check_index(order[1])+'_'+check_index(order[2])+'_'+check_index(order[3])
                 if par in more_params:
-                    values=make_dict(values, par, samples[:, o])
+                    values=make_dict(values, par, samples[:, o], logl)
             
     lower_errors=[]
     upper_errors=[]
@@ -203,11 +280,13 @@ def get_asymmetric_errors_updated(folder):
     for p in params_to_add:
         samples=values[p]
         best=values[p+'_best']
+        logl=values[p+'_logl']
+        weights=find_avg_binned_likelihood(samples, logl,num_bins=1000)
         try:
-            le,ue=get_quantiles_on_best_val_unweighted(samples, best)
+            le,ue=get_quantiles_on_best_val(samples,weights, best)
         except:
             issue_with_priors.append(p.replace('_',', '))
-            le,ue=get_std_on_best_val_unweighted(samples, best)
+            le,ue=get_error_from_binned_lkl(samples, best,logl)
         lower_errors.append(le)
         upper_errors.append(ue)
         _p=p.split('_')

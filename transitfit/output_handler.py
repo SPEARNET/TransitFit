@@ -23,8 +23,7 @@ from .retriever import global_params, filter_dependent_params, lightcurve_depend
 from ._utils import weighted_avg_and_std, host_radii_to_AU, get_normalised_weights, get_covariance_matrix
 from ._paramarray import ParamArray
 from .lightcurve import LightCurve
-from .error_analysis import ErrorLimits, get_quantiles_on_best_val_unweighted
-from .new_error_analysis import get_asymmetric_errors_updated, get_std_on_best_val_unweighted
+from .new_error_analysis import get_asymmetric_errors_updated, get_error_from_binned_lkl, get_quantiles_on_best_val, find_avg_binned_likelihood
 from .ttv_fitting import taylor_series, get_time_duration, get_total_shift, get_shift_in_time_due_to_ttv
 
 
@@ -1258,9 +1257,10 @@ class OutputHandler:
         upper_error=np.empty(0)
         for i in range(ndim):
             try:
-                _l,_u = get_quantiles_on_best_val_unweighted(samples[:,i], best[i])#get_quantiles_on_best_val(samples[:,i], weights, best[i])
+                _weight=find_avg_binned_likelihood(samples[:,i], result.logl, num_bins=1000)
+                _l,_u = get_quantiles_on_best_val(samples[:,i], _weight, best[i])
             except IndexError:
-                _l,_u = get_std_on_best_val_unweighted(samples[:,i], best[i])
+                _l,_u = get_error_from_binned_lkl(samples[:,i], best[i],result.logl)
             _title = r'param = best$_{_l}^{_u}$'
             _title = _title.replace('param', labels[i])
             _title = _title.replace('best', f"{result.best[i]:.6f}")
