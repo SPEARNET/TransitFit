@@ -26,6 +26,8 @@ Along with an installation of Python 3 (with the standard Conda distribution pac
 ## User guide
 The documentation for TransitFit can be found [here](https://transitfit.readthedocs.io/en/latest/)
 
+Example demonstration for TransitFit: https://github.com/PriyadarshiAkshay/TransitFit_demo
+
 <a name="data"></a>
 ## Observational Data
 The observational data of WASP-127b obtained by SPEARNET and the TRANSITFIT transmission spectrum of WASP-96b can be downloaded from [here](https://cdsarc.cds.unistra.fr/viz-bin/cat/J/MNRAS/527/4936) and [here](https://vizier.cds.unistra.fr/viz-bin/VizieR?-source=J/MNRAS/527/4936).

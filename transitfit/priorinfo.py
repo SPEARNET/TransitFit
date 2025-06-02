@@ -605,6 +605,13 @@ class PriorInfo:
 
         if not fit_method == "independent":
             # Now if we are coupling across wavelength we must initialise PyLDTK
+
+            print('Initialising LDTK. If stuck here, please check the cache path')
+            self.ld_handler.initialise_ldtk(host_T, host_logg, host_z, filters,
+                                            self.limb_dark,
+                                            n_samples, do_mc, cache_path,
+                                            ldtk_uncertainty_multiplier)
+
             self.ld_handler.initialise_ldtk(
                 host_T,
                 host_logg,
