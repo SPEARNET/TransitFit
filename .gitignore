@@ -87,3 +87,10 @@ ttv_plot_analysis_new_wasp12b.ipynb
 ttv_plot_analysis_new.ipynb
 ttv_plot_analysis.ipynb
 ttv_test_module.py
+cache/*
+no_ttv/*
+raw_files/*
+filterpath*
+wasp*
+ltt*
+*.ipynb
