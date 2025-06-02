@@ -47,6 +47,7 @@ class ParamArray:
         else:
             self.default_value = default_value
         self.lightcurves = lightcurves
+        self.type=None
 
         # Check that shape matches up with the given dependencies
         if not self.telescope_dependent and not shape[0] == 1:
@@ -98,11 +99,11 @@ class ParamArray:
     def add_gaussian_fit_param(self, mean, stdev, telescope_idx=None,
                                filter_idx=None, epoch_idx=None,
                                negative_allowed=True,
-                               clipped_gaussian=False):
+                               clipped_gaussian=False, custom_ldcs=False):
         '''
         Adds a gaussian sampled fitting parameter
         '''
-        self.set_value(_GaussianParam(mean, stdev, negative_allowed, clipped_gaussian),
+        self.set_value(_GaussianParam(mean, stdev, negative_allowed, clipped_gaussian, custom_ldcs),
                        telescope_idx, filter_idx, epoch_idx)
 
     def from_unit_interval(self, u, telescope_idx=None, filter_idx=None,
@@ -169,6 +170,9 @@ class ParamArray:
             idx += (0,)
 
         return idx
+    
+    def _set_type_fixed_ldc(self,):
+        self.type='fixed'
 
     def __getitem__(self, idx):
         telescope_idx, filter_idx, epoch_idx = idx
@@ -202,6 +206,8 @@ class ParamArray:
 
                 if type(self[i]) is _Param:
                     line += 'Fixed - value: {}\n'.format( self[i].default_value)
+                elif self.type=='fixed':
+                    line += 'Fixed - value: {}\n'.format( self[i].__str__())
                 elif type(self[i]) is float or type(self[i]) is int:
                     line += 'Fixed - value: {}\n'.format(self[i])
                 elif type(self[i]) is _UniformParam:

@@ -9,6 +9,20 @@ import pandas as pd
 from statsmodels.stats import weightstats
 
 
+def get_quantiles_on_best_val_unweighted(samples, best_val):
+    """Generates lower and upper limit of errors for the best values.
+    Gets value of samples such that they encompass 68.27% of the samples on both sides of the best value.
+
+    Args:
+        samples (array): the sampled values for the parameter from dynesty
+        best_val (float): best value among the samples
+
+    Returns:
+        tuple: the lower and upper error on the best value.
+    """
+
+    return -np.abs(np.percentile(samples[samples<best_val], 31.73)-best_val), np.abs(np.percentile(samples[samples>best_val], 68.27)-best_val)
+
 def get_quantiles_on_best_val(samples, weights, best_val):
     """Generates lower and upper limit of errors for the best values.
     Sorts the samples and corresponding weights. 
@@ -135,7 +149,7 @@ class ErrorLimits:
         self.OUTPUT_PARAMETERS_FOLDER = output_parmeters
 
         # This will be the name of the output file
-        self.MODIFIED_SUMMARY_OUTPUT = 'modified_output.csv'
+        self.MODIFIED_SUMMARY_OUTPUT = 'results_with_asymmetric_errors.csv'
 
         # Summary_output file
         self.summary_output = glob.glob(
@@ -252,8 +266,10 @@ class ErrorLimits:
                 'Parameter,Filter,Epoch,Best,Lower_error,Upper_error\n')
             for e in all_epochs:
                 param_ = 't0_'+str(int(e))
-                errs = get_quantiles_on_best_val(
-                    samples=self.values[param_], weights=self.values[param_+'_weights'], best_val=self.values[param_+'_best'])
+                errs = get_quantiles_on_best_val_unweighted(
+                    samples=self.values[param_], best_val=self.values[param_+'_best'])
+                #get_quantiles_on_best_val(
+                #    samples=self.values[param_], weights=self.values[param_+'_weights'], best_val=self.values[param_+'_best'])
                 # (model.mean)
                 mso.write(
                     f"t0,-,{e},{self.values[param_+'_best']},{errs[0]},{errs[1]}\n")
@@ -261,8 +277,9 @@ class ErrorLimits:
             q, q_low, q_up = [], [], []
             for p in params:
                 param_ = p
-                errs = get_quantiles_on_best_val(
-                    samples=self.values[param_], weights=self.values[param_+'_weights'], best_val=self.values[param_+'_best'])
+                errs = get_quantiles_on_best_val_unweighted(
+                    samples=self.values[param_], best_val=self.values[param_+'_best'])#get_quantiles_on_best_val(
+                    #samples=self.values[param_], weights=self.values[param_+'_weights'], best_val=self.values[param_+'_best'])
                 # (model.mean)
 
                 mso.write(
@@ -420,16 +437,18 @@ class ErrorLimits:
                         except KeyError:
                             best_val=self.values[param+'_best']
                         
-                        errs = get_quantiles_on_best_val(
-                            samples=self.values[param_], weights=self.values[param_+'_weights'], best_val=best_val)
+                        errs = get_quantiles_on_best_val_unweighted(
+                            samples=self.values[param_], best_val=best_val)#get_quantiles_on_best_val(
+                            #samples=self.values[param_], weights=self.values[param_+'_weights'], best_val=best_val)
 
                         # (model.mean)
                         mso.write(
                             f"{param},{fil},{best_val},{errs[0]},{errs[1]}\n")
 
                 else:
-                    errs = get_quantiles_on_best_val(
-                        samples=self.values[param], weights=self.values[param+'_weights'], best_val=self.values[param+'_best'])
+                    errs = get_quantiles_on_best_val_unweighted(
+                        samples=self.values[param], best_val=self.values[param+'_best'])#get_quantiles_on_best_val_un(
+                        #samples=self.values[param], weights=self.values[param+'_weights'], best_val=self.values[param+'_best'])
                     mso.write(
                         f"{param},-,{self.values[param+'_best']},{errs[0]},{errs[1]}\n")
 
@@ -455,8 +474,10 @@ class ErrorLimits:
                                 best_val=self.values[param_+'_best']
                             except:
                                 best_val=self.values[param+'_best']
-                            errs = get_quantiles_on_best_val(
-                                samples=self.values[param_], weights=self.values[param_+'_weights'], best_val=best_val)
+                            errs = get_quantiles_on_best_val_unweighted(
+                                samples=self.values[param_], best_val=best_val)
+                            #get_quantiles_on_best_val_unweighted(
+                            #    samples=self.values[param_], weights=self.values[param_+'_weights'], best_val=best_val)
 
                             q.append(best_val),
                             q_low.append(errs[0])

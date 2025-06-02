@@ -1,8 +1,9 @@
-'''
+"""
 Object to handle and deal with prior info for retrieval
-'''
+"""
 
 import numpy as np
+import pandas as pd
 from collections.abc import Iterable
 
 from ._params import _Param, _UniformParam, _GaussianParam
@@ -13,31 +14,65 @@ from ._paramarray import ParamArray
 
 # Parameters which do not vary with telescope, filter, or epoch
 # Note that t0 is in here, as it is global unless ttv mode is on
-_global_params = ['P', 'a', 'inc', 'ecc', 'w', 't0']
+_global_params = ["P", "a", "inc", "ecc", "w", "t0"]
 
 # Parameters which vary with filter
-_filter_dependent_params = ['rp', 'q0', 'q1', 'q2', 'q3']
+_filter_dependent_params = ["rp", "q0", "q1", "q2", "q3"]
 
 # Params which vary with epoch
 _epoch_dependent_params = []
 
 # The possible ldc lables
-_all_ldcs = ['q0', 'q1', 'q2', 'q3']
+_all_ldcs = ["q0", "q1", "q2", "q3"]
 
 # Default values for parameters (used in io.parse_priors_list)
-_prior_info_defaults = {'P':1, 'a':10, 'inc':90, 'rp':0.05, 't0':0, 'ecc':0,
-                        'w':90, 'limb_dark':'quadratic', 'q0':0.1, 'q1':0.3,
-                        'q2':None, 'q3':None, 'n_telescopes':1,  'n_filters':1,
-                        'n_epochs':1, 'norm':1,'escale':0}
+_prior_info_defaults = {
+    "P": 1,
+    "a": 10,
+    "inc": 90,
+    "rp": 0.05,
+    "t0": 0,
+    "ecc": 0,
+    "w": 90,
+    "limb_dark": "quadratic",
+    "q0": 0.1,
+    "q1": 0.3,
+    "q2": None,
+    "q3": None,
+    "n_telescopes": 1,
+    "n_filters": 1,
+    "n_epochs": 1,
+    "norm": 1,
+    "escale": 0,
+}
 
-def setup_priors(P, t0, a, rp, inc, ecc, w, limb_dark, n_telescopes, n_filters,
-                 n_epochs, q0=None, q1=None, q2=None, q3=None, allow_ttv=False,
-                 lightcurves=None, error_scaling=False):
-    '''
+
+def setup_priors(
+    P,
+    t0,
+    a,
+    rp,
+    inc,
+    ecc,
+    w,
+    limb_dark,
+    n_telescopes,
+    n_filters,
+    n_epochs,
+    q0=None,
+    q1=None,
+    q2=None,
+    q3=None,
+    allow_ttv=False,
+    lightcurves=None,
+    error_scaling=False,
+    fit_ttv_taylor=False,
+):
+    """
     Factory function to initialise a PriorInfo object
 
     qX should either be a single value or a list of values length n_filters
-    '''
+    """
     # Deal with the qX values
     if q0 is not None and not isinstance(q0, Iterable):
         q0 = [q0 for i in range(n_filters)]
@@ -48,20 +83,45 @@ def setup_priors(P, t0, a, rp, inc, ecc, w, limb_dark, n_telescopes, n_filters,
     if q3 is not None and not isinstance(q3, Iterable):
         q3 = [q3 for i in range(n_filters)]
 
-    default_dict = {'P':P, 't0':t0, 'a':a, 'rp':rp, 'inc':inc, 'ecc':ecc,
-                    'w':w, 'q0':q0, 'q1':q1, 'q2':q2, 'q3':q3, 'norm':1}#,'escale':0}
+    default_dict = {
+        "P": P,
+        "t0": t0,
+        "a": a,
+        "rp": rp,
+        "inc": inc,
+        "ecc": ecc,
+        "w": w,
+        "q0": q0,
+        "q1": q1,
+        "q2": q2,
+        "q3": q3,
+        "norm": 1,
+    }  # ,'escale':0}
 
+    if fit_ttv_taylor:
+        default_dict = {'P':P, 'p_prime':0,'p_dprime':0,'t0':t0, 'a':a, 'rp':rp, 'inc':inc, 'ecc':ecc,
+                    'w':w, 'q0':q0, 'q1':q1, 'q2':q2, 'q3':q3, 'norm':1}
     if error_scaling:
-        default_dict = {'P':P, 't0':t0, 'a':a, 'rp':rp, 'inc':inc, 'ecc':ecc,
-                    'w':w, 'q0':q0, 'q1':q1, 'q2':q2, 'q3':q3, 'norm':1,'escale':0}
+        default_dict["escale"] = 0
+    
 
-    return PriorInfo(default_dict, limb_dark, n_telescopes, n_filters,
-                      n_epochs, allow_ttv, lightcurves)
+    
 
+    return PriorInfo(
+        default_dict,
+        limb_dark,
+        n_telescopes,
+        n_filters,
+        n_epochs,
+        allow_ttv,
+        lightcurves,
+        error_scaling,
+        fit_ttv_taylor,
+    )
 
 
 class PriorInfo:
-    '''
+    """
     Object to deal with anything involving priors
 
     Parameters
@@ -82,9 +142,20 @@ class PriorInfo:
         Array of the light curves. If there is no observation for a particular
         telescope, filter, epoch combination, then the value should be set to
         None.
-    '''
-    def __init__(self, default_dict, limb_dark, n_telescopes, n_filters,
-                 n_epochs, allow_ttv=False, lightcurves=None):
+    """
+
+    def __init__(
+        self,
+        default_dict,
+        limb_dark,
+        n_telescopes,
+        n_filters,
+        n_epochs,
+        allow_ttv=False,
+        lightcurves=None,
+        error_scaling=False,
+        fit_ttv_taylor=False,
+    ):
         # Store the basics
         self.limb_dark = limb_dark
         self.n_telescopes = n_telescopes
@@ -96,16 +167,17 @@ class PriorInfo:
         self.ld_handler = LimbDarkeningHandler(self.limb_dark)
         self.limb_dark_coeffs = self.ld_handler.get_required_coefficients()
         self.fit_ld = False
-        self.ld_fit_method = 'off'
+        self.ld_fit_method = "off"
 
         # Initialse detrending (set to off)
         self.detrend = False
         self.detrending_coeffs = []
 
         # Initialse normalisation (set to off)
-        self.normalise=False
+        self.normalise = False
 
-        self.error_scaling = False
+        self.error_scaling = error_scaling
+        self.fit_ttv_taylor = fit_ttv_taylor
 
         #####################
         # Set up the priors #
@@ -113,18 +185,30 @@ class PriorInfo:
         # Dictionary containing info on all the priors
         self.priors = {}
 
-        for key in default_dict.keys():
-            #print('Param:', key)
-            # Loop through each parameter and initialise the prior
+        if self.fit_ttv_taylor:
+            _global_params.append('p_prime')
+            _global_params.append('p_dprime')
 
+        for key in default_dict.keys():
+            # print('Param:', key)
+            # Loop through each parameter and initialise the prior
 
             if key in _global_params:
                 # These are global parameters
-                if key == 't0' and allow_ttv:
+                if key == "t0" and allow_ttv:
                     # We are fitting a separate t0 for each epoch
-                    self.priors[key] = ParamArray(key, (1,1, self.n_epochs), False, False, True, default_dict[key])
+                    self.priors[key] = ParamArray(
+                        key,
+                        (1, 1, self.n_epochs),
+                        False,
+                        False,
+                        True,
+                        default_dict[key],
+                    )
                 else:
-                    self.priors[key] = ParamArray(key, (1,1, 1), False, False, False, default_dict[key])
+                    self.priors[key] = ParamArray(
+                        key, (1, 1, 1), False, False, False, default_dict[key]
+                    )
 
             elif key in _filter_dependent_params:
                 # These parameters vary with filter
@@ -133,18 +217,30 @@ class PriorInfo:
                 # Deal with the ldcs
                 if key in _all_ldcs:
                     if key in self.limb_dark_coeffs:
-                        #print('Initialising ldc', key)
-                        self.priors[key] = ParamArray(key, shape, False, True, False, default_dict[key][0])
+                        # print('Initialising ldc', key)
+                        self.priors[key] = ParamArray(
+                            key, shape, False, True, False, default_dict[key][0]
+                        )
                         for qi, q in enumerate(default_dict[key]):
                             self.priors[key].set_value(q, filter_idx=qi)
 
                 # Otherwise, this is rp
                 else:
-                    self.priors[key] = ParamArray(key, shape, False, True, False, default_dict[key])
+                    self.priors[key] = ParamArray(
+                        key, shape, False, True, False, default_dict[key]
+                    )
 
             else:
                 # This is a lightcurve dependent parameter
-                self.priors[key] = ParamArray(key, (self.n_telescopes, self.n_filters,self.n_epochs), True, True, True, default_dict[key], lightcurves=lightcurves)
+                self.priors[key] = ParamArray(
+                    key,
+                    (self.n_telescopes, self.n_filters, self.n_epochs),
+                    True,
+                    True,
+                    True,
+                    default_dict[key],
+                    lightcurves=lightcurves,
+                )
 
         # All priors should now be initialised
 
@@ -153,83 +249,115 @@ class PriorInfo:
         # [param name, telescope index, filter index, epoch index]
         self.fitting_params = None
 
-        #for p in self.priors.keys():
+        # for p in self.priors.keys():
         #    print(p, self.priors[p].array)
 
     ###############################################################
     #                   ADDING FIT PARAMS                         #
     ###############################################################
 
-    def add_uniform_fit_param(self, name, low_lim, high_lim,
-                              telescope_idx=None, filter_idx=None, epoch_idx=None):
-        '''
+    def add_uniform_fit_param(
+        self,
+        name,
+        low_lim,
+        high_lim,
+        telescope_idx=None,
+        filter_idx=None,
+        epoch_idx=None,
+    ):
+        """
         Adds a new parameter which will be fitted uniformly in the range given
         by low_lim and high_lim
-        '''
-        if name in ['a', 'P', 'rp', 'inc', 'ecc', 'w']:
+        """
+        if name in ["a", "P", "rp", "inc", "ecc", "w","p_prime","p_dprime"]:
             negative_allowed = False
         else:
             negative_allowed = True
-        
-        if name in ['inc']:
+
+        if name in ["inc"]:
             high_lim = 90
-        
-        #if name not in self.priors and name=='escale':
+
+        # if name not in self.priors and name=='escale':
         #    # Need to initialise the entry in the priors dict
         #    self.priors[name] = ParamArray(name, (self.n_telescopes, self.n_filters,self.n_epochs), True, True, True)
 
-        self.priors[name].add_uniform_fit_param(low_lim, high_lim,
-                                                telescope_idx, filter_idx,
-                                                epoch_idx, negative_allowed)
+        self.priors[name].add_uniform_fit_param(
+            low_lim, high_lim, telescope_idx, filter_idx, epoch_idx, negative_allowed
+        )
 
         # Store some info for later
         if self.fitting_params is None:
-            self.fitting_params = np.array([[name, telescope_idx, filter_idx, epoch_idx]], dtype=object)
+            self.fitting_params = np.array(
+                [[name, telescope_idx, filter_idx, epoch_idx]], dtype=object
+            )
         else:
-            self.fitting_params = np.append(self.fitting_params, np.array([[name, telescope_idx, filter_idx, epoch_idx]], object), axis=0)
-        #self.fitting_params.append([name, telescope_idx, filter_idx, epoch_idx])
+            self.fitting_params = np.append(
+                self.fitting_params,
+                np.array([[name, telescope_idx, filter_idx, epoch_idx]], object),
+                axis=0,
+            )
+        # self.fitting_params.append([name, telescope_idx, filter_idx, epoch_idx])
 
-    def add_gaussian_fit_param(self, name, mean, stdev,
-                               telescope_idx=None, filter_idx=None, epoch_idx=None):
-        '''
+    def add_gaussian_fit_param(
+        self, name, mean, stdev, telescope_idx=None, filter_idx=None, epoch_idx=None
+    ):
+        """
         Adds a new parameter which will be fitted with a Gaussian prior
-        '''
+        """
         # If this is t0 and ttvs are on, we want to make the prior much wider to allow for proper TTVs
-        #if name == 't0' and self.allow_ttv:
-            # Set the Gaussian width to 0.1 days for ttv fitting mode
-            #stdev = 0.1
-        if name in ['a', 'P', 'rp', 'inc', 'ecc', 'w']:
+        # if name == 't0' and self.allow_ttv:
+        # Set the Gaussian width to 0.1 days for ttv fitting mode
+        # stdev = 0.1
+        if name in ["a", "P", "rp", "inc", "ecc", "w"]:
             negative_allowed = False
         else:
             negative_allowed = True
-        
-        if name in 'inc':
-            clipped_gaussian=True
-        else:
-            clipped_gaussian=False
 
-        self.priors[name].add_gaussian_fit_param(mean, stdev,
-                                                 telescope_idx, filter_idx,
-                                                 epoch_idx, negative_allowed, clipped_gaussian)
+        if name in "inc":
+            clipped_gaussian = True
+        else:
+            clipped_gaussian = False
+        
+        if name in ["q0", "q1", "q2", "q3", "q4"] and self.ld_fit_method == "custom":
+            custom_ldcs = True
+        else:  
+            custom_ldcs = False
+
+        self.priors[name].add_gaussian_fit_param(
+            mean,
+            stdev,
+            telescope_idx,
+            filter_idx,
+            epoch_idx,
+            negative_allowed,
+            clipped_gaussian,
+            custom_ldcs,
+        )
 
         # Store some info for later
         if self.fitting_params is None:
-            self.fitting_params = np.array([[name, telescope_idx, filter_idx, epoch_idx]], dtype=object)
+            self.fitting_params = np.array(
+                [[name, telescope_idx, filter_idx, epoch_idx]], dtype=object
+            )
         else:
-            self.fitting_params = np.append(self.fitting_params, np.array([[name, telescope_idx, filter_idx, epoch_idx]], object), axis=0)
-
+            self.fitting_params = np.append(
+                self.fitting_params,
+                np.array([[name, telescope_idx, filter_idx, epoch_idx]], object),
+                axis=0,
+            )
 
     ###############################################################
     #         ADDING DETRENDING/NORMALISATION/LDC FITTING         #
     ###############################################################
 
-    def fit_detrending(self, lightcurves, method_list, method_index_array,
-                       limits=None):
-        '''
+    def fit_detrending(self, lightcurves, method_list, method_index_array, limits=None):
+        """
         Intialises detrending
-        '''
+        """
         if self.detrend:
-            raise ValueError('Detrending is already initialised. You need to make a new PriorInfo to use another detrending method!')
+            raise ValueError(
+                "Detrending is already initialised. You need to make a new PriorInfo to use another detrending method!"
+            )
 
         # Store some info - used in splitting
         self._detrend_method_list = method_list
@@ -246,29 +374,33 @@ class PriorInfo:
                 method_idx = method_index_array[i]
                 method = method_list[method_idx]
 
-                if method[0] == 'off':
+                if method[0] == "off":
                     # No detrending - skip this curve
                     pass
                 else:
                     # First we set up the detrending for the lightcurve
-                    if method[0] == 'nth order':
-                        lightcurves[i].set_detrending(method[0], order=method[1], method_idx=method_idx)
-                    elif method[0] == 'custom':
-                        lightcurves[i].set_detrending(method[0], function=method[1], method_idx=method_idx)
+                    if method[0] == "nth order":
+                        lightcurves[i].set_detrending(
+                            method[0], order=method[1], method_idx=method_idx
+                        )
+                    elif method[0] == "custom":
+                        lightcurves[i].set_detrending(
+                            method[0], function=method[1], method_idx=method_idx
+                        )
 
                     # Now set up the required parameters to be fitted
                     n_coeffs = lightcurves[i].n_detrending_params
 
                     for coeff_i in range(n_coeffs):
                         # Loop over each coefficient!
-                        coeff_name = 'd{}_{}'.format(coeff_i, method_idx)
+                        coeff_name = "d{}_{}".format(coeff_i, method_idx)
 
                         # Set up the limits of each fitting parameter
                         if limits is None:
                             # Limits are not provided.
                             # We hard-code a default of ±10
-                            low_lim = -10.
-                            high_lim = 10.
+                            low_lim = -10.0
+                            high_lim = 10.0
 
                         elif isinstance(limits[method_idx][0], Iterable):
                             # The limits for each parameter have been set
@@ -282,7 +414,7 @@ class PriorInfo:
                             low_lim = limits[method_idx][0]
                             high_lim = limits[method_idx][1]
 
-                        if method[0] == 'custom':
+                        if method[0] == "custom":
                             # Work out telescope, filter, epoch dependencies
                             tel_dep = coeff_i + 1 in method[2]
                             filt_dep = coeff_i + 1 in method[3]
@@ -300,7 +432,7 @@ class PriorInfo:
                             coeff_telescope_idx = telescope_idx
                         else:
                             coeff_telescope_idx = None
-                        if  filt_dep:
+                        if filt_dep:
                             coeff_filter_idx = filter_idx
                         else:
                             coeff_filter_idx = None
@@ -314,46 +446,75 @@ class PriorInfo:
                             self.detrending_coeffs[method_idx].append(coeff_name)
 
                             # Have to deal with nth order and custom separately
-                            if method[0] == 'nth order':
-                                shape = (self.n_telescopes, self.n_filters, self.n_epochs)
+                            if method[0] == "nth order":
+                                shape = (
+                                    self.n_telescopes,
+                                    self.n_filters,
+                                    self.n_epochs,
+                                )
 
                                 # Initialise the prior
-                                self.priors[coeff_name] = ParamArray(coeff_name, shape, True, True, True)
+                                self.priors[coeff_name] = ParamArray(
+                                    coeff_name, shape, True, True, True
+                                )
 
-                            elif method[0] == 'custom':
+                            elif method[0] == "custom":
                                 # Work out the shape needed for the ParamArray
-                                shape = ([1, self.n_telescopes][tel_dep],
-                                         [1, self.n_filters][filt_dep],
-                                         [1, self.n_epochs][epoch_dep])
+                                shape = (
+                                    [1, self.n_telescopes][tel_dep],
+                                    [1, self.n_filters][filt_dep],
+                                    [1, self.n_epochs][epoch_dep],
+                                )
 
                                 # Initialise the prior
-                                self.priors[coeff_name] = ParamArray(coeff_name, shape, tel_dep, filt_dep, epoch_dep)
-
+                                self.priors[coeff_name] = ParamArray(
+                                    coeff_name, shape, tel_dep, filt_dep, epoch_dep
+                                )
 
                         # Now set up the fitting. We assume a uniform prior
                         # We have to check here for parameters which are
                         # telescope/filter/epoch dependent!
-                        if coeff_name not in self.fitting_params[:,0]:
+                        if coeff_name not in self.fitting_params[:, 0]:
                             # The parameter has not been set up for fitting
                             # -> no checks needed
-                            self.add_uniform_fit_param(coeff_name, low_lim, high_lim, coeff_telescope_idx, coeff_filter_idx, coeff_epoch_idx)
-
+                            self.add_uniform_fit_param(
+                                coeff_name,
+                                low_lim,
+                                high_lim,
+                                coeff_telescope_idx,
+                                coeff_filter_idx,
+                                coeff_epoch_idx,
+                            )
 
                         else:
                             # Run a check to see if the param is at least one
                             # of telescope, filter, or epoch dependent. If so,
                             # this needs to be fitted, but otherwise ignored.
                             if tel_dep or filt_dep or epoch_dep:
-                                self.add_uniform_fit_param(coeff_name, low_lim, high_lim, coeff_telescope_idx, coeff_filter_idx, coeff_epoch_idx)
+                                self.add_uniform_fit_param(
+                                    coeff_name,
+                                    low_lim,
+                                    high_lim,
+                                    coeff_telescope_idx,
+                                    coeff_filter_idx,
+                                    coeff_epoch_idx,
+                                )
 
-        self.detrend=True
+        self.detrend = True
 
-    def fit_limb_darkening(self, fit_method='independent',
-                           host_T=None, host_logg=None,
-                           host_z=None, filters=None,
-                           n_samples=20000, do_mc=False, cache_path=None,
-                           ldtk_uncertainty_multiplier=1.):
-        '''
+    def fit_limb_darkening(
+        self,
+        fit_method="independent",
+        host_T=None,
+        host_logg=None,
+        host_z=None,
+        filters=None,
+        n_samples=20000,
+        do_mc=False,
+        cache_path=None,
+        ldtk_uncertainty_multiplier=1.0,
+    ):
+        """
         Initialises fitting of limb darkening parameters, either independently
         or coupled across wavebands.
 
@@ -407,16 +568,22 @@ class PriorInfo:
             that defines how strongly the LD profile (or the prior created
             from it) constrains the final analysis (that is, how much we
             trust the stellar atmosphere models used to create the profiles.)
-        '''
+        """
         # Sanity checks
-        if fit_method not in ['coupled', 'single', 'independent']:
-            raise ValueError('Unrecognised fit method {}'.format(fit_method))
+        if fit_method not in ["coupled", "single", "independent"]:
+            raise ValueError("Unrecognised fit method {}".format(fit_method))
 
-        if not fit_method == 'independent':
+        if not fit_method == "independent":
             if filters is None:
-                raise ValueError('Filters must be provided for coupled and single ld_fit_methods')
+                raise ValueError(
+                    "Filters must be provided for coupled and single ld_fit_methods"
+                )
             if not len(filters) == self.n_filters:
-                raise ValueError('{} filters were given, but there are {} filters required!'.format(len(filters), self.n_filters))
+                raise ValueError(
+                    "{} filters were given, but there are {} filters required!".format(
+                        len(filters), self.n_filters
+                    )
+                )
 
         # Store some useful information
         self.fit_ld = True
@@ -433,19 +600,116 @@ class PriorInfo:
 
             # If we are in 'single' mode, we only need to fit for the first
             # wavelength
-            if self.ld_fit_method == 'single':
+            if self.ld_fit_method == "single":
                 break
 
-        if not fit_method == 'independent':
+        if not fit_method == "independent":
             # Now if we are coupling across wavelength we must initialise PyLDTK
+
             print('Initialising LDTK. If stuck here, please check the cache path')
             self.ld_handler.initialise_ldtk(host_T, host_logg, host_z, filters,
                                             self.limb_dark,
                                             n_samples, do_mc, cache_path,
                                             ldtk_uncertainty_multiplier)
 
-    def fit_normalisation(self, lightcurves,normalise_limits):
-        '''
+            self.ld_handler.initialise_ldtk(
+                host_T,
+                host_logg,
+                host_z,
+                filters,
+                self.limb_dark,
+                n_samples,
+                do_mc,
+                cache_path,
+                ldtk_uncertainty_multiplier,
+            )
+
+    def fit_custom_limb_darkening(self, priors_file,filter_indices, ldtk_uncertainty_multiplier=1):
+        """
+        Initialises fitting of limb darkening parameters, either independently
+        or coupled across wavebands.
+
+        Parameters
+        ----------
+        priors_file : str
+            The path to the priors file containing the priors for the limb darkening
+            coefficients. The file should be in the format:
+                Parameter,Distribution,Input_A,Input_B,Filter
+                ...
+                u0,gaussian,best,error,0
+                u1,gaussian,best,error,0
+                ...
+            where each row corresponds to a filter, and each column corresponds
+            to a limb darkening coefficient. The values should be the mean
+            values of the coefficients, and the uncertainties should be set
+            to 0. The values should be between 0 and 1.
+
+        ldtk_uncertainty_multiplier: float, optional
+            (From LDTK:) The uncertainty multiplier ϵ is a subjective factor
+            that defines how strongly the LD profile (or the prior created
+            from it) constrains the final analysis (that is, how much we
+            trust the stellar atmosphere models used to create the profiles.)
+        """
+
+        df = pd.read_csv(priors_file)
+
+        # Store some useful information
+        self.fit_ld = True
+        self.ld_fit_method = "custom"
+        self.filters = None
+        self._n_ld_samples = 20000
+        self._do_ld_mc = False
+        self._ld_cache_path = None
+
+        ldc_priors = df[df["Parameter"].isin(["q0", "q1", "q2", "q3"])]
+        if len(ldc_priors)  < len(self.limb_dark_coeffs):
+            ldc_priors = df[df["Parameter"].isin(["u0", "u1","u2","u3"])]
+            if len(ldc_priors) < len(self.limb_dark_coeffs):
+                print(len(ldc_priors),len(self.limb_dark_coeffs),ldc_priors,self.limb_dark_coeffs)
+                #breakpoint()
+                raise ValueError(
+                    "The priors file must contain at least q0 and q1 or u0 and u1"
+                )
+
+            for i in filter_indices:
+                ldc_vals = ldc_priors[ldc_priors["Filter"] == i]
+                rows=[r for r in ldc_vals.index]
+                if ldc_vals["Distribution"].iloc[0] == "uniform":
+                    u_val = (ldc_vals["Input_A"].to_numpy(dtype=float)+ldc_vals["Input_B"].to_numpy(dtype=float))/2
+                    u_val_err = (ldc_vals["Input_B"].to_numpy(dtype=float)-ldc_vals["Input_A"].to_numpy(dtype=float))/2
+                    ldc_vals.at[0,"Distribution"] = "gaussian"
+                else:
+                    u_val = ldc_vals["Input_A"].to_numpy(dtype=float)
+                    u_val_err = ldc_vals["Input_B"].to_numpy(dtype=float)
+                q, q_err = self.ld_handler.convert_utoq_with_errors(u_val, u_err=u_val_err)
+                ldc_priors.loc[rows,"Input_A"] = q
+                ldc_priors.loc[rows,"Input_B"] = q_err
+
+        #breakpoint()
+        # Set up fitting for each LDC
+        fi=0
+        for i in filter_indices:
+            ldc_vals = ldc_priors[ldc_priors["Filter"] == i]
+            if ldc_vals["Distribution"].iloc[0] == "gaussian":
+                for ldc, name in enumerate(self.limb_dark_coeffs):
+                    self.add_gaussian_fit_param(
+                        name,
+                        ldc_vals["Input_A"].iloc[ldc],
+                        ldc_vals["Input_B"].iloc[ldc]*ldtk_uncertainty_multiplier,
+                        filter_idx=fi,
+                    )
+            else:
+                for ldc, name in enumerate(self.limb_dark_coeffs):
+                    self.add_uniform_fit_param(
+                        name,
+                        ldc_vals["Input_A"].iloc[ldc],
+                        ldc_vals["Input_B"].iloc[ldc],
+                        filter_idx=i,
+                    )
+            fi+=1
+
+    def fit_normalisation(self, lightcurves, normalise_limits):
+        """
         When run, the Retriever will fit normalisation of the data as a
         free parameter.
 
@@ -457,9 +721,11 @@ class PriorInfo:
             light curve. We use
                 ``1/f_median -1 <= c_n <= 1/f_median + 1``
             as the default range, where f_median is the median flux value.
-        '''
+        """
         if self.normalise:
-            raise ValueError('Detrending is already initialised. You need to make a new PriorInfo to use another detrending method!')
+            raise ValueError(
+                "Detrending is already initialised. You need to make a new PriorInfo to use another detrending method!"
+            )
 
         for i in np.ndindex(lightcurves.shape):
             telescope_idx, filter_idx, epoch_idx = i
@@ -467,12 +733,16 @@ class PriorInfo:
             if lightcurves[i] is not None:
                 # A light curve exists. Set up normalisation
                 best, low, high = lightcurves[i].set_normalisation(normalise_limits)
-                self.add_uniform_fit_param('norm', low, high, telescope_idx, filter_idx, epoch_idx)
+                self.add_uniform_fit_param(
+                    "norm", low, high, telescope_idx, filter_idx, epoch_idx
+                )
 
         self.normalise = True
 
-    def set_error_scaling(self,lightcurves, scaling_limits, method_index_array):#, telescope_idx=None):
-        
+    def set_error_scaling(
+        self, lightcurves, scaling_limits, method_index_array
+    ):  # , telescope_idx=None):
+
         for i in np.ndindex(lightcurves.shape):
             telescope_idx, filter_idx, epoch_idx = i
 
@@ -483,8 +753,8 @@ class PriorInfo:
                 if isinstance(scaling_limits[0], Iterable):
                     # The limits for each parameter have been set
                     # individually
-                    #low_lim = scaling_limits[telescope_idx][0]
-                    #high_lim = scaling_limits[telescope_idx][1]
+                    # low_lim = scaling_limits[telescope_idx][0]
+                    # high_lim = scaling_limits[telescope_idx][1]
                     scaling_limits_iter = scaling_limits[method_idx]
 
                 else:
@@ -492,48 +762,56 @@ class PriorInfo:
 
                 if lightcurves[i] is not None:
                     # A light curve exists. Set up error scaling
-                    best, low, high = lightcurves[i].set_error_scaling(scaling_limits_iter)
-                    self.add_uniform_fit_param('escale', low, high, telescope_idx, filter_idx, epoch_idx)
+                    best, low, high = lightcurves[i].set_error_scaling(
+                        scaling_limits_iter
+                    )
+                    self.add_uniform_fit_param(
+                        "escale", low, high, telescope_idx, filter_idx, epoch_idx
+                    )
 
         self.error_scaling = True
-        #key='escale'
-        #self.priors[key] = ParamArray(key, (self.n_telescopes, self.n_filters,self.n_epochs), True, True, True, 0, lightcurves=lightcurves)
-
-
+        # key='escale'
+        # self.priors[key] = ParamArray(key, (self.n_telescopes, self.n_filters,self.n_epochs), True, True, True, 0, lightcurves=lightcurves)
 
     ###############################################################
     #             CONVERSIONS FOR FITTING ROUTINES                #
     ###############################################################
 
     def _convert_unit_cube(self, cube):
-        '''
+        """
         Takes the unit cube provided by dynesty (all values between 0 and 1)
         and converts them into physical values
-        '''
+        """
         new_cube = np.zeros(len(self.fitting_params))
 
         for i, param_info in enumerate(self.fitting_params):
             name, tidx, fidx, eidx = param_info
 
-            if name == 'inc':
+            if name == "inc":
                 idx = self.priors[name]._generate_idx(tidx, fidx, eidx)
 
                 if hasattr(self.priors[name].array[idx], "uniform_to_clipped_gaussian"):
-                    new_cube[i] = self.priors[name].clipped_gaussian_transform(cube[i], tidx, fidx, eidx)
+                    new_cube[i] = self.priors[name].clipped_gaussian_transform(
+                        cube[i], tidx, fidx, eidx
+                    )
 
                 else:
-                    new_cube[i] = self.priors[name].from_unit_interval(cube[i], tidx, fidx, eidx)
+                    new_cube[i] = self.priors[name].from_unit_interval(
+                        cube[i], tidx, fidx, eidx
+                    )
 
             else:
-                new_cube[i] = self.priors[name].from_unit_interval(cube[i], tidx, fidx, eidx)
+                new_cube[i] = self.priors[name].from_unit_interval(
+                    cube[i], tidx, fidx, eidx
+                )
 
         return new_cube
 
     def _interpret_param_array(self, array):
-        '''
+        """
         Interprets the parameter cube generated by dynesty and returns them in
         a format usable by the LikelihoodCalculator
-        '''
+        """
 
         # Initialse a dictionary to store the physical results in
         result = {}
@@ -558,10 +836,10 @@ class PriorInfo:
         return result
 
     def _interpret_final_results(self, results):
-        '''
+        """
         Generates a dictionary of results and a dictionary of errors from the
         final results of a run
-        '''
+        """
         best_results = results.best
         best_result_errors = results.uncertainties
 
@@ -592,32 +870,31 @@ class PriorInfo:
 
         return result_dict, errors_dict
 
-
     ###############################################################
     #                          MISC                               #
     ###############################################################
     def __str__(self):
-        print_str = 'Priors:\n'
-        print_str += 'Limb darkening model: {}\n'.format(self.limb_dark)
-        print_str += 'n telescopes: {}\n'.format(self.n_telescopes)
-        print_str += 'n filters: {}\n'.format(self.n_filters)
-        print_str += 'n epochs: {}\n'.format(self.n_epochs)
+        print_str = "Priors:\n"
+        print_str += "Limb darkening model: {}\n".format(self.limb_dark)
+        print_str += "n telescopes: {}\n".format(self.n_telescopes)
+        print_str += "n filters: {}\n".format(self.n_filters)
+        print_str += "n epochs: {}\n".format(self.n_epochs)
         for var in self.priors:
             print_str += self.priors[var].__str__()
-        print_str += 'Total {} fitting parameters'.format(len(self.fitting_params))
+        print_str += "Total {} fitting parameters".format(len(self.fitting_params))
         return print_str
-    
+
     def get_latex_friendly_labels(self):
         """Adds a $ around the underscored text to make the latex displays work"""
         labels = []
-        for param in self.fitting_params[:,0]:
+        for param in self.fitting_params[:, 0]:
             if "_" in param:
-                new_label = ''
+                new_label = ""
                 for s in param.split("_")[:-1]:
                     new_label += s + "$_"
-                new_label += param.split("_")[-1]+"$"
-            elif param[-1].isdigit() or param =='rp':
-                new_label = param[:-1]+'$_'+param[-1]+'$'
+                new_label += param.split("_")[-1] + "$"
+            elif param[-1].isdigit() or param == "rp":
+                new_label = param[:-1] + "$_" + param[-1] + "$"
             else:
                 new_label = param
             labels.append(new_label)

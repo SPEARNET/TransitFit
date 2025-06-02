@@ -24,9 +24,12 @@ from .io import (
     read_filter_info,
     parse_filter_list,
     print_results,
+    parse_data_path_list,
+    read_data_path_array,
 )
 from ._likelihood import LikelihoodCalculator
 from ._utils import  weighted_avg_and_std
+from .new_error_analysis import get_asymmetric_errors_fitting_mode_all
 
 # Parameters and if they are global, filter-specific or lightcurve-specific
 global_params = ["P", "ecc", "a", "inc", "w"]
@@ -123,6 +126,10 @@ class Retriever:
             that defines how strongly the LD profile (or the prior created
             from it) constrains the final analysis (that is, how much we
             trust the stellar atmosphere models used to create the profiles.)
+    fit_ttv_taylor: bool, optional
+        If True, will fit the TTVs using a Taylor expansion of the ephemeris
+        equation. Default is False.
+    
     """
 
     def __init__(
@@ -153,6 +160,8 @@ class Retriever:
         error_scaling=False,
         error_scaling_limits=None,
         ldtk_uncertainty_multiplier=1.,
+        ld_fit_method='independent',
+        fit_ttv_taylor=False,
     ):
 
         ###################
@@ -198,6 +207,7 @@ class Retriever:
         self.do_ld_mc = do_ld_mc
         self.ldtk_cache = ldtk_cache
         self.ldtk_uncertainty_multiplier = ldtk_uncertainty_multiplier
+        self.fit_ttv_taylor=fit_ttv_taylor
 
         ###########################################################################
         # Now read in things from files to get Filters, full priors, full lc data #
@@ -209,19 +219,40 @@ class Retriever:
             self.filters = read_filter_info(self._filter_input, filter_delimiter)
         else:
             self.filters = parse_filter_list(self._filter_input, filter_delimiter)
+            
+        if ld_fit_method == 'exoctk':
+            from .exoctk_handler import change_priors_take_extremes
+            self._prior_input=change_priors_take_extremes(self._filter_input,self.filters,host_T,host_logg, host_z, n_ld_samples,ldtk_uncertainty_multiplier,priors)
+
+        if ld_fit_method == 'exotik':
+            from .exotik_handler import change_priors
+            self._prior_input=change_priors(self._filter_input,self.filters,host_T,host_logg, host_z, n_ld_samples,ldtk_uncertainty_multiplier,priors)
 
         # Load in the full LightCurve data and detrending index array
-        self.all_lightcurves, self.detrending_index_array = read_input_file(
-            data_files, data_skiprows
-        )
+        if fit_ttv_taylor:
+            info = data_files.values
+
+            data_path_array, detrending_index_array = parse_data_path_list(info)
+
+            lightcurves = read_data_path_array(data_path_array, skiprows=0)
+
+            self.all_lightcurves, self.detrending_index_array =  lightcurves, detrending_index_array
+
+
+        else:
+
+            self.all_lightcurves, self.detrending_index_array = read_input_file(
+                data_files, data_skiprows
+            )
 
         if median_normalisation:
             print("Normalising lightcurves...")
             #normalise_limits=[0.95,1.05]
             for i in np.ndindex(self.all_lightcurves.shape):
-                scale=np.median(self.all_lightcurves[i].flux)
-                self.all_lightcurves[i].flux = self.all_lightcurves[i].flux/scale
-                self.all_lightcurves[i].errors = self.all_lightcurves[i].errors/scale
+                if self.all_lightcurves[i] is not None:
+                    scale=np.median(self.all_lightcurves[i].flux)
+                    self.all_lightcurves[i].flux = self.all_lightcurves[i].flux/scale
+                    self.all_lightcurves[i].errors = self.all_lightcurves[i].errors/scale
         
         self.error_scaling = error_scaling
         if error_scaling:
@@ -315,7 +346,7 @@ class Retriever:
 
         # Initialise the OutputWriter
         self.output_handler = OutputHandler(
-            self.all_lightcurves, self._full_prior, self.host_r
+            self.all_lightcurves, self._full_prior, self.host_r,fit_ttv_taylor=self.fit_ttv_taylor
         )
 
 
@@ -355,7 +386,7 @@ class Retriever:
                 n_dof += len(lightcurves[i].times)
 
         # Make a LikelihoodCalculator
-        likelihood_calc = LikelihoodCalculator(lightcurves, priors)
+        likelihood_calc = LikelihoodCalculator(lightcurves, priors, self.fit_ttv_taylor)
         print(priors)
 
         #######################################################################
@@ -370,7 +401,7 @@ class Retriever:
 
             ln_likelihood= likelihood_calc.find_likelihood(params)
 
-            if priors.fit_ld and not priors.ld_fit_method == "independent":
+            if priors.fit_ld and priors.ld_fit_method not in["independent","custom"]:
                 # Pull out the q values and convert them
                 u = []
                 for fi in range(priors.n_filters):
@@ -384,9 +415,8 @@ class Retriever:
 
         #######################################################################
         #######################################################################
-
         # Now we can set up and run the sampler!
-        sampler = NestedSampler(
+        """sampler = NestedSampler(
             lnlike,
             prior_transform,
             n_dims,
@@ -395,17 +425,18 @@ class Retriever:
             nlive=nlive,
             walks=walks,
             slices=slices,
-        )
-        """
+            pool=Pool(20),
+            queue_size=20
+        )"""
         # Modification to include multiprocessing in single batches. 
-        # If the n_procs is less than batches, then each batch gets additional 
-        # processors to .
+        # If there is only 1 batch, it provides the additional cores to dynesty.
         if self.dynesty_procs>1:
+            from pathos.multiprocessing import ProcessingPool as Pool
             print(f"Running dynesty on {self.dynesty_procs} cores for this batch.")
-            dynesty_pool = mp.Pool(self.dynesty_procs)
+            dynesty_pool = Pool(self.dynesty_procs)
             sampler = NestedSampler(
-                likelihood_calc.find_likelihood_parallel_processed,
-                priors._convert_unit_cube,
+                lnlike,
+                prior_transform,
                 n_dims,
                 bound=bound,
                 sample=sample,  # update_interval=float(n_dims),
@@ -426,10 +457,12 @@ class Retriever:
                 nlive=nlive,
                 walks=walks,
                 slices=slices,
-            )"""
+            )
 
         try:
             sampler.run_nested(maxiter=maxiter, maxcall=maxcall, dlogz=dlogz)
+        except KeyboardInterrupt:
+            print("Keyboard interrupt received. Stopping sampler.")
         except BaseException as e:
             # Added for testing
             print(f"Exception ({type(e)}) encountered:")
@@ -444,7 +477,7 @@ class Retriever:
             #results = sampler.results
             #results.best = results.samples[np.argmax(results.logl)]
             results = ResultsException(sampler)
-            output_handler = OutputHandler(lightcurves, self._full_prior, self.host_r)
+            output_handler = OutputHandler(lightcurves, self._full_prior, self.host_r,fit_ttv_taylor=self.fit_ttv_taylor)
             output_handler._plot_samples(
                 results, priors, "Exception_posteriors.png", plot_folder
             )
@@ -504,11 +537,13 @@ class Retriever:
         bound="multi",
         walks=100,
         slices=10,
+        n_procs=1,
     ):
         """
         Runs full retrieval with no folding/batching etc. Just a straight
         forward dynesty run.
         """
+        self.dynesty_procs= np.amin([n_procs,mp.cpu_count()])
         priors, lightcurves = self._get_priors_and_curves(
             self.all_lightcurves,
             ld_fit_method,
@@ -518,7 +553,7 @@ class Retriever:
         )
 
         # Set up output handler
-        output_handler = OutputHandler(self.all_lightcurves, priors, self.host_r)
+        output_handler = OutputHandler(self.all_lightcurves, priors, self.host_r,fit_ttv_taylor=self.fit_ttv_taylor)
 
         # print(priors)
         results, ndof = self._run_dynesty(
@@ -541,6 +576,9 @@ class Retriever:
         except Exception as e:
             print(e)
 
+        output_handler._quicksave_result(
+                                    results, priors, lightcurves, output_folder, 0, 0
+                                    )
         # Save outputs parameters, plots, lightcurves!
         try:
             output_handler.save_results(
@@ -611,7 +649,7 @@ class Retriever:
             folded_t0,
             suppress_warnings=True,
         )
-        output_handler = OutputHandler(full_lcs, full_prior, self.host_r)
+        output_handler = OutputHandler(full_lcs, full_prior, self.host_r,fit_ttv_taylor=self.fit_ttv_taylor)
 
         n_batches = len(batches)
 
@@ -653,8 +691,8 @@ class Retriever:
         # If the number of batches is smaller than the number of cores
         # to be used, it provides the additional cores to dynesty for 
         # multiprocessing
-        if len(batches)<n_procs:
-            self.dynesty_procs = n_procs//len(batches)
+        if len(batches)==1:
+            self.dynesty_procs = n_procs
         else:
             self.dynesty_procs = 1
         n_procs = np.amin([n_procs,len(batches),mp.cpu_count()])
@@ -894,7 +932,7 @@ class Retriever:
 
         Parameters
         ----------
-        ld_fit_method : {`'coupled'`, `'single'`, `'independent'`, `'off'`}, optional
+        ld_fit_method : {`'coupled'`, `'single'`, `'independent'`, `'off'`,`'custom'`}, optional
             Determines the mode of fitting of limb darkening parameters. The
             available modes are:
                 - `'coupled'` : all limb darkening parameters are fitted
@@ -909,6 +947,7 @@ class Retriever:
                 - `'independent'` : Each LD coefficient is fitted separately for
                   each filter, with no coupling to the ldtk models.
                 - `'off'` : Will use the fixed value provided in the input file
+                -```'custom'``` : The user can provide priors for limb darkening
             Default is `'independent'`
         fitting_mode : {'auto', 'all', 'folded', 'batched'}, optional
             Determines if the fitting algorithm is limited by max_parameters.
@@ -1009,6 +1048,7 @@ class Retriever:
                 bound,
                 walks,
                 slices,
+                n_procs,
             )
 
         elif fitting_mode.lower() == "batched":
@@ -1089,7 +1129,7 @@ class Retriever:
             suppress_warnings=True,
         )
 
-        output_handler = OutputHandler(self.all_lightcurves, full_prior, self.host_r)
+        output_handler = OutputHandler(self.all_lightcurves, full_prior, self.host_r,fit_ttv_taylor=self.fit_ttv_taylor)
 
         output_handler.save_complete_results(
             fitting_mode, full_prior, output_folder, summary_file
@@ -1115,7 +1155,9 @@ class Retriever:
             print("'batched' mode was used to fit TransitFit lightcurves.")
             print("If this was the first run, it is suggested to rerun TransitFit for the model.")
             print("For wavelength independent parameters, use output from this run as priors.")
-
+        elif fitting_mode.lower() == 'all':
+            get_asymmetric_errors_fitting_mode_all(output_folder,plot_folder)
+            #os.system(f"cp {plot_folder}/unfolded/batch_0_samples_results_with_asymmetric_errors.csv {output_folder}/results_with_asymmetric_errors.csv")
     ##########################################################
     #            PRIOR MANIPULATION                          #
     ##########################################################
@@ -1140,7 +1182,7 @@ class Retriever:
         lightcurves : array_like
             An array of the light curves which will be golbally considered for
             fitting.
-        ld_fit_method : {'independent', 'single', 'coupled', 'off'}
+        ld_fit_method : {'independent', 'single', 'coupled', 'off','custom'}
             The mode to fit limb darkening coefficients with.
         indices : tuple or None
             If None, will fit all light curves. Otherwise, supply relevant
@@ -1230,6 +1272,8 @@ class Retriever:
                 lightcurve_subset,
                 suppress_warnings,
                 self.error_scaling,
+                ld_fit_method,
+                self.fit_ttv_taylor,
             )
         else:
             # Reading in from a list
@@ -1248,12 +1292,15 @@ class Retriever:
                 lightcurve_subset,
                 suppress_warnings,
                 self.error_scaling,
+                self.fit_ttv_taylor,
             )
 
         # Set up limb darkening
         if not ld_fit_method.lower() == "off":
             if ld_fit_method.lower() == "independent":
                 priors.fit_limb_darkening(ld_fit_method)
+            elif ld_fit_method.lower() == "custom":
+                priors.fit_custom_limb_darkening(self._prior_input,filter_indices, self.ldtk_uncertainty_multiplier)
             elif ld_fit_method.lower() in ["coupled", "single"]:
                 if self._filter_input is None:
                     raise ValueError(
@@ -1335,7 +1382,7 @@ class Retriever:
         ###                  GET P AND t0 VALUES                    ###
         ###############################################################
         result_handler = OutputHandler(
-            self.all_lightcurves, self._full_prior, self.host_r
+            self.all_lightcurves, self._full_prior, self.host_r,fit_ttv_taylor=self.fit_ttv_taylor
         )
 
         results_dicts = []
@@ -1354,11 +1401,14 @@ class Retriever:
             # P is fixed
             best_P, best_P_err = combined_results["P"][None, None, None][0, 0], 0
         else:
-            best_P, best_P_err = weighted_avg_and_std(
-                combined_results["P"][None, None, None][:, 0],
-                combined_results["P"][None, None, None][:, -1],
-                single_val=True,
-            )
+            try:
+                best_P, best_P_err = weighted_avg_and_std(
+                    combined_results["P"][None, None, None][:, 0],
+                    combined_results["P"][None, None, None][:, -1],
+                    single_val=True,
+                )
+            except TypeError: #If Period is a fixed value.
+                best_P, best_P_err = combined_results["P"][None, None, None][0, 0], 0
 
         # Get best t0 values, allowing for ttv mode
         best_t0, best_t0_err = np.full(self.n_epochs, None), np.full(
@@ -1887,7 +1937,7 @@ class Retriever:
             n_params += n_epochs
 
         # Account for filter-specific parameters - rp and LD coeffs
-        if ld_fit_method in ["independent", "coupled"]:
+        if ld_fit_method in ["independent", "coupled", "custom"]:
             n_params += n_filters * (1 + self.n_ld_params)
         else:  # single fitting mode being used
             n_params += n_filters + self.n_ld_params

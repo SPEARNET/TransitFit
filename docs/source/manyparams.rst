@@ -36,3 +36,5 @@ By default, ``TransitFit`` will try and detect which fitting mode is most approp
     2. If any filter has 3 or more epochs observed, then ``'folded'`` mode is used.
 
     3. Otherwise, ``'batched'`` mode is used.
+
+If there are significantly large number of lightcurves with different filters, sometimes this might result in an incorrect final fit. Given the large number of light curves involved, there is a possibility of inter-batch variability in the wavelength-independent parameters. Consequently, the wavelength-dependent parameters might not result in the best fit when used with the final results for wavelength-independent parameters. In order to reduce this discrepancy, we suggest using  ‘batched’ mode for fitting the light curves. We take the results from the first run, and calculate inverse variance weighted results from all batches leaving one batch at a time. The union of these results is taken as the prior for the wavelength-independent parameters in the second run in ‘batched’ mode again, which gives us the final results.

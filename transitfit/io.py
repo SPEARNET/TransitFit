@@ -12,15 +12,93 @@ from ._utils import validate_variable_key, AU_to_host_radii
 from .lightcurve import LightCurve
 import batman
 import os
+from ._limb_darkening_handler import LimbDarkeningHandler
 
 #############################################################
 #                         PRIORS                            #
 #############################################################
+def check_valid_ldc_params(limb_dark, _params_found):
+    if limb_dark == 'linear':
+        allowed_params = {'u0'}
+    if limb_dark in ['quadratic','squareroot', 'power2']:
+            allowed_params = {'u0', 'u1'}
+    if limb_dark == 'nonlinear':
+            allowed_params = {'u0', 'u1', 'u2', 'u3'}
+
+    invalid_params = [param for param in _params_found if param not in allowed_params]
+    missing_params = [param for param in allowed_params if param not in _params_found]
+
+    if invalid_params:
+        raise ValueError(f"Invalid parameters found for {limb_dark} limb darkening: {invalid_params}")
+    if missing_params:
+        raise ValueError(f"Missing required parameters for {limb_dark} limb darkening: {missing_params}")
+
+
+def process_ldc_priors(priors_list,limb_dark,ld_fit_method='custom'):
+    """Handles the processing of LDC priors whenever required.
+
+    Args:
+        priors_list (list): list of priors
+
+    Returns:
+        list: list of priors with LDCs processed
+    """
+    LDH=LimbDarkeningHandler(limb_dark)
+    u_params = ['u0', 'u1', 'u2', 'u3']
+    _params_found = []
+    u_values = {}
+
+    # Collect u values and errors by filter index
+    for entry in priors_list:
+        param, dist, input_a, input_b, filter_index = entry
+        if param in u_params:
+            if param not in _params_found:
+                _params_found.append(param)
+
+            if filter_index not in u_values:
+                u_values[filter_index] = {}
+            if dist.lower() == 'uniform':
+                u_values[filter_index][param] = ((input_a+ input_b)/2, (input_b - input_a)/2)
+            u_values[filter_index][param] = (input_a, input_b)
+    if len(_params_found) == 0:
+        return priors_list
+    
+    check_valid_ldc_params(limb_dark, _params_found)
+    
+    # Convert u values to q values
+    q_values = {}
+    for filter_index, u_dict in u_values.items():
+        u = [u_dict.get(param, (0, 0))[0] for param in _params_found]
+        u_err = [u_dict.get(param, (0, 0))[1] for param in _params_found]
+        q, q_err = LDH.convert_utoq_with_errors(u, u_err)
+        q_values[filter_index] = (q, q_err)
+
+    # Create new priors list with q values
+    new_priors_list = []
+    for entry in priors_list:
+        param, dist, input_a, input_b, filter_index = entry
+        if param in _params_found and filter_index in q_values:
+            q, q_err = q_values[filter_index]
+            q_param_index = _params_found.index(param)
+            if ld_fit_method =='off':
+                new_entry = [f'q{q_param_index}', 'fixed', q[q_param_index], q_err[q_param_index], filter_index]
+            else:
+                new_entry = [f'q{q_param_index}', 'gaussian', q[q_param_index], q_err[q_param_index], filter_index]
+                
+            new_priors_list.append(new_entry)
+        else:
+            new_priors_list.append(entry)
+
+    return np.array(new_priors_list, dtype=object)
+
 def read_priors_file(path, n_telescopes, n_filters, n_epochs,
                      limb_dark='quadratic', filter_indices=None, folded=False,
                      folded_P=None, folded_t0=None, host_radius=None,
                      allow_ttv=None, lightcurves=None, suppress_warnings=False, 
-                     error_scaling=False):
+                     error_scaling=False,
+                     ld_fit_method='independent',
+                     fit_ttv_taylor=False,
+                     ):
     '''
     If given a csv file containing priors, will produce a PriorInfo object
     based off the given values
@@ -85,15 +163,23 @@ def read_priors_file(path, n_telescopes, n_filters, n_epochs,
     Detrending currently cannot be initialised in the prior file. It will be
     available as a kwarg in the pipeline function
     '''
-    priors_list = pd.read_csv(path).values
+    priors_list = pd.read_csv(path)
+    # Parameters u0 and u1 are used only when fitting limb darkening coefficients from user defined custom priors. 
+    if ld_fit_method not in ['off','custom']:
 
-    return parse_priors_list(priors_list, n_telescopes, n_filters, n_epochs, limb_dark, filter_indices, folded, folded_P, folded_t0, host_radius, allow_ttv, lightcurves, suppress_warnings, error_scaling)
+        priors_list = priors_list.drop(priors_list[priors_list['Parameter'].isin(['u0', 'u1','u2','u3','u4','q0', 'q1','q2','q3','q4'])].index)
+    priors_list = priors_list.values
+
+    if ld_fit_method in ['off','custom']:
+        priors_list=process_ldc_priors(priors_list,limb_dark, ld_fit_method=ld_fit_method)
+
+    return parse_priors_list(priors_list, n_telescopes, n_filters, n_epochs, limb_dark, filter_indices, folded, folded_P, folded_t0, host_radius, allow_ttv, lightcurves, suppress_warnings, error_scaling, fit_ttv_taylor,ld_fit_method)
 
 def parse_priors_list(priors_list, n_telescopes, n_filters,
                       n_epochs, ld_model, filter_indices=None, folded=False,
                       folded_P=None, folded_t0=None, host_radius=None,
                       allow_ttv=False, lightcurves=None, suppress_warnings=False,
-                      error_scaling=False):
+                      error_scaling=False,fit_ttv_taylor=False,ld_fit_method='independent'):
     '''
     Parses a list of priors to produce a PriorInfo with all fitting parameters
     initialised.
@@ -156,7 +242,14 @@ def parse_priors_list(priors_list, n_telescopes, n_filters,
         filter_indices = np.arange(n_filters)
 
     rp_count = 0
+    q_count={
+        "q0":-1,
+        "q1":-1,
+        "q2":-1,
+        "q3":-1,
+            }
     used_filters = []
+    #print(priors_dict)
     for row in priors_list:
         # First check the key and correct if possible
         row[0] = validate_variable_key(row[0])
@@ -174,6 +267,12 @@ def parse_priors_list(priors_list, n_telescopes, n_filters,
                 priors_dict[row[0]] = np.append(row[2:-1], rp_count)
                 rp_count += 1
                 used_filters.append(row[-1])
+        
+        elif ld_fit_method in ['off','custom'] and row[0] in ['q0','q1','q2','q3']:
+            q_count[row[0]]+=1
+            
+            if row[-1] in filter_indices:
+                priors_dict[row[0]]=np.append(row[2:-1],q_count[row[0]])
 
         else:
             if row[0] == 'a' and host_radius is not None:
@@ -182,7 +281,8 @@ def parse_priors_list(priors_list, n_telescopes, n_filters,
                 row[3] = AU_to_host_radii(row[3], host_radius)
 
             priors_dict[row[0]] = row[2:]
-
+    #print(priors_dict)
+    #breakpoint()
     # We  have to convert between the global filter indexing and an
     # internal filter indexing here.
     filter_conversion = {ai : i for i, ai in enumerate(used_filters)}
@@ -217,11 +317,16 @@ def parse_priors_list(priors_list, n_telescopes, n_filters,
                           priors_dict['q1'][0],
                           priors_dict['q2'][0],
                           priors_dict['q3'][0],
-                          allow_ttv, lightcurves, error_scaling)
-
+                          allow_ttv, lightcurves, error_scaling,fit_ttv_taylor)
     ##########################
     # Initialise the fitting #
     ##########################
+    q_arrays={
+        "q0":[],
+        "q1":[],
+        "q2":[],
+        "q3":[],
+            }
     for ri, row in enumerate(priors_list):
         key, mode, inputA, inputB, filt = row
         mode = mode.strip()
@@ -258,7 +363,10 @@ def parse_priors_list(priors_list, n_telescopes, n_filters,
 
             elif mode.lower() in ['fixed', 'f', 'constant', 'c']:
                 # Not being fitted. Default value was specified.
-                pass
+                if ld_fit_method in ['off','custom'] and key in ['q0','q1','q2','q3']:
+                    q_arrays[key].append([inputA])
+                else:    
+                    pass
 
             elif mode.lower() in ['uniform', 'unif', 'u']:
                 # Uniform fitting
@@ -282,7 +390,14 @@ def parse_priors_list(priors_list, n_telescopes, n_filters,
 
             else:
                 raise ValueError('Unrecognised fiting mode {} in input row {}. Must be any of "uniform", "gaussian", or "fixed"'.format(mode, ri))
-
+    if ld_fit_method in ['off','custom']:    
+        #breakpoint()
+        for key in q_arrays:
+            _arr=np.array([q_arrays[key]])
+            if _arr.size>0:
+                #priors.priors[key].default_value = _arr
+                priors.priors[key].array = _arr
+                priors.priors[key]._set_type_fixed_ldc()
     return priors
 
 #############################################################
@@ -680,7 +795,7 @@ def print_results(results, priorinfo, n_dof):
             #    param = param +'_{}'.format(int(priorinfo._epoch_idx[i]))
             elif (param in priorinfo.detrending_coeffs + ['norm']) or (param in['t0'] and priorinfo.allow_ttv):
                 param = param + '_t{}_f{}_e{}:'.format(int(tidx),int(fidx), int(eidx))
-            elif param in priorinfo.limb_dark_coeffs and priorinfo.ld_fit_method in ['independent', 'coupled']:
+            elif param in priorinfo.limb_dark_coeffs and priorinfo.ld_fit_method in ['independent', 'coupled','custom']:
                 # All the LD coeffs are fitted separately and will write out
                 param = param +'_{}:\t'.format(int(fidx))
             else:
