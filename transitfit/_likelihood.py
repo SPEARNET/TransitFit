@@ -126,25 +126,29 @@ class LikelihoodCalculator:
         t0_all = np.array([self.t0_first])
 
         t_start=0
-        condition=True
         initial_guess_epochs=np.array((times_last-self.t0_first)//self.P,dtype=int)
         indx=1
         for i in range(1,max(initial_guess_epochs)+1):
             tau=get_time_duration(self.p_prime,self.p_dprime,self.P,t_start)
 
+            if tau is None:
+                return None, (max(initial_guess_epochs)-i)
+            
+            if tau>2*self.P or tau<.5*self.P:
+                return None, (max(initial_guess_epochs)-i)
+
             # The period at the next epoch
-            P_new=taylor_series(self.P,self.p_prime,self.p_dprime,tau)
+            P_new=taylor_series(self.P,self.p_prime,self.p_dprime,tau,t_start)
             self.P=P_new
             t_start+=tau
 
             if i in initial_guess_epochs:
-                if t_start+self.t0_first<times_first[indx] or t_start+self.t0_first>self.times_last[indx]:
-                    return None, (max(initial_guess_epochs)-i)
-                else:
-                    period_all=np.append(period_all,P_new)
-                    t0_all=np.append(t0_all,t_start+self.t0_first)
-                    indx+=1
+                period_all=np.append(period_all,P_new)
+                t0_all=np.append(t0_all,t_start+self.t0_first)
+                indx+=1
 
+        if len(t0_all)==0:
+            return None, (max(initial_guess_epochs))
         """while condition:
             # The time duration between the current and the next epoch
             tau=get_time_duration(self.p_prime,self.p_dprime,self.P,t_start)
@@ -173,6 +177,8 @@ class LikelihoodCalculator:
 
             if self.lightcurves[i] is not None:
                 find_id=t0_all-self.lightcurves[i].times[-1]
+                if len(find_id[find_id<=0])==0:
+                    return None, (max(initial_guess_epochs)-i)
                 id=np.argmax(find_id[find_id<=0])
 
                 params['P'][i]=period_all[id]
@@ -276,14 +282,17 @@ class LikelihoodCalculator:
                                    u)
 
                 # Now we calculate the model transits
-                model = self.batman_models[i]
+                model = deepcopy(self.batman_models[i])
                 # Batman considers uniform period. So we need to shift the timestamps accordingly.
-                if self.fit_ttv_taylor:
+                """if self.fit_ttv_taylor:
                     _time=model.t
-                    shift=get_shift_in_time_due_to_ttv(0,_time-params['t0'][i],params['p_prime'][i],params['p_dprime'][i],params['P'][i], params['t0'][i]-self.t0_first)                    
+                    shift=get_shift_in_time_due_to_ttv(_time-params['t0'][i],params['p_prime'][i],params['p_dprime'][i],params['P'][i], params['t0'][i]-self.t0_first)  
+                    if abs(max(shift))>params['P'][i]:
+                        total_chi2 += 1e7
+
                     #fraction=(_time-model.t0)/self.P
                     #shift=fraction*((params['p_prime'][i]/2 - 1) * fraction*_time +params['p_dprime'][i]/6 * (fraction*_time)**2)
-                    #model.t=_time-shift
+                    model.t=_time-shift"""
                 model_flux = model.light_curve(self.batman_params[i])
 
                 # DETREND AND NORMALISE THE DATA TO COMPARE TO THE MODEL

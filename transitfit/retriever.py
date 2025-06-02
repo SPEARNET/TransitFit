@@ -576,6 +576,9 @@ class Retriever:
         except Exception as e:
             print(e)
 
+        output_handler._quicksave_result(
+                                    results, priors, lightcurves, output_folder, 0, 0
+                                    )
         # Save outputs parameters, plots, lightcurves!
         try:
             output_handler.save_results(
@@ -1297,7 +1300,6 @@ class Retriever:
             if ld_fit_method.lower() == "independent":
                 priors.fit_limb_darkening(ld_fit_method)
             elif ld_fit_method.lower() == "custom":
-                #breakpoint()
                 priors.fit_custom_limb_darkening(self._prior_input,filter_indices, self.ldtk_uncertainty_multiplier)
             elif ld_fit_method.lower() in ["coupled", "single"]:
                 if self._filter_input is None:

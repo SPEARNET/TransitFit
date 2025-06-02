@@ -229,7 +229,7 @@ def get_asymmetric_errors_updated(folder):
                 results = pickle.load(handle)
                 samples = results.samples
                 logl=results.logl
-                #weights=np.exp(results.logwt - results.logwt.max())/np.sum(np.exp(results.logwt - results.logwt.max()))
+                weights=np.exp(results.logwt - results.logwt.max())/np.sum(np.exp(results.logwt - results.logwt.max()))
                 order_of_params=results.fitting_params
             
             for o, order in enumerate(order_of_params):
@@ -255,7 +255,7 @@ def get_asymmetric_errors_updated(folder):
                 results = pickle.load(handle)
                 samples = results.samples
                 logl=results.logl
-                #weights=np.exp(results.logwt - results.logwt.max())/np.sum(np.exp(results.logwt - results.logwt.max()))
+                weights=np.exp(results.logwt - results.logwt.max())/np.sum(np.exp(results.logwt - results.logwt.max()))
                 order_of_params=results.fitting_params
             
             for o, order in enumerate(order_of_params):

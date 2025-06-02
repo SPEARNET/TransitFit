@@ -10,8 +10,8 @@ When ``allow_TTV=True``, ``TransitFit`` cannot fit for the period value, and thi
 
 1. Run ``TransitFit`` with ``allow_TTV=False``.
 
-2. Run ``TransitFit`` with ``allow_TTV=True``, fixing the period at the best fit value from the first step.
-
+2. Run ``TransitFit`` with ``allow_TTV=True``, fixing the period at the best fit value from the first step. This output from this run provides the best fit values for :math:`t_0` for each epoch, which can then be used for further analysis. Bear in mind that it fits for :math:`t_0` corresponding to the prior for :math:`t0`. These best fit values can be transformed into corresponding transit-midpoints using the best fit period from the first step. For example: consider that the lightcurve with epoch index 5 in the input file is 10 epochs away from the provided prior for :math:`t0`. Then we take the :math:`t0` best-fit value corresponding to epoch index 5, and then add :math:`10 \times P` to it to get the corresponding observed transit-midpoint for epoch index 5.
+Meanwhile, the calculated transit-midpoint would be = prior for :math:`t0` + :math:`10 \times P`.
 
 =================
 Fitting for P_dot

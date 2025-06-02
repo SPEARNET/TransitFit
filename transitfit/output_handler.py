@@ -4,6 +4,7 @@ Object to deal with writing fitting results to files
 import numpy as np
 import os
 import csv
+from copy import deepcopy
 import pandas as pd
 import batman
 import itertools
@@ -54,6 +55,7 @@ class OutputHandler:
         self.best_model = None
         self.batman_initialised = False
         self.fit_ttv_taylor=fit_ttv_taylor
+        self.params_shifted_ttv=False
 
         self.global_params = []
         for i, param in enumerate(self.full_prior.fitting_params):
@@ -90,13 +92,29 @@ class OutputHandler:
         t0_all = np.array([self.t0_first])
 
         t_start=0
-        condition=True
+
+        ####
+        initial_guess_epochs = np.array((self.times_last-self.t0_first)//self.P, dtype=int)
+        indx = 1
+        for i in range(1, max(initial_guess_epochs)+1):
+            tau = get_time_duration(self.p_prime, self.p_dprime, self.P, t_start)
+
+            P_new = taylor_series(self.P, self.p_prime, self.p_dprime, tau, t_start)
+            self.P=P_new
+            t_start += tau
+            if i in initial_guess_epochs:
+                period_all = np.append(period_all, P_new)
+                t0_all = np.append(t0_all, t_start + self.t0_first)
+                indx += 1
+
+        #####
+        """condition=True
         while condition:
             # The time duration between the current and the next epoch
             tau=get_time_duration(self.p_prime,self.p_dprime,self.P,t_start)
 
             # The period at the next epoch
-            P_new=taylor_series(period_all[-1],self.p_prime,self.p_dprime,tau)
+            P_new=taylor_series(period_all[-1],self.p_prime,self.p_dprime,tau,t_start)
             self.P=P_new
             period_all=np.append(period_all,P_new)
 
@@ -106,7 +124,7 @@ class OutputHandler:
             
             
             if t0_all[-1]>self.times_last[-1]:#+self.t0_first:
-                condition=False
+                condition=False"""
         #breakpoint()
         #if len(t0_all)<max(self.initial_guess_epochs):
         #   return -1e9
@@ -122,6 +140,8 @@ class OutputHandler:
 
                 self.best_model['P'][i]=(period_all[id],self.best_model['P'][i][1])
                 self.best_model['t0'][i]=(t0_all[id],self.best_model['t0'][i][1])
+        
+        self.params_shifted_ttv=True
 
     def find_period_ttv(self, all_lightcurves):
         times_last=np.empty(0)
@@ -242,14 +262,15 @@ class OutputHandler:
 
                 # Get the best fit model depths
                 # Batman considers uniform period. So we need to shift the timestamps accordingly.
-                if self.fit_ttv_taylor:
-                    _time=self.batman_models[i].t
-                    shift=get_shift_in_time_due_to_ttv(0,_time-self.batman_models[i].t0,self.best_model['p_prime'][i][0],self.best_model['p_dprime'][i][0],self.best_model['P'][i][0], self.batman_models[i].t0-self.t0_first)
+                batman_model = deepcopy(self.batman_models[i])
+                """if self.fit_ttv_taylor:
+                    _time=batman_model.t
+                    shift=get_shift_in_time_due_to_ttv(_time-self.batman_models[i].t0,self.best_model['p_prime'][i][0],self.best_model['p_dprime'][i][0],self.best_model['P'][i][0], self.batman_models[i].t0-self.t0_first)
 
                     #fraction=(_time-self.batman_models[i].t0)/self.best_model['P'][i][0]
                     #shift=fraction*((self.best_model['p_prime'][i][0]/2 - 1) * fraction*_time +self.best_model['p_dprime'][i][0]/6 * (fraction*_time)**2)
-                    #self.batman_models[i].t=_time-shift
-                model_curve = self.batman_models[i].light_curve(self.batman_params[i])
+                    batman_model.t=_time-shift"""
+                model_curve = batman_model.light_curve(self.batman_params[i])
 
                 write_data = np.vstack((lc.times, phase, flux, flux_err, model_curve)).T
 
@@ -277,6 +298,10 @@ class OutputHandler:
         print('Plotting final curves')
 
         # Getting the maximum limits of the phase in all light curves
+        if self.fit_ttv_taylor and not self.params_shifted_ttv:
+            #self.find_period_ttv(all_lightcurves)
+            self.find_period_ttv_integration(all_lightcurves)
+
         phase_lims=[1,-1]
         for i, lc in np.ndenumerate(all_lightcurves):
             # Loop through each light curve, make the best model, and save it!
@@ -334,16 +359,24 @@ class OutputHandler:
                 # and the lc times for residuals
                 model_times = np.linspace(lc.times.min(), lc.times.max(), 1000)
                 # Batman considers uniform period. So we need to shift the timestamps accordingly.
-                if self.fit_ttv_taylor:
-                    _time=model_times
-                    shift=get_total_shift(self.best_model['t0'][i][0],_time,self.best_model['p_prime'][i][0],self.best_model['p_dprime'][i][0],self.best_model['P'][i][0], self.best_model['t0'][i][0]-self.t0_first)
+                shift=0
+                shift_for_curve=0
+                #if self.fit_ttv_taylor:
+                #    _time=model_times
+                    #shift=get_total_shift(self.best_model['t0'][i][0],_time,self.best_model['p_prime'][i][0],self.best_model['p_dprime'][i][0],self.best_model['P'][i][0], self.best_model['t0'][i][0]-self.t0_first)
+                    #shift=get_shift_in_time_due_to_ttv(0,_time-self.batman_models[i].t0,self.best_model['p_prime'][i][0],self.best_model['p_dprime'][i][0],self.best_model['P'][i][0], self.batman_models[i].t0-self.t0_first)
+                    
+                    #shift_for_curve = get_shift_in_time_due_to_ttv(0,self.batman_models[i].t-self.batman_models[i].t0,self.best_model['p_prime'][i][0],self.best_model['p_dprime'][i][0],self.best_model['P'][i][0], self.batman_models[i].t0-self.t0_first)
 
                     #fraction=(_time-self.best_model['t0'][i][0])/self.best_model['P'][i][0]
                     #shift=fraction*((self.best_model['p_prime'][i][0]/2 - 1) * fraction*_time +self.best_model['p_dprime'][i][0]/6 * (fraction*_time)**2)
                     #model_times=model_times-shift
-                model = batman.TransitModel(self.batman_params[i], model_times)
+                model = batman.TransitModel(self.batman_params[i], model_times-shift)
                 model_curve = model.light_curve(self.batman_params[i])
-                time_wise_best_curve = self.batman_models[i].light_curve(self.batman_params[i])
+
+                batman_model = deepcopy(self.batman_models[i])
+                batman_model.t-=shift_for_curve
+                time_wise_best_curve = batman_model.light_curve(self.batman_params[i])
                 # get model phase:
                 n = (model_times - (self.best_model['t0'][i][0] - 0.5 * self.best_model['P'][i][0]))//self.best_model['P'][i][0]
 
@@ -395,9 +428,17 @@ class OutputHandler:
                     # Get the best fit model depths - use linspaced times for plot
                     # and the lc times for residuals
                     model_times = np.linspace(lc.times.min(), lc.times.max(), 1000)
-                    model = batman.TransitModel(self.batman_params[i], model_times)
+                    batman_model = deepcopy(self.batman_models[i])
+                    shift=0
+                    shift_for_curve=0
+                    """if self.fit_ttv_taylor:
+                        shift=get_shift_in_time_due_to_ttv(model_times-self.batman_models[i].t0,self.best_model['p_prime'][i][0],self.best_model['p_dprime'][i][0],self.best_model['P'][i][0], self.batman_models[i].t0-self.t0_first)
+                        shift_for_curve = get_shift_in_time_due_to_ttv(batman_model.t-self.batman_models[i].t0,self.best_model['p_prime'][i][0],self.best_model['p_dprime'][i][0],self.best_model['P'][i][0], self.batman_models[i].t0-self.t0_first)"""
+
+
+                    model = batman.TransitModel(self.batman_params[i], model_times-shift)
                     lc_model_curve = model.light_curve(self.batman_params[i])
-                    time_wise_best_curve = self.batman_models[i].light_curve(self.batman_params[i])
+                    time_wise_best_curve = batman_model.light_curve(self.batman_params[i])
 
                     # get model phase:
                     n = (model_times - (self.best_model['t0'][i][0] - 0.5 * self.best_model['P'][i][0]))//self.best_model['P'][i][0]
@@ -1263,9 +1304,15 @@ class OutputHandler:
                 _l,_u = get_error_from_binned_lkl(samples[:,i], best[i],result.logl)
             _title = r'param = best$_{_l}^{_u}$'
             _title = _title.replace('param', labels[i])
-            _title = _title.replace('best', f"{result.best[i]:.6f}")
-            _title = _title.replace('_l', f"{_l:.6f}")
-            _title = _title.replace('_u', f"+{_u:.6f}")
+            _b=result.best[i]
+            if 1e-3 < abs(_b) < 1e3:
+                _title = _title.replace('best', f"{result.best[i]:.3f}")
+                _title = _title.replace('_l', f"{_l:.3f}")
+                _title = _title.replace('_u', f"+{_u:.3f}")
+            else:
+                _title = _title.replace('best', f"{result.best[i]:.3e}")
+                _title = _title.replace('_l', f"{_l:.3e}")
+                _title = _title.replace('_u', f"+{_u:.3e}")
             titles+=[_title]
             lower_error=np.concatenate((lower_error,[_l]))
             upper_error=np.concatenate((upper_error,[_u]))

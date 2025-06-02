@@ -63,3 +63,27 @@ WASP43*
 WASP-43*
 HST_LDCs-Cus*
 Test*
+pickle*
+test*
+wasp*
+WASP*
+avg_shift_ttv.ipynb
+lightcurve_plotting.ipynb
+lightcurve_samples.ipynb
+ltt9779b_analysis.py
+ltt9779b.py
+plot-1.ipynb
+TESS_filter_path.csv
+ttv_test_new.py
+ttv_wasp12b.py
+ttv.txt
+Untitled-1.ipynb
+LTT 9779 b/*
+LTT 9779b/*
+ltt9779b_plots/*
+paper_plots/*
+ttv_plot_analysis_new_ltt9779b.ipynb
+ttv_plot_analysis_new_wasp12b.ipynb
+ttv_plot_analysis_new.ipynb
+ttv_plot_analysis.ipynb
+ttv_test_module.py

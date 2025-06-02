@@ -30,14 +30,14 @@ def get_time_duration(P_prime,P_dprime,P,t0=0):
     b=np.float64((P_prime/2 -1))
     c=P+0
     correction_term=np.float64(P_dprime)*t0/2
-    b-=correction_term
+    b+=correction_term
 
     if a==0:
         tau=np.float64(-c/b)
     else:
         d=np.float64(b**2-4*a*c)
         if d<0:
-            print("no real solution")
+            #print("no real solution")
             return None
         else:
             x1=np.float64((-b+np.sqrt(d))/(2*a))
@@ -84,7 +84,7 @@ def get_total_shift(t1,t2,p_prime,p_dprime,P,t0):
         float: the total shift between t1 and t2
     """
     tau=get_time_duration(p_prime,p_dprime,P,t0)
-    tau_previous=get_time_duration(-p_prime,p_dprime,P,t0)
+    tau_previous=get_time_duration(-p_prime,p_dprime,P,-t0)
 
     if type(t2)==np.ndarray:
         tau_array=np.zeros(len(t2))
@@ -104,7 +104,7 @@ def get_integral_at_x(x,p_prime,p_dprime,t0):
     Returns:
         float: value of the function at x
     """
-    correction_term=np.float64(p_dprime)*t0*(x**2)/2
+    #correction_term=np.float64(p_dprime)*t0*(x**2)/2
     
     term_1=np.float64((p_prime*x**2)/2)
     term_2=np.float64((p_dprime*x**3)/6)
@@ -112,9 +112,9 @@ def get_integral_at_x(x,p_prime,p_dprime,t0):
 
     return term_1+term_2+correction_term
 
-def get_shift_in_time_due_to_ttv(t1,t2,p_prime,p_dprime,P,t0):
+def get_shift_in_time_due_to_ttv2(t1,t2,p_prime,p_dprime,P,t0):
     tau=get_time_duration(p_prime,p_dprime,P,t0)
-    tau_previous=get_time_duration(-p_prime,p_dprime,P,t0)
+    tau_previous=get_time_duration(-p_prime,p_dprime,P,-t0)
 
     if type(t2)==np.ndarray:
         tau_array=np.zeros(len(t2))
@@ -125,9 +125,31 @@ def get_shift_in_time_due_to_ttv(t1,t2,p_prime,p_dprime,P,t0):
 
     return (1/tau)*(get_integral_at_x(t2,p_prime,p_dprime,t0)-get_integral_at_x(t1,p_prime,p_dprime,t0))
 
+def get_shift_in_time_due_to_ttv(t2,p_prime,p_dprime,P,t0):
+    # P is given for local transit-midpoint
+    # t0 is distace of local transit-midpoint from the global transit-midpoint.
+    # t2 are timestamps where you need to find the TTV fluctuations.
+    
+    t1=0
+    tau=get_time_duration(p_prime,p_dprime,P,t0)
+    
+    """tau_previous=get_time_duration(-p_prime,p_dprime,P,-t0)"""
+
+    if type(t2)==np.ndarray:
+        tau_array=np.zeros(len(t2))
+        #idxs=np.where(t2>t1)
+        tau_array[t2>t1]=tau
+        tau_array[t2<=t1]=-tau#tau_previous
+        tau=tau_array
+    
+    term_1=np.float64((p_prime*t2**2)/2)
+    term_2=np.float64((p_dprime*t2**3)/6)
+    correction_term=np.float64(p_dprime*t0*t2**2)/2
+
+    return (1/tau)*(term_1+term_2+correction_term-0)
 
 
-def taylor_series(period, period_prime, period_dprime, times):
+def taylor_series(period, period_prime, period_dprime, times, t0_conjunction=0):
     """Calculates the period for given times using the taylor series expansion.
 
     Args:
@@ -142,7 +164,7 @@ def taylor_series(period, period_prime, period_dprime, times):
     """
 
     period_all = (
-        period + (times * period_prime) + (np.power(times, 2) * period_dprime / 2)
+        period + (times * period_prime) + (np.power(times, 2) * period_dprime / 2) + (period_dprime * times * t0_conjunction)
     )
 
     return period_all
