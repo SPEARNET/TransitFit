@@ -119,6 +119,26 @@ def inject_ttv(times, P, t0, p_prime, p_dprime):
 
     return times_ttv_injected_with_shift
 
+def get_injected_ttv_times(input_data, priors, p_prime, p_dprime):
+    """
+    Get the times with TTV signals injected.
+    
+    Args:
+        input_data (str): Path to the input data CSV file.
+        priors (str): Path to the priors CSV file.
+        p_prime (float): First order TTV parameter.
+        p_dprime (float): Second order TTV parameter.
+    
+    Returns:
+        list: List of time arrays with TTV signals injected.
+    """
+    priors_df = pd.read_csv(priors)
+    times, fluxes, errors = read_input_data(input_data)
+    P = get_prior_value('P', priors_df)
+    t0 = get_prior_value('t0', priors_df)
+
+    return inject_ttv(times, P, t0, p_prime, p_dprime)
+
 if __name__ == "__main__":
     input_data = 'input_data.csv'
     priors = 'priors.csv'
@@ -126,10 +146,5 @@ if __name__ == "__main__":
     # Values to be injected
     p_prime = 5e-8
     p_dprime = 2e-10
-    priors_df = pd.read_csv(priors)
-    times, fluxes, errors = read_input_data(input_data)
-    P = get_prior_value('P', priors_df)
-    t0 = get_prior_value('t0', priors_df)
 
-    # Inject TTV signals
-    times_ttv_injected = inject_ttv(times, P, t0, p_prime, p_dprime)
+    times_ttv_injected = get_injected_ttv_times(input_data, priors, p_prime, p_dprime)
