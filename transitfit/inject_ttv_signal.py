@@ -87,3 +87,8 @@ def inject_ttv(times, P, t0, p_prime, p_dprime):
         if tau>2*_P or tau<.5*_P:
             print(None, (max(initial_guess_epochs)-i))
             break
+
+        # The period at the next epoch
+        P_new=taylor_series(_P,p_prime,p_dprime,tau,t_start)
+        _P=P_new
+        t_start+=tau
