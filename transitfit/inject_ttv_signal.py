@@ -77,3 +77,5 @@ def inject_ttv(times, P, t0, p_prime, p_dprime):
     initial_guess_epochs=np.array((times_last-t0_first)//P,dtype=int)
     indx=1
     _P=P+0
+    for i in range(1,max(initial_guess_epochs)+1):
+        tau=get_time_duration(p_prime,p_dprime,_P,t_start)
