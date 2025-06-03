@@ -65,3 +65,6 @@ def inject_ttv(times, P, t0, p_prime, p_dprime):
     for i in range(len(times)):
         times_last = np.append(times_last, times[i][-1])
         times_first = np.append(times_first, times[i][0])
+    
+    # We calculate t01 which is time of conjucntion for the first lightcurve. helpful when the given t0 is not the first time of conjuction.
+    t0_first=np.min(times_last)-((np.min(times_last)-t0)%P)
