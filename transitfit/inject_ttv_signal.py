@@ -47,3 +47,5 @@ def read_input_data(input_data):
         fluxes.append(_f)
         errors.append(_e)
     return times, fluxes, errors
+
+def inject_ttv(times, P, t0, p_prime, p_dprime):
