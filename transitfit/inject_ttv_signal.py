@@ -137,7 +137,7 @@ def get_injected_ttv_times(input_data, priors, p_prime, p_dprime):
     P = get_prior_value('P', priors_df)
     t0 = get_prior_value('t0', priors_df)
 
-    return inject_ttv(times, P, t0, p_prime, p_dprime)
+    return inject_ttv(times, P, t0, p_prime, p_dprime), fluxes, errors
 
 if __name__ == "__main__":
     input_data = 'input_data.csv'
@@ -147,4 +147,4 @@ if __name__ == "__main__":
     p_prime = 5e-8
     p_dprime = 2e-10
 
-    times_ttv_injected = get_injected_ttv_times(input_data, priors, p_prime, p_dprime)
+    times_ttv_injected, _, _ = get_injected_ttv_times(input_data, priors, p_prime, p_dprime)
