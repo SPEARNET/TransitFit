@@ -118,3 +118,18 @@ def inject_ttv(times, P, t0, p_prime, p_dprime):
         times_ttv_injected_with_shift.append(times[i]+(t0_all[i]-t0_no_ttv[i])+_shift)
 
     return times_ttv_injected_with_shift
+
+if __name__ == "__main__":
+    input_data = 'input_data.csv'
+    priors = 'priors.csv'
+
+    # Values to be injected
+    p_prime = 5e-8
+    p_dprime = 2e-10
+    priors_df = pd.read_csv(priors)
+    times, fluxes, errors = read_input_data(input_data)
+    P = get_prior_value('P', priors_df)
+    t0 = get_prior_value('t0', priors_df)
+
+    # Inject TTV signals
+    times_ttv_injected = inject_ttv(times, P, t0, p_prime, p_dprime)
