@@ -110,3 +110,7 @@ def inject_ttv(times, P, t0, p_prime, p_dprime):
 
         p_list.append(period_all[id])
         t0_list.append(t0_all[id])
+
+    times_ttv_injected=[]
+    times_ttv_injected_with_shift=[]
+    t0_no_ttv=t0+(initial_guess_epochs*P)
