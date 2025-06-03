@@ -92,3 +92,8 @@ def inject_ttv(times, P, t0, p_prime, p_dprime):
         P_new=taylor_series(_P,p_prime,p_dprime,tau,t_start)
         _P=P_new
         t_start+=tau
+
+        if i in initial_guess_epochs:
+            if t_start+t0_first<times_first[indx] or t_start+t0_first>times_last[indx]:
+                print(None, (max(initial_guess_epochs)-i))
+                break
