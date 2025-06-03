@@ -24,3 +24,15 @@ def get_prior_value(param, priors_df):
         value = np.mean(_selected_row['Input_A'].iloc[0], _selected_row['Input_B'].iloc[0])
 
     return value
+
+def read_input_data(input_data):
+    """
+    Read input data and priors from CSV files.
+    
+    Args:
+        input_data (str): Path to the input data CSV file.
+    
+    Returns:
+        tuple: time, flux, flux_err.
+    """
+    input_data_df = pd.read_csv(input_data)
