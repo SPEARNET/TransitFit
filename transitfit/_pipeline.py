@@ -36,7 +36,8 @@ def run_retrieval(data_files, priors, filter_info=None,
                   n_procs=1, check_batchsizes=False, median_normalisation=False,
                   error_scaling=False, error_scaling_limits=None, 
                   ldtk_uncertainty_multiplier=1.,
-                  fit_ttv_taylor=False):
+                  fit_ttv_taylor=False, 
+                  use_differential_evolution=False):
     '''
     Runs a full retrieval of posteriors using nested sampling on a transit
     light curve or a set of transit light curves. For more guidance on the use
@@ -331,6 +332,10 @@ def run_retrieval(data_files, priors, filter_info=None,
         If True, will fit the TTVs using a Taylor expansion of the ephemeris
         equation. Default is False.
 
+    use_differential_evolution: bool, optional
+        If True, will use the differential evolution sampler instead of dynesty.
+        Default is False.
+
     Returns
     -------
     results : dict
@@ -403,7 +408,7 @@ def run_retrieval(data_files, priors, filter_info=None,
                           filter_delimiter, detrending_limits, normalise, 
                           normalise_limits,detrend,median_normalisation,
                           error_scaling, error_scaling_limits, 
-                          ldtk_uncertainty_multiplier,ld_fit_method, fit_ttv_taylor)
+                          ldtk_uncertainty_multiplier,ld_fit_method, fit_ttv_taylor, use_differential_evolution)
 
     # This part has been handled by the Retriever
     if ld_fit_method in ['exoctk','exotik']:
