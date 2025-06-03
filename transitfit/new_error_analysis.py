@@ -83,6 +83,12 @@ def check_index(index):
     return str(index)
 
 def get_params(results_csv):
+    """Gets the parameters from the results csv file.
+    Args:
+        results_csv (pd.DataFrame): the results csv file containing the parameters, telescopes, filters, epochs, best values and errors.
+    Returns:
+        tuple: a list of parameters to add and a list of best values.
+    """
     params=results_csv['Parameter'].values
     telescope_idxs=results_csv['Telescope'].values
     filter_idxs=results_csv['Filter'].values
