@@ -49,3 +49,13 @@ def read_input_data(input_data):
     return times, fluxes, errors
 
 def inject_ttv(times, P, t0, p_prime, p_dprime):
+    """Inject TTV signals into the provided light curves.
+    Args:
+        times (list): List of time arrays for each light curve.
+        P (float): Orbital period.
+        t0 (float): Reference time of conjunction.
+        p_prime (float): First order TTV parameter.
+        p_dprime (float): Second order TTV parameter.
+    Returns:
+        list: List of time arrays with TTV signals injected.
+    """
