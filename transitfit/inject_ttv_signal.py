@@ -83,3 +83,7 @@ def inject_ttv(times, P, t0, p_prime, p_dprime):
         if tau is None:
             print(None, (max(initial_guess_epochs)-i))
             break
+
+        if tau>2*_P or tau<.5*_P:
+            print(None, (max(initial_guess_epochs)-i))
+            break
