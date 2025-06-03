@@ -36,3 +36,14 @@ def read_input_data(input_data):
         tuple: time, flux, flux_err.
     """
     input_data_df = pd.read_csv(input_data)
+
+    times = []
+    fluxes = []
+    errors = []
+
+    for i in range(len(input_data_df)):
+        _t, _f, _e = pd.read_csv(input_data_df['Path'][i]).values.T
+        times.append(_t)
+        fluxes.append(_f)
+        errors.append(_e)
+    return times, fluxes, errors
