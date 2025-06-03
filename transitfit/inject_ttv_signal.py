@@ -97,3 +97,7 @@ def inject_ttv(times, P, t0, p_prime, p_dprime):
             if t_start+t0_first<times_first[indx] or t_start+t0_first>times_last[indx]:
                 print(None, (max(initial_guess_epochs)-i))
                 break
+            else:
+                period_all=np.append(period_all,P_new)
+                t0_all=np.append(t0_all,t_start+t0_first)
+                indx+=1
