@@ -37,6 +37,14 @@ def find_avg_binned_likelihood(x, y, num_bins=100):
     return all_li
 
 def get_error_from_binned_lkl(chosen_sample, best,logl):
+    """Calculates the error from the binned likelihood of the samples.
+    Args:
+        chosen_sample (array): the sampled values for the parameter from dynesty
+        best (float): best value among the samples
+        logl (array): log likelihood of the samples
+    Returns:
+        tuple: the lower and upper error on the best value.
+    """
     all_li=find_avg_binned_likelihood(chosen_sample, logl,num_bins=1000)
 
     err=np.sqrt(np.sum(np.power((chosen_sample-best),2)*all_li)/np.sum(all_li))#*err_weight
