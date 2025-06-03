@@ -19,6 +19,7 @@ class _Param:
 
 
 class _UniformParam(_Param):
+    """Class to represent a uniform parameter in a given range."""
     def __init__(self, low_lim, high_lim, negative_allowed=True):
         if low_lim >= high_lim:
             raise ValueError('low_lim >= high_lim')
