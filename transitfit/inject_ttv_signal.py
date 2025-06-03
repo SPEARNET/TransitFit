@@ -59,3 +59,9 @@ def inject_ttv(times, P, t0, p_prime, p_dprime):
     Returns:
         list: List of time arrays with TTV signals injected.
     """
+    times_last = np.empty(0)
+    times_first = np.empty(0)
+
+    for i in range(len(times)):
+        times_last = np.append(times_last, times[i][-1])
+        times_first = np.append(times_first, times[i][0])
