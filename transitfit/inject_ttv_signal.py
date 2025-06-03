@@ -107,3 +107,6 @@ def inject_ttv(times, P, t0, p_prime, p_dprime):
     for i in range(len(times)):
         find_id=t0_all-times[i][-1]
         id=np.argmax(find_id[find_id<=0])
+
+        p_list.append(period_all[id])
+        t0_list.append(t0_all[id])
