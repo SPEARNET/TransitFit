@@ -119,3 +119,5 @@ def inject_ttv(times, P, t0, p_prime, p_dprime):
         _shift=get_shift_in_time_due_to_ttv(times[i]-t0_list[i],p_prime,p_dprime,p_list[i], t0_list[i]-t0_first)
         times_ttv_injected.append(times[i]+(t0_all[i]-t0_no_ttv[i]))
         times_ttv_injected_with_shift.append(times[i]+(t0_all[i]-t0_no_ttv[i])+_shift)
+
+    return times_ttv_injected_with_shift
