@@ -67,11 +67,12 @@ class DifferentialEvolutionSampler:
         likelihood = self.log_likelihood(cube)
         return -likelihood
 
-    def run(self,nlive=1000, maxiter=None ):
+    def run(self,nlive=1000, maxiter=None, workers=1):
         """
         Run the differential evolution sampler.
         nlive: Number of live points (population size).
         maxiter: Maximum number of iterations (optional, if None, defaults to 1000).
+        workers: Number of workers to use for multiprocessing (default is 1 to avoid pickling issues).
         """
         bounds = Bounds(np.zeros(self.ndim), np.ones(self.ndim))
 
@@ -81,7 +82,7 @@ class DifferentialEvolutionSampler:
                 disp=True,
                 strategy='randtobest1bin',
                 popsize=nlive,
-                #workers=62,
+                workers=workers,
                 updating='deferred',
                 polish=False,
                 init='sobol',
