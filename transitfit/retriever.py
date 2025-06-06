@@ -30,7 +30,7 @@ from .io import (
 from ._likelihood import LikelihoodCalculator
 from ._utils import  weighted_avg_and_std
 from .new_error_analysis import get_asymmetric_errors_fitting_mode_all
-
+from .de import DifferentialEvolutionSampler
 # Parameters and if they are global, filter-specific or lightcurve-specific
 global_params = ["P", "ecc", "a", "inc", "w"]
 
@@ -129,6 +129,9 @@ class Retriever:
     fit_ttv_taylor: bool, optional
         If True, will fit the TTVs using a Taylor expansion of the ephemeris
         equation. Default is False.
+    use_differential_evolution: bool, optional
+        If True, will use the Differential Evolution sampler instead of dynesty.
+        Default is False.
     
     """
 
@@ -162,6 +165,7 @@ class Retriever:
         ldtk_uncertainty_multiplier=1.,
         ld_fit_method='independent',
         fit_ttv_taylor=False,
+        use_differential_evolution=False,
     ):
 
         ###################
@@ -208,6 +212,7 @@ class Retriever:
         self.ldtk_cache = ldtk_cache
         self.ldtk_uncertainty_multiplier = ldtk_uncertainty_multiplier
         self.fit_ttv_taylor=fit_ttv_taylor
+        self.use_differential_evolution = use_differential_evolution
 
         ###########################################################################
         # Now read in things from files to get Filters, full priors, full lc data #
@@ -353,6 +358,32 @@ class Retriever:
     ##########################################################
     #               RETRIEVAL RUNNING METHODS                #
     ##########################################################
+    def _prior_transform_func(self, cube):
+        """
+        Picklable version of prior transform function.
+        """
+        return self._current_priors._convert_unit_cube(cube)
+    
+    def _lnlike_func(self, cube):
+        """
+        Picklable version of likelihood function.
+        """
+        params = self._current_priors._interpret_param_array(cube)
+        
+        ln_likelihood = self._current_likelihood_calc.find_likelihood(params)
+        
+        if self._current_priors.fit_ld and self._current_priors.ld_fit_method not in["independent","custom"]:
+            # Pull out the q values and convert them
+            u = []
+            for fi in range(self._current_priors.n_filters):
+                q = [params[qX][0, fi, 0] for qX in self._current_priors.limb_dark_coeffs]
+                u.append(self._current_priors.ld_handler.convert_qtou(*q))
+            return ln_likelihood + self._current_priors.ld_handler.ldtk_lnlike(
+                u, self._current_priors.limb_dark
+            )
+        else:
+            return ln_likelihood
+
     def _run_dynesty(
         self,
         lightcurves,
@@ -389,29 +420,19 @@ class Retriever:
         likelihood_calc = LikelihoodCalculator(lightcurves, priors, self.fit_ttv_taylor)
         print(priors)
 
+        # Store these as instance variables to make them accessible to methods
+        self._current_priors = priors
+        self._current_likelihood_calc = likelihood_calc
+
         #######################################################################
         #######################################################################
         # Now we define the prior transform and ln likelihood function for
         # dynesty to use
         def prior_transform(cube):
-            return priors._convert_unit_cube(cube)
+            return self._prior_transform_func(cube)
 
         def lnlike(cube):
-            params = priors._interpret_param_array(cube)
-
-            ln_likelihood= likelihood_calc.find_likelihood(params)
-
-            if priors.fit_ld and priors.ld_fit_method not in["independent","custom"]:
-                # Pull out the q values and convert them
-                u = []
-                for fi in range(priors.n_filters):
-                    q = [params[qX][0, fi, 0] for qX in priors.limb_dark_coeffs]
-                    u.append(priors.ld_handler.convert_qtou(*q))
-                return ln_likelihood + priors.ld_handler.ldtk_lnlike(
-                    u, priors.limb_dark
-                )
-            else:
-                return ln_likelihood
+            return self._lnlike_func(cube)
 
         #######################################################################
         #######################################################################
@@ -430,61 +451,66 @@ class Retriever:
         )"""
         # Modification to include multiprocessing in single batches. 
         # If there is only 1 batch, it provides the additional cores to dynesty.
-        if self.dynesty_procs>1:
-            from pathos.multiprocessing import ProcessingPool as Pool
-            print(f"Running dynesty on {self.dynesty_procs} cores for this batch.")
-            dynesty_pool = Pool(self.dynesty_procs)
-            sampler = NestedSampler(
-                lnlike,
-                prior_transform,
-                n_dims,
-                bound=bound,
-                sample=sample,  # update_interval=float(n_dims),
-                nlive=nlive,
-                walks=walks,
-                slices=slices,
-                pool=dynesty_pool,
-                queue_size=self.dynesty_procs
-            )
-        
+        if self.use_differential_evolution:
+            sampler=DifferentialEvolutionSampler(self._prior_transform_func, self._lnlike_func, ndim=n_dims)
+            results = sampler.run(nlive=nlive, maxiter=maxiter, workers=self.dynesty_procs)
         else:
-            sampler = NestedSampler(
-                lnlike,
-                prior_transform,
-                n_dims,
-                bound=bound,
-                sample=sample,  # update_interval=float(n_dims),
-                nlive=nlive,
-                walks=walks,
-                slices=slices,
-            )
 
-        try:
-            sampler.run_nested(maxiter=maxiter, maxcall=maxcall, dlogz=dlogz)
-        except KeyboardInterrupt:
-            print("Keyboard interrupt received. Stopping sampler.")
-        except BaseException as e:
-            # Added for testing
-            print(f"Exception ({type(e)}) encountered:")
-            print(e)
-            if type(e) == RuntimeError:
-                print(
-                    "If this is an error from sampling getting stuck, check your priors and the samples. This is often seen when the true value is at the edge of/outside your priors!"
+            if self.dynesty_procs>1:
+                #from pathos.multiprocessing import ProcessingPool as Pool
+                print(f"Running dynesty on {self.dynesty_procs} cores for this batch.")
+                dynesty_pool = mp.Pool(self.dynesty_procs)#,maxtasksperchild=1000)#Pool(self.dynesty_procs)
+                sampler = NestedSampler(
+                    self._lnlike_func,
+                    self._prior_transform_func,
+                    n_dims,
+                    bound=bound,
+                    sample=sample,  # update_interval=float(n_dims),
+                    nlive=nlive,
+                    walks=walks,
+                    slices=slices,
+                    pool=dynesty_pool,
+                    queue_size=self.dynesty_procs
+                )
+            
+            else:
+                sampler = NestedSampler(
+                    lnlike,
+                    prior_transform,
+                    n_dims,
+                    bound=bound,
+                    sample=sample,  # update_interval=float(n_dims),
+                    nlive=nlive,
+                    walks=walks,
+                    slices=slices,
                 )
 
-            print("Plotting samples at time of exception")
-            # Plot the samples
-            #results = sampler.results
-            #results.best = results.samples[np.argmax(results.logl)]
-            results = ResultsException(sampler)
-            output_handler = OutputHandler(lightcurves, self._full_prior, self.host_r,fit_ttv_taylor=self.fit_ttv_taylor)
-            output_handler._plot_samples(
-                results, priors, "Exception_posteriors.png", plot_folder
-            )
-            raise
-        #self.all_t0= likelihood_calc.all_t0
-        # Pull out the results and calculate a few additional bits of info
-        results = Results(sampler)
+            try:
+                sampler.run_nested(maxiter=maxiter, maxcall=maxcall, dlogz=dlogz)
+            except KeyboardInterrupt:
+                print("Keyboard interrupt received. Stopping sampler.")
+            except BaseException as e:
+                # Added for testing
+                print(f"Exception ({type(e)}) encountered:")
+                print(e)
+                if type(e) == RuntimeError:
+                    print(
+                        "If this is an error from sampling getting stuck, check your priors and the samples. This is often seen when the true value is at the edge of/outside your priors!"
+                    )
+
+                print("Plotting samples at time of exception")
+                # Plot the samples
+                #results = sampler.results
+                #results.best = results.samples[np.argmax(results.logl)]
+                results = ResultsException(sampler)
+                output_handler = OutputHandler(lightcurves, self._full_prior, self.host_r,fit_ttv_taylor=self.fit_ttv_taylor)
+                output_handler._plot_samples(
+                    results, priors, "Exception_posteriors.png", plot_folder
+                )
+                raise
+            #self.all_t0= likelihood_calc.all_t0
+            # Pull out the results and calculate a few additional bits of info
+            results = Results(sampler)
         """results = sampler.results
 
         # Normalise weights

@@ -19,6 +19,7 @@ class _Param:
 
 
 class _UniformParam(_Param):
+    """Class to represent a uniform parameter in a given range."""
     def __init__(self, low_lim, high_lim, negative_allowed=True):
         if low_lim >= high_lim:
             raise ValueError('low_lim >= high_lim')
@@ -41,6 +42,8 @@ class _UniformParam(_Param):
         return abs(val)
 
 class _GaussianParam(_Param):
+    """Class to represent a Gaussian parameter with a mean and standard deviation."""
+
     def __init__(self, best, sigma, negative_allowed=True, clipped_gaussian=False, custom_ldcs=False):
         '''
         A GaussianParam is one which is fitted using a Gaussian prior (normal)
