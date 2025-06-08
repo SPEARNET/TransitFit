@@ -56,6 +56,10 @@ def count_number_lcs(
     if "t0" in other_params:
         total_params += 1
         multipliers["t0"] = 1
+    
+    if "p_dprime" in other_params:
+        total_params += 1
+        multipliers["p_dprime"] = 1
 
     if normalise:
         if not "norm" in other_params:
