@@ -373,13 +373,15 @@ def run_retrieval(data_files, priors, filter_info=None,
         )
         df_inputs = pd.read_csv(data_files)
         if number_lcs<len(df_inputs):
-            df_inputs = df_inputs.sort_values("Epochs", ignore_index=True)
+            # Check for both "Epoch" and "Epochs" columns
+            epoch_col = "Epochs" if "Epochs" in df_inputs.columns else "Epoch"
+            df_inputs = df_inputs.sort_values(epoch_col, ignore_index=True)
             indices = np.unique(np.linspace(0, len(df_inputs) - 1, number_lcs, dtype=int))
             df_inputs = df_inputs.iloc[indices]
             Path(results_output_folder).mkdir(parents=True, exist_ok=True)
             df_inputs.to_csv(results_output_folder+'/lightcurves_for_ttv.csv',index=False)
             df_inputs=df_inputs.reset_index(drop=True)
-            df_inputs['Epochs']=np.arange(0,len(df_inputs))
+            df_inputs[epoch_col]=np.arange(0,len(df_inputs))
             
             
         data_files=df_inputs
