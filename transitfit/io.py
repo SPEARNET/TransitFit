@@ -327,6 +327,7 @@ def parse_priors_list(priors_list, n_telescopes, n_filters,
         "q2":[],
         "q3":[],
             }
+    fixed_radius=[]
     for ri, row in enumerate(priors_list):
         key, mode, inputA, inputB, filt = row
         mode = mode.strip()
@@ -365,6 +366,8 @@ def parse_priors_list(priors_list, n_telescopes, n_filters,
                 # Not being fitted. Default value was specified.
                 if ld_fit_method in ['off','custom'] and key in ['q0','q1','q2','q3']:
                     q_arrays[key].append([inputA])
+                elif key in ['rp']:
+                    fixed_radius.append([inputA])
                 else:    
                     pass
 
@@ -390,6 +393,13 @@ def parse_priors_list(priors_list, n_telescopes, n_filters,
 
             else:
                 raise ValueError('Unrecognised fiting mode {} in input row {}. Must be any of "uniform", "gaussian", or "fixed"'.format(mode, ri))
+    if fixed_radius:
+        _arr=np.array(fixed_radius)
+        if _arr.size>0:
+            #priors.priors['rp'].default_value = _arr
+            priors.priors['rp'].array = _arr
+            priors.priors['rp']._set_type_fixed_radius()
+
     if ld_fit_method in ['off','custom']:    
         #breakpoint()
         for key in q_arrays:
