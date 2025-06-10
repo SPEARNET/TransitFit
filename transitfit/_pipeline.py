@@ -383,6 +383,53 @@ def run_retrieval(data_files, priors, filter_info=None,
             df_inputs=df_inputs.reset_index(drop=True)
             df_inputs[epoch_col]=np.arange(0,len(df_inputs))
             
+            # Fix filter mapping in priors file for the subset
+            # Get the original and new filter mappings
+            original_filters = df_inputs['Filter'].values
+            unique_original_filters = np.unique(original_filters)
+            filter_mapping = {old_idx: new_idx for new_idx, old_idx in enumerate(unique_original_filters)}
+            
+            # Update priors file to match the new filter indices
+            df_priors_updated = df_priors.copy()
+            filter_dependent_params = ['rp', 'q0', 'q1', 'q2', 'q3', 'u0', 'u1', 'u2', 'u3']
+            
+            # Create new priors file with updated filter indices
+            new_priors_rows = []
+            for _, row in df_priors.iterrows():
+                param = row['Parameter']
+                if param in filter_dependent_params and not pd.isna(row.get('Filter', np.nan)):
+                    old_filter_idx = int(row['Filter'])
+                    if old_filter_idx in filter_mapping:
+                        # This filter is still being used, update the index
+                        new_row = row.copy()
+                        #new_row['Filter'] = filter_mapping[old_filter_idx]
+                        new_priors_rows.append(new_row)
+                    # If old_filter_idx not in filter_mapping, skip this row (filter not used)
+                else:
+                    # Non-filter dependent parameter, keep as is
+                    new_priors_rows.append(row)
+            
+            # Save updated priors file
+            df_priors_updated = pd.DataFrame(new_priors_rows)
+            updated_priors_path = Path(results_output_folder) / 'priors_for_ttv.csv'
+            df_priors_updated.to_csv(updated_priors_path, index=False)
+            
+            # Use the updated priors file
+            priors = str(updated_priors_path)
+        
+            # Create a new filter_info file with the updated filters
+            filter_info = read_filter_info(df_inputs, filter_delimiter=filter_delimiter)
+            # Select the filters that are actually used in the subset
+            for i, row in filter_info.iterrows():
+                if row['Filter'] not in unique_original_filters:
+                    filter_info = filter_info.drop(i)
+            filter_info = filter_info.reset_index(drop=True)
+            # Save the updated filter_info file
+            updated_filter_info_path = Path(results_output_folder) / 'filter_info_for_ttv.csv'
+            filter_info.to_csv(updated_filter_info_path, index=False)
+            filter_info = str(updated_filter_info_path)
+
+
             
         data_files=df_inputs
         info = data_files.values
