@@ -394,20 +394,20 @@ def parse_priors_list(priors_list, n_telescopes, n_filters,
             else:
                 raise ValueError('Unrecognised fiting mode {} in input row {}. Must be any of "uniform", "gaussian", or "fixed"'.format(mode, ri))
     if fixed_radius:
-        _arr=np.array(fixed_radius)
+        _arr=np.array([fixed_radius])
         if _arr.size>0:
             #priors.priors['rp'].default_value = _arr
             priors.priors['rp'].array = _arr
             priors.priors['rp']._set_type_fixed_radius()
 
     if ld_fit_method in ['off','custom']:    
-        #breakpoint()
         for key in q_arrays:
             _arr=np.array([q_arrays[key]])
             if _arr.size>0:
                 #priors.priors[key].default_value = _arr
                 priors.priors[key].array = _arr
                 priors.priors[key]._set_type_fixed_ldc()
+        breakpoint()
     return priors
 
 #############################################################
