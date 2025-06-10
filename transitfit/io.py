@@ -407,7 +407,6 @@ def parse_priors_list(priors_list, n_telescopes, n_filters,
                 #priors.priors[key].default_value = _arr
                 priors.priors[key].array = _arr
                 priors.priors[key]._set_type_fixed_ldc()
-        breakpoint()
     return priors
 
 #############################################################
