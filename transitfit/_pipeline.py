@@ -379,8 +379,7 @@ def run_retrieval(data_files, priors, filter_info=None,
             indices = np.unique(np.linspace(0, len(df_inputs) - 1, number_lcs, dtype=int))
             df_inputs = df_inputs.iloc[indices]
             Path(results_output_folder).mkdir(parents=True, exist_ok=True)
-            df_inputs.to_csv(results_output_folder+'/lightcurves_for_ttv.csv',index=False)
-            df_inputs=df_inputs.reset_index(drop=True)
+            
             df_inputs[epoch_col]=np.arange(0,len(df_inputs))
             
             # Fix filter mapping in priors file for the subset
@@ -391,6 +390,7 @@ def run_retrieval(data_files, priors, filter_info=None,
 
             df_inputs['Filter'] = df_inputs['Filter'].map(filter_mapping)
             df_inputs = df_inputs.reset_index(drop=True)
+            df_inputs.to_csv(results_output_folder+'/lightcurves_for_ttv.csv',index=False)
             
             # Update priors file to match the new filter indices
             df_priors_updated = df_priors.copy()
