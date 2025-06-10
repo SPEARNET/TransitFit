@@ -28,7 +28,7 @@ class LikelihoodCalculator:
         equation. Default is False.
     '''
     def __init__(self, lightcurves, priors,fit_ttv_taylor=False,):
-        lightcurves = deepcopy(lightcurves)
+        #lightcurves = deepcopy(lightcurves)
         self.lightcurves = np.array(lightcurves, dtype=object)
 
         self.n_telescopes = self.lightcurves.shape[0]
@@ -282,7 +282,8 @@ class LikelihoodCalculator:
                                    u)
 
                 # Now we calculate the model transits
-                model = deepcopy(self.batman_models[i])
+                #model = deepcopy(self.batman_models[i])
+                model = self.batman_models[i]
                 # Batman considers uniform period. So we need to shift the timestamps accordingly.
                 """if self.fit_ttv_taylor:
                     _time=model.t
