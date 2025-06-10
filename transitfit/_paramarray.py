@@ -171,6 +171,9 @@ class ParamArray:
 
         return idx
     
+    def _set_type_fixed_radius(self,):
+        self.type='fixed'
+        
     def _set_type_fixed_ldc(self,):
         self.type='fixed'
 

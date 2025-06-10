@@ -56,6 +56,10 @@ def count_number_lcs(
     if "t0" in other_params:
         total_params += 1
         multipliers["t0"] = 1
+    
+    if "p_dprime" in other_params:
+        total_params += 1
+        multipliers["p_dprime"] = 1
 
     if normalise:
         if not "norm" in other_params:
@@ -75,7 +79,9 @@ def count_number_lcs(
         ldtk_params_count = len(ldtk_params)
 
     df = pd.read_csv(inputdata)
-    df = df.sort_values("Epochs", ignore_index=True)
+    # Check for both "Epoch" and "Epochs" columns
+    epoch_col = "Epochs" if "Epochs" in df.columns else "Epoch"
+    df = df.sort_values(epoch_col, ignore_index=True)
 
     total_params_list = np.empty(0)
 
