@@ -1434,6 +1434,7 @@ class OutputHandler:
             # Histogram residuals
             rgba_color = colors.to_rgba(marker_color)
             facecolor = (rgba_color[0], rgba_color[1], rgba_color[2], 0.6)
+            rgba_color = colors.to_hex(rgba_color, keep_alpha=True)
 
             unbinned_counts, bins = np.histogram(residuals, bins=30)
 
@@ -1447,6 +1448,7 @@ class OutputHandler:
             if bin_data:
                 rgba_color = colors.to_rgba(binned_colour)
                 facecolor = (rgba_color[0], rgba_color[1], rgba_color[2], 0.6)
+                rgba_color = colors.to_hex(rgba_color, keep_alpha=True)
 
                 binned_counts, _ = np.histogram(binned_residuals, bins)
 

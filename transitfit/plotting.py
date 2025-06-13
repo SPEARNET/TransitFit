@@ -187,6 +187,7 @@ def plot_individual_lightcurves(lightcurves, priorinfo, results,
             # Sort out colors:
             rgba_color = colors.to_rgba(marker_color)
             facecolor = (rgba_color[0], rgba_color[1], rgba_color[2], 0.6)
+            rgba_color = colors.to_hex(rgba_color, keep_alpha=True)
 
             hist_ax.hist(residuals, bins=30, orientation='horizontal',
                          color=facecolor, edgecolor=rgba_color,
@@ -370,6 +371,7 @@ def plot_from_file(path, phase_plot=True, folder_path='./plots',
     # Sort out colors:
     rgba_color = colors.to_rgba(marker_color)
     facecolor = (rgba_color[0], rgba_color[1], rgba_color[2], 0.6)
+    rgba_color = colors.to_hex(rgba_color, keep_alpha=True)
 
     hist_ax.hist(residuals, bins=30, orientation='horizontal',
                  color=facecolor, edgecolor=rgba_color,
