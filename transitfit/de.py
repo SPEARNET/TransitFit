@@ -71,7 +71,7 @@ class DifferentialEvolutionSampler:
         """
         Run the differential evolution sampler.
         nlive: Number of live points (population size).
-        maxiter: Maximum number of iterations (optional, if None, defaults to 1000).
+        maxiter: Maximum number of iterations (optional).
         workers: Number of workers to use for multiprocessing (default is 1 to avoid pickling issues).
         """
         bounds = Bounds(np.zeros(self.ndim), np.ones(self.ndim))
