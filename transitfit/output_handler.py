@@ -213,7 +213,6 @@ class OutputHandler:
         if self.fit_ttv_taylor:
             #self.find_period_ttv(all_lightcurves)
             self.find_period_ttv_integration(all_lightcurves)
-        breakpoint()
         self._initialise_batman(all_lightcurves)
 
         # Put all the detrending coeffs in usable format
