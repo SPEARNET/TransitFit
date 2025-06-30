@@ -14,14 +14,14 @@ from .io import (
     print_results,
 )
 
-def get_time_duration(P_prime,P_dprime,P,t0=0):
+def get_time_duration(P_prime,P_dprime,P,t_passed=0):
     """Gets the time duration between two epochs
 
     Args:
         P_prime (float): the first derivative of the period
         P_dprime (float): second derivative of the period
         P (float): Period
-        t0 (float, optional): time of conjunction. Defaults to 0.
+        t_passed (float, optional): time from time of conjunction. Defaults to 0.
 
     Returns:
         float: time duration between two epochs
@@ -29,13 +29,13 @@ def get_time_duration(P_prime,P_dprime,P,t0=0):
     a=np.float64(P_dprime/6)
     b=np.float64((P_prime/2 -1))
     c=P+0
-    correction_term=np.float64(P_dprime)*t0/2
+    correction_term=np.float64(P_dprime)*t_passed/2
     b+=correction_term
 
     if a==0:
         tau=np.float64(-c/b)
     else:
-        d=np.float64(b**2-4*a*c)
+        d=np.float64(np.power(b,2)-4*a*c)
         if d<0:
             #print("no real solution")
             return None
@@ -125,13 +125,13 @@ def get_shift_in_time_due_to_ttv2(t1,t2,p_prime,p_dprime,P,t0):
 
     return (1/tau)*(get_integral_at_x(t2,p_prime,p_dprime,t0)-get_integral_at_x(t1,p_prime,p_dprime,t0))
 
-def get_shift_in_time_due_to_ttv(t2,p_prime,p_dprime,P,t0):
+def get_shift_in_time_due_to_ttv(t2,p_prime,p_dprime,P,t_passed, tau):
     # P is given for local transit-midpoint
-    # t0 is distace of local transit-midpoint from the global transit-midpoint.
-    # t2 are timestamps where you need to find the TTV fluctuations.
+    # t_passed is distace of local transit-midpoint from the global transit-midpoint.
+    # t2 are timestamps, with respect to the local transit mid-point, where you need to find the TTV fluctuations .
     
     t1=0
-    tau=get_time_duration(p_prime,p_dprime,P,t0)
+    #tau=get_time_duration(p_prime,p_dprime,P,t_passed)
     
     """tau_previous=get_time_duration(-p_prime,p_dprime,P,-t0)"""
 
@@ -142,9 +142,9 @@ def get_shift_in_time_due_to_ttv(t2,p_prime,p_dprime,P,t0):
         tau_array[t2<=t1]=-tau#tau_previous
         tau=tau_array
     
-    term_1=np.float64((p_prime*t2**2)/2)
-    term_2=np.float64((p_dprime*t2**3)/6)
-    correction_term=np.float64(p_dprime*t0*t2**2)/2
+    term_1=np.float64((p_prime*np.power(t2,2))/2)
+    term_2=np.float64((p_dprime*np.power(t2,3))/6)
+    correction_term=np.float64(p_dprime*t_passed*np.power(t2,2))/2
 
     return (1/tau)*(term_1+term_2+correction_term-0)
 

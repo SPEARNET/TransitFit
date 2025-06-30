@@ -80,6 +80,10 @@ class OutputHandler:
             self.p_dprime=0
         self.t0=self.best_model['t0'][i][0]
 
+        self.best_model['P']=np.zeros_like(all_lightcurves, dtype=[('values', 'f8'), ('error', 'f8')])
+        self.best_model['t0']=np.zeros_like(all_lightcurves, dtype=[('values', 'f8'), ('error', 'f8')])
+        self.best_model['tau']=np.zeros_like(all_lightcurves)
+
         # We calculate t01 which is time of conjucntion for the first lightcurve. helpful when the given t0 is not the first time of conjuction.
         self.t0_first=np.min(times_last)-((np.min(times_last)-self.t0)%self.P)
         
@@ -132,6 +136,11 @@ class OutputHandler:
         #period_all=np.append(period_all,taylor_series(self.P, self.p_prime, 0, t_start))
         #period_all=(period_all[:-1]+period_all[1:])/2
 
+        # Check if 'tau' key exists in params, if not, create it
+        if 'tau' not in self.best_model:
+            # Initialize 'tau' with the same structure as other parameter arrays
+            self.best_model['tau'] = deepcopy(self.best_model['P'])
+
         for i in np.ndindex(all_lightcurves.shape):
 
             if all_lightcurves[i] is not None:
@@ -140,6 +149,12 @@ class OutputHandler:
 
                 self.best_model['P'][i]=(period_all[id],self.best_model['P'][i][1])
                 self.best_model['t0'][i]=(t0_all[id],self.best_model['t0'][i][1])
+
+                if id==0:
+                    self.best_model['tau'][i] = period_all[id]
+                else:
+                    self.best_model['tau'][i] = t0_all[id] - t0_all[id-1]
+
         
         self.params_shifted_ttv=True
 
@@ -263,13 +278,13 @@ class OutputHandler:
                 # Get the best fit model depths
                 # Batman considers uniform period. So we need to shift the timestamps accordingly.
                 batman_model = deepcopy(self.batman_models[i])
-                """if self.fit_ttv_taylor:
+                if self.fit_ttv_taylor:
                     _time=batman_model.t
-                    shift=get_shift_in_time_due_to_ttv(_time-self.batman_models[i].t0,self.best_model['p_prime'][i][0],self.best_model['p_dprime'][i][0],self.best_model['P'][i][0], self.batman_models[i].t0-self.t0_first)
+                    shift=get_shift_in_time_due_to_ttv(_time-self.batman_models[i].t0,self.best_model['p_prime'][i][0],self.best_model['p_dprime'][i][0],self.best_model['P'][i][0], self.batman_models[i].t0-self.t0_first, self.best_model['tau'][i])
 
                     #fraction=(_time-self.batman_models[i].t0)/self.best_model['P'][i][0]
                     #shift=fraction*((self.best_model['p_prime'][i][0]/2 - 1) * fraction*_time +self.best_model['p_dprime'][i][0]/6 * (fraction*_time)**2)
-                    batman_model.t=_time-shift"""
+                    batman_model.t=_time-shift
                 model_curve = batman_model.light_curve(self.batman_params[i])
 
                 write_data = np.vstack((lc.times, phase, flux, flux_err, model_curve)).T
@@ -361,16 +376,16 @@ class OutputHandler:
                 # Batman considers uniform period. So we need to shift the timestamps accordingly.
                 shift=0
                 shift_for_curve=0
-                #if self.fit_ttv_taylor:
-                #    _time=model_times
-                    #shift=get_total_shift(self.best_model['t0'][i][0],_time,self.best_model['p_prime'][i][0],self.best_model['p_dprime'][i][0],self.best_model['P'][i][0], self.best_model['t0'][i][0]-self.t0_first)
+                if self.fit_ttv_taylor:
+                    _time=model_times
+                    shift=get_shift_in_time_due_to_ttv(_time-self.best_model['t0'][i][0],self.best_model['p_prime'][i][0],self.best_model['p_dprime'][i][0],self.best_model['P'][i][0], self.best_model['t0'][i][0]-self.t0_first, self.best_model['tau'][i])
                     #shift=get_shift_in_time_due_to_ttv(0,_time-self.batman_models[i].t0,self.best_model['p_prime'][i][0],self.best_model['p_dprime'][i][0],self.best_model['P'][i][0], self.batman_models[i].t0-self.t0_first)
                     
                     #shift_for_curve = get_shift_in_time_due_to_ttv(0,self.batman_models[i].t-self.batman_models[i].t0,self.best_model['p_prime'][i][0],self.best_model['p_dprime'][i][0],self.best_model['P'][i][0], self.batman_models[i].t0-self.t0_first)
 
                     #fraction=(_time-self.best_model['t0'][i][0])/self.best_model['P'][i][0]
                     #shift=fraction*((self.best_model['p_prime'][i][0]/2 - 1) * fraction*_time +self.best_model['p_dprime'][i][0]/6 * (fraction*_time)**2)
-                    #model_times=model_times-shift
+                    model_times=model_times-shift
                 model = batman.TransitModel(self.batman_params[i], model_times-shift)
                 model_curve = model.light_curve(self.batman_params[i])
 
@@ -431,9 +446,9 @@ class OutputHandler:
                     batman_model = deepcopy(self.batman_models[i])
                     shift=0
                     shift_for_curve=0
-                    """if self.fit_ttv_taylor:
-                        shift=get_shift_in_time_due_to_ttv(model_times-self.batman_models[i].t0,self.best_model['p_prime'][i][0],self.best_model['p_dprime'][i][0],self.best_model['P'][i][0], self.batman_models[i].t0-self.t0_first)
-                        shift_for_curve = get_shift_in_time_due_to_ttv(batman_model.t-self.batman_models[i].t0,self.best_model['p_prime'][i][0],self.best_model['p_dprime'][i][0],self.best_model['P'][i][0], self.batman_models[i].t0-self.t0_first)"""
+                    if self.fit_ttv_taylor:
+                        shift=get_shift_in_time_due_to_ttv(model_times-self.batman_models[i].t0,self.best_model['p_prime'][i][0],self.best_model['p_dprime'][i][0],self.best_model['P'][i][0], self.batman_models[i].t0-self.t0_first, self.best_model['tau'][i])
+                        #shift_for_curve = get_shift_in_time_due_to_ttv(batman_model.t-self.batman_models[i].t0,self.best_model['p_prime'][i][0],self.best_model['p_dprime'][i][0],self.best_model['P'][i][0], self.batman_models[i].t0-self.t0_first)"""
 
 
                     model = batman.TransitModel(self.batman_params[i], model_times-shift)
@@ -465,6 +480,11 @@ class OutputHandler:
 
             P = self.best_model['P'][None, None, None][0]
             t0 = self.best_model['t0'][None, None, 0][0]
+
+            if isinstance(P, Iterable):
+                P = P.flat[0][0]
+            if isinstance(t0, Iterable):
+                t0 = t0.flat[0][0]
 
             cadence_days = cadence / (24 * 60)
 

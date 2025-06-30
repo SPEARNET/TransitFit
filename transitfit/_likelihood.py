@@ -106,13 +106,19 @@ class LikelihoodCalculator:
                 times_first=np.append(times_first,self.lightcurves[i].times[0])
 
         
-        self.P=params['P'][i]
+        self.P=deepcopy(params['P'][i])
         self.p_prime=params['p_prime'][i]
+        self.t0=deepcopy(params['t0'][i])
+        params['P']=np.zeros_like(self.lightcurves)
+        params['t0']=np.zeros_like(self.lightcurves)
+        params['tau']=np.zeros_like(self.lightcurves)
+
+
         try:
             self.p_dprime=params['p_dprime'][i]
         except KeyError:
             self.p_dprime=0
-        self.t0=params['t0'][i]
+        
 
         # We calculate t01 which is time of conjucntion for the first lightcurve. helpful when the given t0 is not the first time of conjuction.
         self.t0_first=np.min(times_last)-((np.min(times_last)-self.t0)%self.P)
@@ -173,6 +179,11 @@ class LikelihoodCalculator:
         #period_all=np.append(period_all,taylor_series(self.P, self.p_prime, 0, t_start))
         #period_all=(period_all[:-1]+period_all[1:])/2
 
+        # Check if 'tau' key exists in params, if not, create it
+        if 'tau' not in params:
+            # Initialize 'tau' with the same structure as other parameter arrays
+            params['tau'] = deepcopy(params['P'])
+
         for i in np.ndindex(self.lightcurves.shape):
 
             if self.lightcurves[i] is not None:
@@ -183,6 +194,12 @@ class LikelihoodCalculator:
 
                 params['P'][i]=period_all[id]
                 params['t0'][i]=t0_all[id]
+
+                # Store the period at this epoch
+                if id==0:
+                    params['tau'][i] = period_all[id]
+                else:
+                    params['tau'][i] = t0_all[id] - t0_all[id-1]
         
         return params
         
@@ -283,17 +300,21 @@ class LikelihoodCalculator:
 
                 # Now we calculate the model transits
                 #model = deepcopy(self.batman_models[i])
-                model = self.batman_models[i]
+                
                 # Batman considers uniform period. So we need to shift the timestamps accordingly.
-                """if self.fit_ttv_taylor:
+                if self.fit_ttv_taylor:
+                    model = deepcopy(self.batman_models[i])
                     _time=model.t
-                    shift=get_shift_in_time_due_to_ttv(_time-params['t0'][i],params['p_prime'][i],params['p_dprime'][i],params['P'][i], params['t0'][i]-self.t0_first)  
+                    shift=get_shift_in_time_due_to_ttv(_time-params['t0'][i],params['p_prime'][i],params['p_dprime'][i],params['P'][i], params['t0'][i]-self.t0_first, params['tau'][i])  
                     if abs(max(shift))>params['P'][i]:
                         total_chi2 += 1e7
 
                     #fraction=(_time-model.t0)/self.P
                     #shift=fraction*((params['p_prime'][i]/2 - 1) * fraction*_time +params['p_dprime'][i]/6 * (fraction*_time)**2)
-                    model.t=_time-shift"""
+                    model.t=_time-shift
+                else:
+                    model = self.batman_models[i]
+
                 model_flux = model.light_curve(self.batman_params[i])
 
                 # DETREND AND NORMALISE THE DATA TO COMPARE TO THE MODEL

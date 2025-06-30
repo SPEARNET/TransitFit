@@ -113,7 +113,12 @@ def inject_ttv(times, P, t0, p_prime, p_dprime):
     t0_no_ttv=t0+(initial_guess_epochs*P)
 
     for i in range(len(times)):
-        _shift=get_shift_in_time_due_to_ttv(times[i]-t0_list[i],p_prime,p_dprime,p_list[i], t0_list[i]-t0_first)
+        if i==0:
+            _tau=P
+        else:
+            _tau=t0_all[i]-t0_all[i-1]
+        _shift=get_shift_in_time_due_to_ttv(times[i]-t0_list[i],p_prime,p_dprime,p_list[i], t0_list[i]-t0_first, _tau)
+
         times_ttv_injected.append(times[i]+(t0_all[i]-t0_no_ttv[i]))
         times_ttv_injected_with_shift.append(times[i]+(t0_all[i]-t0_no_ttv[i])+_shift)
 
