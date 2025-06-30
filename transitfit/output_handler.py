@@ -228,7 +228,6 @@ class OutputHandler:
         if self.fit_ttv_taylor:
             #self.find_period_ttv(all_lightcurves)
             self.find_period_ttv_integration(all_lightcurves)
-
         self._initialise_batman(all_lightcurves)
 
         # Put all the detrending coeffs in usable format
@@ -1121,6 +1120,10 @@ class OutputHandler:
                             failed_index.append(i)
                         else:
                             self.best_model[key][i]=[1.0,0]
+
+                    elif key=='rp' and self.full_prior.priors['rp'].type=='fixed':
+                        pass
+
                     else:
                         failed_key.append(key)
                         failed_index.append(i)
@@ -1154,6 +1157,9 @@ class OutputHandler:
                 transit_params.w = self.best_model['w'][i][0]
                 transit_params.u = [self.best_model[uX][i][0] for uX in self.ld_coeffs_u]
                 transit_params.limb_dark = self.ld_model
+
+                if isinstance(transit_params.rp, (list, np.ndarray)) and len(transit_params.rp) > 1  and transit_params.rp[1] is None:
+                    transit_params.rp = self.best_model['rp'][i][0][0]
 
                 # Save the parameters
                 self.batman_params[i] = transit_params
