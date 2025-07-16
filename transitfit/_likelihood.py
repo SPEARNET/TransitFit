@@ -109,8 +109,8 @@ class LikelihoodCalculator:
         self.P=deepcopy(params['P'][i])
         self.p_prime=params['p_prime'][i]
         self.t0=deepcopy(params['t0'][i])
-        params['P']=np.zeros_like(self.lightcurves)
-        params['t0']=np.zeros_like(self.lightcurves)
+        #params['P']=np.zeros_like(self.lightcurves)
+        #params['t0']=np.zeros_like(self.lightcurves)
         params['tau']=np.zeros_like(self.lightcurves)
 
 

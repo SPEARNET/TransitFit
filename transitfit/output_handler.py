@@ -80,8 +80,8 @@ class OutputHandler:
             self.p_dprime=0
         self.t0=self.best_model['t0'][i][0]
 
-        self.best_model['P']=np.zeros_like(all_lightcurves, dtype=[('values', 'f8'), ('error', 'f8')])
-        self.best_model['t0']=np.zeros_like(all_lightcurves, dtype=[('values', 'f8'), ('error', 'f8')])
+        #self.best_model['P']=np.zeros_like(all_lightcurves, dtype=[('values', 'f8'), ('error', 'f8')])
+        #self.best_model['t0']=np.zeros_like(all_lightcurves, dtype=[('values', 'f8'), ('error', 'f8')])
         self.best_model['tau']=np.zeros_like(all_lightcurves)
 
         # We calculate t01 which is time of conjucntion for the first lightcurve. helpful when the given t0 is not the first time of conjuction.

@@ -94,16 +94,18 @@ def inject_ttv(times, P, t0, p_prime, p_dprime):
             if t_start+t0_first<times_first[indx] or t_start+t0_first>times_last[indx]:
                 print(None, (max(initial_guess_epochs)-i))
                 break
-            else:
-                period_all=np.append(period_all,P_new)
-                t0_all=np.append(t0_all,t_start+t0_first)
-                indx+=1
+            #else:
+            period_all=np.append(period_all,P_new)
+            t0_all=np.append(t0_all,t_start+t0_first)
+            #indx+=1
         
     p_list=[]
     t0_list=[]
     for i in range(len(times)):
-        find_id=t0_all-times[i][-1]
-        id=np.argmax(find_id[find_id<=0])
+        #find_id=t0_all-times[i][-1]
+        #id=np.argmax(find_id[find_id<=0])
+        __times_last=times[i][-1]
+        id=int((__times_last-t0_first)//P)
 
         p_list.append(period_all[id])
         t0_list.append(t0_all[id])
