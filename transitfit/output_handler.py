@@ -106,10 +106,10 @@ class OutputHandler:
             P_new = taylor_series(self.P, self.p_prime, self.p_dprime, tau, t_start)
             self.P=P_new
             t_start += tau
-            if i in initial_guess_epochs:
-                period_all = np.append(period_all, P_new)
-                t0_all = np.append(t0_all, t_start + self.t0_first)
-                indx += 1
+            #if i in initial_guess_epochs:
+            period_all = np.append(period_all, P_new)
+            t0_all = np.append(t0_all, t_start + self.t0_first)
+            #indx += 1
 
         #####
         """condition=True
@@ -144,8 +144,10 @@ class OutputHandler:
         for i in np.ndindex(all_lightcurves.shape):
 
             if all_lightcurves[i] is not None:
-                find_id=t0_all-all_lightcurves[i].times[-1]
-                id=np.argmax(find_id[find_id<=0])
+                #find_id=t0_all-all_lightcurves[i].times[-1]
+                #id=np.argmax(find_id[find_id<=0])
+                __times_last=all_lightcurves[i][i].times[-1]
+                id=int((__times_last-self.t0_first)//self.best_model['P'][i][0])
 
                 self.best_model['P'][i]=(period_all[id],self.best_model['P'][i][1])
                 self.best_model['t0'][i]=(t0_all[id],self.best_model['t0'][i][1])

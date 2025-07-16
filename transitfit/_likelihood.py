@@ -148,10 +148,10 @@ class LikelihoodCalculator:
             self.P=P_new
             t_start+=tau
 
-            if i in initial_guess_epochs:
-                period_all=np.append(period_all,P_new)
-                t0_all=np.append(t0_all,t_start+self.t0_first)
-                indx+=1
+            #if i in initial_guess_epochs:
+            period_all=np.append(period_all,P_new)
+            t0_all=np.append(t0_all,t_start+self.t0_first)
+            indx+=1
 
         if len(t0_all)==0:
             return None, (max(initial_guess_epochs))
@@ -187,10 +187,12 @@ class LikelihoodCalculator:
         for i in np.ndindex(self.lightcurves.shape):
 
             if self.lightcurves[i] is not None:
-                find_id=t0_all-self.lightcurves[i].times[-1]
-                if len(find_id[find_id<=0])==0:
-                    return None, (max(initial_guess_epochs)-i)
-                id=np.argmax(find_id[find_id<=0])
+                #find_id=t0_all-self.lightcurves[i].times[-1]
+                #if len(find_id[find_id<=0])==0:
+                #    return None, (max(initial_guess_epochs)-i)
+                #id=np.argmax(find_id[find_id<=0])
+                __times_last=self.lightcurves[i].times[-1]
+                id=int((__times_last-self.t0_first)//params['P'][i])
 
                 params['P'][i]=period_all[id]
                 params['t0'][i]=t0_all[id]
