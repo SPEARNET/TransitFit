@@ -125,6 +125,10 @@ def weighted_avg_and_std(values, weights, axis=-1, single_val=False):
         values = [values]
     if not isinstance(weights, Iterable):
         weights = [weights]
+    
+    # Check for NaN values in weights and replace with None
+    if isinstance(weights, (list, np.ndarray)):
+        weights = [None if np.isnan(w) else w for w in weights]
 
     values = np.array(values)
     weights = np.array(weights)
@@ -141,6 +145,8 @@ def weighted_avg_and_std(values, weights, axis=-1, single_val=False):
             flat_vals = values
             flat_weights = weights
         try:
+            if np.sum(flat_weights)==0:
+                flat_weights = np.ones_like(flat_vals)
             average = np.average(flat_vals, weights=1/(flat_weights**2))
             uncertainty = 1 / np.sqrt(np.sum(1/(flat_weights**2)))
         except TypeError:

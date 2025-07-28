@@ -763,8 +763,10 @@ class OutputHandler:
         for param in combined_dict.keys():
             for i in np.ndindex(combined_dict[param].shape):
                 if combined_dict[param][i] is not None:
-                    combined_dict[param][i] = np.array(combined_dict[param][i])
-
+                    try:
+                        combined_dict[param][i] = np.array(combined_dict[param][i])
+                    except ValueError:
+                        combined_dict[param][i] = np.array([[item.item() if isinstance(item, np.ndarray) else item for item in row] for row in combined_dict[param][i]], dtype=object)
         return combined_dict
 
     def add_best_u(self, best_dict, combined_dict):
@@ -1545,6 +1547,16 @@ class Results:
 
         # Calculate covariance matrix and use to get uncertainties
         cov = get_covariance_matrix(self)
+
+        # Handle case where cov is a scalar (single parameter)
+        cov = np.asarray(cov)
+
+        # Handle based on dimensions
+        if cov.ndim == 0:
+            # 0-D array (scalar) - convert to 1-D
+            cov = np.array([cov.item()])
+
+        print(cov, cov.shape)
         diagonal = np.diag(cov)
         uncertainties = np.sqrt(diagonal)
 
