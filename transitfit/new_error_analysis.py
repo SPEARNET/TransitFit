@@ -301,7 +301,7 @@ def get_asymmetric_errors_updated(folder, weighted_uncertainties=True):
         if weighted_uncertainties:
             weights=find_avg_binned_likelihood(samples, logl,num_bins=1000)
         else:
-            weights=np.ones_like(samples[:,0])
+            weights=np.ones_like(samples)
         try:
             le,ue=get_quantiles_on_best_val(samples,weights, best)
         except:
