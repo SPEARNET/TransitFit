@@ -36,7 +36,7 @@ def find_avg_binned_likelihood(x, y, num_bins=100):
     
     return all_li
 
-def get_error_from_binned_lkl(chosen_sample, best,logl):
+def get_error_from_binned_lkl(chosen_sample, best,logl, weighted_uncertainties=True):
     """Calculates the error from the binned likelihood of the samples.
     Args:
         chosen_sample (array): the sampled values for the parameter from dynesty
@@ -47,7 +47,10 @@ def get_error_from_binned_lkl(chosen_sample, best,logl):
     """
     all_li=find_avg_binned_likelihood(chosen_sample, logl,num_bins=1000)
 
-    err=np.sqrt(np.sum(np.power((chosen_sample-best),2)*all_li)/np.sum(all_li))#*err_weight
+    if weighted_uncertainties:
+        err=np.sqrt(np.sum(np.power((chosen_sample-best),2)*all_li)/np.sum(all_li))#*err_weight
+    else:
+        err=np.sqrt(np.sum(np.power((chosen_sample-best),2))/len(chosen_sample))
     return err, err
 
 
@@ -218,7 +221,7 @@ def check_files_for_samples(pathname_to_check, params_to_add, values):
                     values=make_dict(values, par, samples[:, o])
     return values
 
-def get_asymmetric_errors_updated(folder):
+def get_asymmetric_errors_updated(folder, weighted_uncertainties=True):
     if folder[-1]!='/':
         folder+='/'
     values = {}
@@ -295,12 +298,15 @@ def get_asymmetric_errors_updated(folder):
         samples=values[p]
         best=values[p+'_best']
         logl=values[p+'_logl']
-        weights=find_avg_binned_likelihood(samples, logl,num_bins=1000)
+        if weighted_uncertainties:
+            weights=find_avg_binned_likelihood(samples, logl,num_bins=1000)
+        else:
+            weights=np.ones_like(samples[:,0])
         try:
             le,ue=get_quantiles_on_best_val(samples,weights, best)
         except:
             issue_with_priors.append(p.replace('_',', '))
-            le,ue=get_error_from_binned_lkl(samples, best,logl)
+            le,ue=get_error_from_binned_lkl(samples, best,logl, weighted_uncertainties)
         lower_errors.append(le)
         upper_errors.append(ue)
         _p=p.split('_')

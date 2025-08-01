@@ -166,6 +166,7 @@ class Retriever:
         ld_fit_method='independent',
         fit_ttv_taylor=False,
         use_differential_evolution=False,
+        weighted_uncertainties=True,
     ):
 
         ###################
@@ -182,6 +183,7 @@ class Retriever:
         self.allow_ttv = allow_ttv
 
         self.detrending_info = detrending_list
+        self.weighted_uncertainties = weighted_uncertainties
 
         # self.detrending_limits = detrending_limits
         if detrending_limits is None:
@@ -351,7 +353,7 @@ class Retriever:
 
         # Initialise the OutputWriter
         self.output_handler = OutputHandler(
-            self.all_lightcurves, self._full_prior, self.host_r,fit_ttv_taylor=self.fit_ttv_taylor
+            self.all_lightcurves, self._full_prior, self.host_r,fit_ttv_taylor=self.fit_ttv_taylor, weighted_uncertainties=self.weighted_uncertainties
         )
 
 
@@ -503,7 +505,7 @@ class Retriever:
                 #results = sampler.results
                 #results.best = results.samples[np.argmax(results.logl)]
                 results = ResultsException(sampler)
-                output_handler = OutputHandler(lightcurves, self._full_prior, self.host_r,fit_ttv_taylor=self.fit_ttv_taylor)
+                output_handler = OutputHandler(lightcurves, self._full_prior, self.host_r,fit_ttv_taylor=self.fit_ttv_taylor, weighted_uncertainties=self.weighted_uncertainties)
                 output_handler._plot_samples(
                     results, priors, "Exception_posteriors.png", plot_folder
                 )
@@ -579,7 +581,7 @@ class Retriever:
         )
 
         # Set up output handler
-        output_handler = OutputHandler(self.all_lightcurves, priors, self.host_r,fit_ttv_taylor=self.fit_ttv_taylor)
+        output_handler = OutputHandler(self.all_lightcurves, priors, self.host_r,fit_ttv_taylor=self.fit_ttv_taylor, weighted_uncertainties=self.weighted_uncertainties)
 
         # print(priors)
         results, ndof = self._run_dynesty(
@@ -675,7 +677,7 @@ class Retriever:
             folded_t0,
             suppress_warnings=True,
         )
-        output_handler = OutputHandler(full_lcs, full_prior, self.host_r,fit_ttv_taylor=self.fit_ttv_taylor)
+        output_handler = OutputHandler(full_lcs, full_prior, self.host_r,fit_ttv_taylor=self.fit_ttv_taylor, weighted_uncertainties=self.weighted_uncertainties)
 
         n_batches = len(batches)
 
@@ -1155,7 +1157,7 @@ class Retriever:
             suppress_warnings=True,
         )
 
-        output_handler = OutputHandler(self.all_lightcurves, full_prior, self.host_r,fit_ttv_taylor=self.fit_ttv_taylor)
+        output_handler = OutputHandler(self.all_lightcurves, full_prior, self.host_r,fit_ttv_taylor=self.fit_ttv_taylor, weighted_uncertainties=self.weighted_uncertainties)
 
         output_handler.save_complete_results(
             fitting_mode, full_prior, output_folder, summary_file
@@ -1408,7 +1410,7 @@ class Retriever:
         ###                  GET P AND t0 VALUES                    ###
         ###############################################################
         result_handler = OutputHandler(
-            self.all_lightcurves, self._full_prior, self.host_r,fit_ttv_taylor=self.fit_ttv_taylor
+            self.all_lightcurves, self._full_prior, self.host_r,fit_ttv_taylor=self.fit_ttv_taylor, weighted_uncertainties=self.weighted_uncertainties
         )
 
         results_dicts = []

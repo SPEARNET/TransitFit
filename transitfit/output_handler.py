@@ -40,7 +40,7 @@ class OutputHandler:
         The prior for the complete light curve dataset.
 
     '''
-    def __init__(self, lightcurves, full_prior, host_r=None,fit_ttv_taylor=False, error_scaling=False,ldtk_uncertainty_multiplier=1.):
+    def __init__(self, lightcurves, full_prior, host_r=None,fit_ttv_taylor=False, error_scaling=False,ldtk_uncertainty_multiplier=1., weighted_uncertainties=True):
 
         self.all_lightcurves = lightcurves
 
@@ -56,6 +56,7 @@ class OutputHandler:
         self.batman_initialised = False
         self.fit_ttv_taylor=fit_ttv_taylor
         self.params_shifted_ttv=False
+        self.weighted_uncertainties=weighted_uncertainties
 
         self.global_params = []
         for i, param in enumerate(self.full_prior.fitting_params):
@@ -528,7 +529,7 @@ class OutputHandler:
         try:
             #el = ErrorLimits(output_folder)
             #el.get_errors()
-            get_asymmetric_errors_updated(output_folder)
+            get_asymmetric_errors_updated(output_folder, self.weighted_uncertainties)
         except:
             print("An exception occurred while trying to get asymmetric errors!")
 
@@ -1328,10 +1329,14 @@ class OutputHandler:
         upper_error=np.empty(0)
         for i in range(ndim):
             try:
-                _weight=find_avg_binned_likelihood(samples[:,i], result.logl, num_bins=1000)
+                if self.weighted_uncertainties:
+                    _weight=find_avg_binned_likelihood(samples[:,i], result.logl, num_bins=1000)
+                else:
+                    _weight=np.ones_like(samples[:,i])
+                
                 _l,_u = get_quantiles_on_best_val(samples[:,i], _weight, best[i])
             except IndexError:
-                _l,_u = get_error_from_binned_lkl(samples[:,i], best[i],result.logl)
+                _l,_u = get_error_from_binned_lkl(samples[:,i], best[i],result.logl, self.weighted_uncertainties)
             _title = r'param = best$_{_l}^{_u}$'
             _title = _title.replace('param', labels[i])
             _b=result.best[i]
