@@ -19,9 +19,9 @@ class ResultsDE:
         self.logwt = np.ones_like(self.logl)
 
         # Normalise weights
-        # unnormalized_weights = np.exp(self.logl-np.max(self.logl))
-        # self.weights = unnormalized_weights / np.sum(unnormalized_weights)
-        self.weights = np.ones_like(self.logl)#get_normalised_weights(results)
+        unnormalized_weights = np.exp(self.logl-np.max(self.logl))
+        self.weights = unnormalized_weights / np.sum(unnormalized_weights)
+        #self.weights = np.ones_like(self.logl)#get_normalised_weights(results)
 
         # Calculate covariance matrix and use to get uncertainties
         cov = get_covariance_matrix(self)
