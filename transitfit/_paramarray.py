@@ -1,6 +1,6 @@
 
 import numpy as np
-from ._params import _Param, _UniformParam, _GaussianParam
+from ._params import _Param, _UniformParam, _GaussianParam, _LogUniformParam
 
 
 class ParamArray:
@@ -104,6 +104,15 @@ class ParamArray:
         Adds a gaussian sampled fitting parameter
         '''
         self.set_value(_GaussianParam(mean, stdev, negative_allowed, clipped_gaussian, custom_ldcs),
+                       telescope_idx, filter_idx, epoch_idx)
+    
+    def add_loguniform_fit_param(self, low_lim, high_lim, telescope_idx=None,
+                              filter_idx=None, epoch_idx=None,
+                              negative_allowed=False):
+        '''
+        Adds a parameter to be fitted with log sampling
+        '''
+        self.set_value(_LogUniformParam(low_lim, high_lim, negative_allowed),
                        telescope_idx, filter_idx, epoch_idx)
 
     def from_unit_interval(self, u, telescope_idx=None, filter_idx=None,
@@ -217,6 +226,8 @@ class ParamArray:
                     line += 'Uniform - min: {} - max: {}\n'.format(self[i].low_lim, self[i].high_lim)
                 elif type(self[i]) is _GaussianParam:
                     line += 'Gaussian - mean: {} - stdev: {}\n'.format(self[i].mean, self[i].stdev)
+                elif type(self[i]) is _LogUniformParam:
+                    line += 'LogUniform - min: {} - max: {}\n'.format(self[i].low_lim, self[i].high_lim)
                 else:
                     line += 'Unrecognised type - {}\n'.format( self[i].__str__())
                 print_str += line

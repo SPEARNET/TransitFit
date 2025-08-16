@@ -191,6 +191,23 @@ def get_std_on_best_val_unweighted(samples, best_val):
     errors=(_e,_e)
     return errors 
 
+def get_std_on_best_val_weighted(samples, best_val, weights):
+    """Generates weighted standard deviation.
+
+    Args:
+        samples (array): the sampled values for the parameter from dynesty
+        best_val (float): best value among the samples
+        weights (array): weights of the samples
+
+    Returns:
+        tuple: the lower and upper error on the best value.
+    """
+    #_e=np.power(np.sum(np.power(samples-best_val,2)*weights)/np.sum(weights),.5)
+    _e = np.sqrt(np.average(np.power(samples-best_val,2), weights=weights))
+
+    errors=(_e,_e)
+    return errors
+
 def HST_detrending():
     pass
 
@@ -298,15 +315,16 @@ def get_asymmetric_errors_updated(folder, weighted_uncertainties=True):
         samples=values[p]
         best=values[p+'_best']
         logl=values[p+'_logl']
-        if weighted_uncertainties:
-            weights=find_avg_binned_likelihood(samples, logl,num_bins=1000)
-        else:
+        #if weighted_uncertainties:
+        #    # weights=find_avg_binned_likelihood(samples, logl,num_bins=1000)
+        #else:
+        if not weighted_uncertainties:
             weights=np.ones_like(samples)
         try:
             le,ue=get_quantiles_on_best_val(samples,weights, best)
         except:
             issue_with_priors.append(p.replace('_',', '))
-            le,ue=get_error_from_binned_lkl(samples, best,logl, weighted_uncertainties)
+            le,ue=get_std_on_best_val_weighted(samples, best, weights)#,logl, weighted_uncertainties)
         lower_errors.append(le)
         upper_errors.append(ue)
         _p=p.split('_')

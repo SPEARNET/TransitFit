@@ -1,6 +1,6 @@
 from scipy.optimize import differential_evolution, Bounds
 import numpy as np
-from ._utils import get_covariance_matrix
+from ._utils import get_covariance_matrix, get_normalised_weights
 
 
 class ResultsDE:
@@ -19,6 +19,8 @@ class ResultsDE:
         self.logwt = np.ones_like(self.logl)
 
         # Normalise weights
+        # unnormalized_weights = np.exp(self.logl-np.max(self.logl))
+        # self.weights = unnormalized_weights / np.sum(unnormalized_weights)
         self.weights = np.ones_like(self.logl)#get_normalised_weights(results)
 
         # Calculate covariance matrix and use to get uncertainties

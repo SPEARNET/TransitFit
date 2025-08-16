@@ -24,7 +24,7 @@ from .retriever import global_params, filter_dependent_params, lightcurve_depend
 from ._utils import weighted_avg_and_std, host_radii_to_AU, get_normalised_weights, get_covariance_matrix
 from ._paramarray import ParamArray
 from .lightcurve import LightCurve
-from .new_error_analysis import get_asymmetric_errors_updated, get_error_from_binned_lkl, get_quantiles_on_best_val, find_avg_binned_likelihood
+from .new_error_analysis import get_asymmetric_errors_updated, get_error_from_binned_lkl, get_quantiles_on_best_val, find_avg_binned_likelihood, get_std_on_best_val_weighted
 from .ttv_fitting import taylor_series, get_time_duration, get_total_shift, get_shift_in_time_due_to_ttv
 
 
@@ -1327,16 +1327,17 @@ class OutputHandler:
         titles=[] 
         lower_error=np.empty(0)
         upper_error=np.empty(0)
+
         for i in range(ndim):
             try:
                 if self.weighted_uncertainties:
-                    _weight=find_avg_binned_likelihood(samples[:,i], result.logl, num_bins=1000)
+                    _weight=weights#find_avg_binned_likelihood(samples[:,i], result.logl, num_bins=1000)
                 else:
                     _weight=np.ones_like(samples[:,i])
                 
                 _l,_u = get_quantiles_on_best_val(samples[:,i], _weight, best[i])
             except IndexError:
-                _l,_u = get_error_from_binned_lkl(samples[:,i], best[i],result.logl, self.weighted_uncertainties)
+                _l,_u = get_std_on_best_val_weighted(samples[:,i], best[i],_weight)
             _title = r'param = best$_{_l}^{_u}$'
             _title = _title.replace('param', labels[i])
             _b=result.best[i]
@@ -1352,7 +1353,11 @@ class OutputHandler:
             lower_error=np.concatenate((lower_error,[_l]))
             upper_error=np.concatenate((upper_error,[_u]))
 
-        fig = corner.corner(samples, labels=labels, titles=titles,
+        axes_scale = ["linear"] * ndim
+        if self.full_prior.error_scaling:
+            axes_scale=["linear"if label!="escale" else "log" for label in labels]
+
+        fig = corner.corner(samples, weights=weights, labels=labels, titles=titles, axes_scale=axes_scale,
                        show_titles=True, title_fmt=None, title_kwargs={"fontsize": 12},quiet=True,)
         corner.overplot_lines(fig, best, color='green')
         corner.overplot_lines(fig, best+lower_error, color='gray',linestyle='--')
@@ -1561,7 +1566,7 @@ class Results:
             # 0-D array (scalar) - convert to 1-D
             cov = np.array([cov.item()])
 
-        print(cov, cov.shape)
+        #print(cov, cov.shape)
         diagonal = np.diag(cov)
         uncertainties = np.sqrt(diagonal)
 

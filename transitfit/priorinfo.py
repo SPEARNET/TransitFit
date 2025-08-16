@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from collections.abc import Iterable
 
-from ._params import _Param, _UniformParam, _GaussianParam
+from ._params import _Param, _UniformParam, _GaussianParam, _LogUniformParam
 from .detrending_funcs import NthOrderDetrendingFunction
 from .detrender import DetrendingFunction
 from ._limb_darkening_handler import LimbDarkeningHandler
@@ -345,6 +345,49 @@ class PriorInfo:
                 np.array([[name, telescope_idx, filter_idx, epoch_idx]], object),
                 axis=0,
             )
+
+    def add_loguniform_fit_param(
+        self,
+        name,
+        low_lim,
+        high_lim,
+        telescope_idx=None,
+        filter_idx=None,
+        epoch_idx=None,
+    ):
+        """
+        Adds a new parameter which will be fitted uniformly in logspace in the range given
+        by low_lim and high_lim
+        """
+        #if name in ["a", "P", "rp", "inc", "ecc", "w","p_prime","p_dprime"]:
+        #    negative_allowed = False
+        #else:
+        #   negative_allowed = True
+        negative_allowed = False
+        if name in ["inc"]:
+            high_lim = 90
+
+        # if name not in self.priors and name=='escale':
+        #    # Need to initialise the entry in the priors dict
+        #    self.priors[name] = ParamArray(name, (self.n_telescopes, self.n_filters,self.n_epochs), True, True, True)
+
+        self.priors[name].add_loguniform_fit_param(
+            low_lim, high_lim, telescope_idx, filter_idx, epoch_idx, negative_allowed
+        )
+
+        # Store some info for later
+        if self.fitting_params is None:
+            self.fitting_params = np.array(
+                [[name, telescope_idx, filter_idx, epoch_idx]], dtype=object
+            )
+        else:
+            self.fitting_params = np.append(
+                self.fitting_params,
+                np.array([[name, telescope_idx, filter_idx, epoch_idx]], object),
+                axis=0,
+            )
+        # self.fitting_params.append([name, telescope_idx, filter_idx, epoch_idx])
+
 
     ###############################################################
     #         ADDING DETRENDING/NORMALISATION/LDC FITTING         #
@@ -765,7 +808,7 @@ class PriorInfo:
                     best, low, high = lightcurves[i].set_error_scaling(
                         scaling_limits_iter
                     )
-                    self.add_uniform_fit_param(
+                    self.add_loguniform_fit_param(
                         "escale", low, high, telescope_idx, filter_idx, epoch_idx
                     )
 

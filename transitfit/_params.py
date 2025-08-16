@@ -91,3 +91,27 @@ class _GaussianParam(_Param):
         if self.negative_allowed:
             return val
         return abs(val)
+    
+class _LogUniformParam(_Param):
+    """Class to represent a loguniform parameter in a given range."""
+    def __init__(self, low_lim, high_lim, negative_allowed=False):
+        if low_lim >= high_lim:
+            raise ValueError('low_lim >= high_lim')
+
+        super().__init__((high_lim + low_lim)/2)
+        self.low_lim = low_lim
+        self.high_lim = high_lim
+        self.negative_allowed = negative_allowed
+
+    def from_unit_interval(self, u):
+        '''
+        Function to convert value u in range (0,1], will convert to a value to
+        be used by Batman
+        '''
+        if u > 1 or u < 0:
+            raise ValueError('u must satisfy 0 < u < 1. ')
+        #val = u * (self.high_lim - self.low_lim) + self.low_lim
+        val = np.exp(u * (np.log(self.high_lim) - np.log(self.low_lim)) + np.log(self.low_lim))
+        if self.negative_allowed:
+            return val
+        return abs(val)
