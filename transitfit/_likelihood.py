@@ -144,9 +144,9 @@ class LikelihoodCalculator:
         for i in np.ndindex(self.lightcurves.shape):
             if self.lightcurves[i] is not None:
                 if idx==0:
-                    params['tau'][initial_guess_epochs[idx]] = self.P
-                    params['P'][initial_guess_epochs[idx]] = self.P
-                    params['t0'][initial_guess_epochs[idx]] = self.t0_first
+                    params['tau'][i] = self.P
+                    params['P'][i] = self.P
+                    params['t0'][i] = self.t0_first
                 lc_indices[initial_guess_epochs[idx]] = i
                 idx += 1
 
