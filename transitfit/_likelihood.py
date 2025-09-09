@@ -133,6 +133,24 @@ class LikelihoodCalculator:
 
         t_start=0
         initial_guess_epochs=np.array((times_last-self.t0_first)//self.P,dtype=int)
+        
+        # Check if 'tau' key exists in params, if not, create it
+        if 'tau' not in params:
+            # Initialize 'tau' with the same structure as other parameter arrays
+            params['tau'] = deepcopy(params['P'])
+
+        lc_indices = {}
+        idx=0
+        for i in np.ndindex(self.lightcurves.shape):
+            if self.lightcurves[i] is not None:
+                if idx==0:
+                    params['tau'][initial_guess_epochs[idx]] = self.P
+                    params['P'][initial_guess_epochs[idx]] = self.P
+                    params['t0'][initial_guess_epochs[idx]] = self.t0_first
+                lc_indices[initial_guess_epochs[idx]] = i
+                idx += 1
+
+        
         indx=1
         for i in range(1,max(initial_guess_epochs)+1):
             tau=get_time_duration(self.p_prime,self.p_dprime,self.P,t_start)
@@ -148,10 +166,17 @@ class LikelihoodCalculator:
             self.P=P_new
             t_start+=tau
 
-            #if i in initial_guess_epochs:
+            if i in initial_guess_epochs:
+                idx_lc=lc_indices[initial_guess_epochs[indx]]
+                params['P'][idx_lc]=P_new
+                params['t0'][idx_lc]=t_start+self.t0_first
+                params['tau'][idx_lc] = tau
+                indx+=1
+
+                
             period_all=np.append(period_all,P_new)
             t0_all=np.append(t0_all,t_start+self.t0_first)
-            indx+=1
+            
 
         if len(t0_all)==0:
             return None, (max(initial_guess_epochs))
@@ -179,20 +204,19 @@ class LikelihoodCalculator:
         #period_all=np.append(period_all,taylor_series(self.P, self.p_prime, 0, t_start))
         #period_all=(period_all[:-1]+period_all[1:])/2
 
-        # Check if 'tau' key exists in params, if not, create it
-        if 'tau' not in params:
-            # Initialize 'tau' with the same structure as other parameter arrays
-            params['tau'] = deepcopy(params['P'])
+        
 
-        for i in np.ndindex(self.lightcurves.shape):
+        """for i in np.ndindex(self.lightcurves.shape):
 
             if self.lightcurves[i] is not None:
                 #find_id=t0_all-self.lightcurves[i].times[-1]
                 #if len(find_id[find_id<=0])==0:
                 #    return None, (max(initial_guess_epochs)-i)
                 #id=np.argmax(find_id[find_id<=0])
-                __times_last=self.lightcurves[i].times[-1]
-                id=int((__times_last-self.t0_first)//params['P'][i])
+                #try:
+                id=int((self.lightcurves[i].times[-1]-self.t0_first)//params['P'][i])
+                #except OverflowError:
+                #    return None, (max(initial_guess_epochs))
 
                 params['P'][i]=period_all[id]
                 params['t0'][i]=t0_all[id]
@@ -201,7 +225,7 @@ class LikelihoodCalculator:
                 if id==0:
                     params['tau'][i] = period_all[id]
                 else:
-                    params['tau'][i] = t0_all[id] - t0_all[id-1]
+                    params['tau'][i] = t0_all[id] - t0_all[id-1]"""
         
         return params
         

@@ -83,7 +83,7 @@ class OutputHandler:
 
         #self.best_model['P']=np.zeros_like(all_lightcurves, dtype=[('values', 'f8'), ('error', 'f8')])
         #self.best_model['t0']=np.zeros_like(all_lightcurves, dtype=[('values', 'f8'), ('error', 'f8')])
-        self.best_model['tau']=np.zeros_like(all_lightcurves)
+        #self.best_model['tau']=np.zeros_like(all_lightcurves)
 
         # We calculate t01 which is time of conjucntion for the first lightcurve. helpful when the given t0 is not the first time of conjuction.
         self.t0_first=np.min(times_last)-((np.min(times_last)-self.t0)%self.P)
@@ -100,6 +100,23 @@ class OutputHandler:
 
         ####
         initial_guess_epochs = np.array((self.times_last-self.t0_first)//self.P, dtype=int)
+        # Check if 'tau' key exists in params, if not, create it
+        if 'tau' not in self.best_model:
+            # Initialize 'tau' with the same structure as other parameter arrays
+            self.best_model['tau'] = deepcopy(self.best_model['P'])
+        
+        lc_indices={}
+        idx=0
+        for i in np.ndindex(all_lightcurves.shape):
+            if all_lightcurves[i] is not None:
+                if idx==0:
+                    self.best_model['P'][i]=(self.P, self.best_model['P'][i][1])
+                    self.best_model['t0'][i]=(self.t0_first, self.best_model['t0'][i][1])
+                    self.best_model['tau'][i] = (self.P, self.best_model['tau'][i][1])
+
+                lc_indices[initial_guess_epochs[idx]]=i
+                idx+=1
+
         indx = 1
         for i in range(1, max(initial_guess_epochs)+1):
             tau = get_time_duration(self.p_prime, self.p_dprime, self.P, t_start)
@@ -107,10 +124,15 @@ class OutputHandler:
             P_new = taylor_series(self.P, self.p_prime, self.p_dprime, tau, t_start)
             self.P=P_new
             t_start += tau
-            #if i in initial_guess_epochs:
+            if i in initial_guess_epochs:
+                idx_lc=lc_indices[initial_guess_epochs[indx]]
+                self.best_model['P'][idx_lc]=(P_new,self.best_model['P'][idx_lc][1])
+                self.best_model['t0'][idx_lc]=(t_start + self.t0_first,self.best_model['t0'][idx_lc][1])
+                self.best_model['tau'][idx_lc] = (tau,self.best_model['tau'][idx_lc][1])
+                indx += 1
             period_all = np.append(period_all, P_new)
             t0_all = np.append(t0_all, t_start + self.t0_first)
-            #indx += 1
+            
 
         #####
         """condition=True
@@ -137,18 +159,15 @@ class OutputHandler:
         #period_all=np.append(period_all,taylor_series(self.P, self.p_prime, 0, t_start))
         #period_all=(period_all[:-1]+period_all[1:])/2
 
-        # Check if 'tau' key exists in params, if not, create it
-        if 'tau' not in self.best_model:
-            # Initialize 'tau' with the same structure as other parameter arrays
-            self.best_model['tau'] = deepcopy(self.best_model['P'])
+        
 
-        for i in np.ndindex(all_lightcurves.shape):
+        """for i in np.ndindex(all_lightcurves.shape):
 
             if all_lightcurves[i] is not None:
                 #find_id=t0_all-all_lightcurves[i].times[-1]
                 #id=np.argmax(find_id[find_id<=0])
-                __times_last=all_lightcurves[i][i].times[-1]
-                id=int((__times_last-self.t0_first)//self.best_model['P'][i][0])
+                #__times_last=all_lightcurves[i].times[-1]
+                id=int((all_lightcurves[i].times[-1]-self.t0_first)//self.best_model['P'][i][0])
 
                 self.best_model['P'][i]=(period_all[id],self.best_model['P'][i][1])
                 self.best_model['t0'][i]=(t0_all[id],self.best_model['t0'][i][1])
@@ -156,7 +175,7 @@ class OutputHandler:
                 if id==0:
                     self.best_model['tau'][i] = period_all[id]
                 else:
-                    self.best_model['tau'][i] = t0_all[id] - t0_all[id-1]
+                    self.best_model['tau'][i] = t0_all[id] - t0_all[id-1]"""
 
         
         self.params_shifted_ttv=True
