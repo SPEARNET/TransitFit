@@ -83,7 +83,7 @@ class OutputHandler:
 
         #self.best_model['P']=np.zeros_like(all_lightcurves, dtype=[('values', 'f8'), ('error', 'f8')])
         #self.best_model['t0']=np.zeros_like(all_lightcurves, dtype=[('values', 'f8'), ('error', 'f8')])
-        #self.best_model['tau']=np.zeros_like(all_lightcurves)
+        self.best_model['tau']=np.zeros_like(all_lightcurves)
 
         # We calculate t01 which is time of conjucntion for the first lightcurve. helpful when the given t0 is not the first time of conjuction.
         self.t0_first=np.min(times_last)-((np.min(times_last)-self.t0)%self.P)
@@ -103,7 +103,7 @@ class OutputHandler:
         # Check if 'tau' key exists in params, if not, create it
         if 'tau' not in self.best_model:
             # Initialize 'tau' with the same structure as other parameter arrays
-            self.best_model['tau'] = deepcopy(self.best_model['P'])
+            self.best_model['tau']=np.zeros_like(all_lightcurves)
         
         lc_indices={}
         idx=0
@@ -112,7 +112,7 @@ class OutputHandler:
                 if idx==0:
                     self.best_model['P'][i]=(self.P, self.best_model['P'][i][1])
                     self.best_model['t0'][i]=(self.t0_first, self.best_model['t0'][i][1])
-                    self.best_model['tau'][i] = (self.P, self.best_model['tau'][i][1])
+                    self.best_model['tau'][i] = self.P
 
                 lc_indices[initial_guess_epochs[idx]]=i
                 idx+=1
@@ -128,7 +128,7 @@ class OutputHandler:
                 idx_lc=lc_indices[initial_guess_epochs[indx]]
                 self.best_model['P'][idx_lc]=(P_new,self.best_model['P'][idx_lc][1])
                 self.best_model['t0'][idx_lc]=(t_start + self.t0_first,self.best_model['t0'][idx_lc][1])
-                self.best_model['tau'][idx_lc] = (tau,self.best_model['tau'][idx_lc][1])
+                self.best_model['tau'][idx_lc] = tau
                 indx += 1
             period_all = np.append(period_all, P_new)
             t0_all = np.append(t0_all, t_start + self.t0_first)
