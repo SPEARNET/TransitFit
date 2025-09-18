@@ -10,6 +10,7 @@ import traceback
 import multiprocessing as mp
 import pandas as pd
 from collections.abc import Iterable
+import time
 
 import io
 
@@ -126,6 +127,8 @@ class Retriever:
             that defines how strongly the LD profile (or the prior created
             from it) constrains the final analysis (that is, how much we
             trust the stellar atmosphere models used to create the profiles.)
+    use_ultranest: bool, optional
+        If True, will use the Ultranest sampler instead of dynesty. Default is False.
     fit_ttv_taylor: bool, optional
         If True, will fit the TTVs using a Taylor expansion of the ephemeris
         equation. Default is False.
@@ -163,6 +166,7 @@ class Retriever:
         error_scaling=False,
         error_scaling_limits=None,
         ldtk_uncertainty_multiplier=1.,
+        use_ultranest=False,
         ld_fit_method='independent',
         fit_ttv_taylor=False,
         use_differential_evolution=False,
@@ -214,6 +218,7 @@ class Retriever:
         self.ldtk_cache = ldtk_cache
         self.ldtk_uncertainty_multiplier = ldtk_uncertainty_multiplier
         self.fit_ttv_taylor=fit_ttv_taylor
+        self.use_ultranest=use_ultranest
         self.use_differential_evolution = use_differential_evolution
 
         ###########################################################################
@@ -453,9 +458,37 @@ class Retriever:
         )"""
         # Modification to include multiprocessing in single batches. 
         # If there is only 1 batch, it provides the additional cores to dynesty.
+        start_time = time.time()
         if self.use_differential_evolution:
             sampler=DifferentialEvolutionSampler(self._prior_transform_func, self._lnlike_func, ndim=n_dims)
             results = sampler.run(nlive=nlive, maxiter=maxiter, workers=self.dynesty_procs)
+        elif self.use_ultranest:
+            from ultranest import ReactiveNestedSampler
+            from ultranest import stepsampler
+            print("Using UltraNest")
+            sampler_un = ReactiveNestedSampler(
+                param_names=list(priors.fitting_params[:, 0]),
+                loglike=lnlike,
+                transform=prior_transform,
+                # n_dims,
+                # bound=bound,
+                # sample=sample,  # update_interval=float(n_dims),
+                # nlive=nlive,
+                # walks=walks,
+                # slices=slices,
+            )
+            nsteps = 2 * n_dims
+            # create step sampler:
+            #result = sampler.run(min_num_live_points=400, max_ncalls=400000)
+            sampler_un.stepsampler = stepsampler.SliceSampler(
+                nsteps=nsteps,
+                generate_direction=stepsampler.generate_random_direction,#(ui=ui, region=None),
+                # adaptive_nsteps=False,
+                # max_nsteps=400
+            )
+            sampler = sampler_un.run(
+                min_num_live_points=max(400, nlive),
+            )
         else:
 
             if self.dynesty_procs>1:
@@ -541,7 +574,7 @@ class Retriever:
         # Save the best fit results for easy access
         results.best = results.samples[np.argmax(results.logl)]
         # results.best = median"""
-
+        print(f"Sampler time: {time.time() - start_time} seconds")
         return results, n_dof
 
     def _run_full_retrieval(

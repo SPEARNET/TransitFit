@@ -36,6 +36,7 @@ def run_retrieval(data_files, priors, filter_info=None,
                   n_procs=1, check_batchsizes=False, median_normalisation=False,
                   error_scaling=False, error_scaling_limits=None, 
                   ldtk_uncertainty_multiplier=1.,
+                  use_ultranest=False,
                   fit_ttv_taylor=False, 
                   use_differential_evolution=False, weighted_uncertainties=True):
     '''
@@ -327,7 +328,9 @@ def run_retrieval(data_files, priors, filter_info=None,
         that defines how strongly the LD profile (or the prior created
         from it) constrains the final analysis (that is, how much we
         trust the stellar atmosphere models used to create the profiles.)
-    
+    use_ultranest: bool, optional
+        If True, will use UltraNest instead of dynesty for nested sampling.
+        Default is False.
     fit_ttv_taylor: bool, optional
         If True, will fit the TTVs using a Taylor expansion of the ephemeris
         equation. Default is False.
@@ -454,6 +457,8 @@ def run_retrieval(data_files, priors, filter_info=None,
         allow_ttv=False # This mode fits t0 for each epoch individually.
 
     # Set up the Retriever
+    if use_ultranest:
+        use_differential_evolution=False
     retriever = Retriever(data_files, priors, n_telescopes, n_filters, n_epochs,
                           filter_info, detrending_list, limb_darkening_model,
                           host_T, host_logg, host_z, host_r, ldtk_cache,
@@ -461,7 +466,8 @@ def run_retrieval(data_files, priors, filter_info=None,
                           filter_delimiter, detrending_limits, normalise, 
                           normalise_limits,detrend,median_normalisation,
                           error_scaling, error_scaling_limits, 
-                          ldtk_uncertainty_multiplier,ld_fit_method, fit_ttv_taylor, use_differential_evolution, weighted_uncertainties)
+                          ldtk_uncertainty_multiplier, use_ultranest, ld_fit_method,
+                           fit_ttv_taylor, use_differential_evolution, weighted_uncertainties)
 
     # This part has been handled by the Retriever
     if ld_fit_method in ['exoctk','exotik']:
