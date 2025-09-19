@@ -1,21 +1,24 @@
 from scipy.optimize import differential_evolution, Bounds
 import numpy as np
 from ._utils import get_covariance_matrix, get_normalised_weights
-
+import psutil
 
 class ResultsDE:
     """
     Creating a Results class to store necessary information about the differential evolution results.
     """
 
-    def __init__(self, sampler,prior_transform):
+    def __init__(self, sampler,prior_transform, callback_instance=None):
         """sampler.results are the results from the dynesty sampler
         prior_transform is the function to transform unit cube samples to parameter space.
         """
-        results = sampler#.results
-
-        self.logl = -np.array(results.population_energies)
-        self.samples = np.array([prior_transform(i) for i in results.population])
+        #results = sampler#.results
+        #breakpoint()
+        samples, unique_idx = np.unique(np.concatenate(callback_instance.population_history),axis=0, return_index=True)
+        
+        
+        self.samples = np.array([prior_transform(i) for i in samples])
+        self.logl = - np.concatenate(callback_instance.energy_history)[unique_idx]# np.ones_like(samples[:,0]) # Placeholder since DE does not provide log-likelihoods
         self.logwt = np.ones_like(self.logl)
 
         # Normalise weights
@@ -45,6 +48,27 @@ class ResultsDE:
 
         # Save the best fit results for easy access
         self.best = np.array(prior_transform(sampler.x))#[np.argmax(self.logl)]
+
+class CallbackDE:
+    def __init__(self,):
+        self.population_history = []
+        self.energy_history = []
+
+    def __call__(self, intermediate_result):
+        self.population_history.append(intermediate_result['population'])
+        self.energy_history.append(intermediate_result['population_energies'])
+
+        print("Stored generations:",len(self.population_history))
+        memory_info = psutil.virtual_memory()
+        available_gb = memory_info.available / (1024**3)  # Convert to GB
+        used_gb = memory_info.used / (1024**3)
+        print(f"Available RAM: {available_gb:.2f} GB")
+        
+        if available_gb < 12.0:
+            print(f"WARNING: Low memory! Available: {available_gb:.2f} GB, Used: {used_gb:.2f} GB")
+            raise MemoryError("Insufficient memory to continue optimization.")
+        
+        #return False
 
 class DifferentialEvolutionSampler:
     def __init__(self, prior_transform, log_likelihood, ndim=None):
@@ -78,6 +102,7 @@ class DifferentialEvolutionSampler:
         """
         bounds = Bounds(np.zeros(self.ndim), np.ones(self.ndim))
 
+        callback_instance = CallbackDE()
         sampler = differential_evolution(
                 self.neg_single_run,
                 bounds,
@@ -89,9 +114,10 @@ class DifferentialEvolutionSampler:
                 polish=False,
                 init='sobol',
                 maxiter=maxiter,
+                callback=callback_instance,
                 #x0=x0,
             )
 
-        results = ResultsDE(sampler, self.prior_transform)
+        results = ResultsDE(sampler, self.prior_transform, callback_instance)
 
         return results
