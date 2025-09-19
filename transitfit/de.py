@@ -63,8 +63,8 @@ class CallbackDE:
         available_gb = memory_info.available / (1024**3)  # Convert to GB
         used_gb = memory_info.used / (1024**3)
         print(f"Available RAM: {available_gb:.2f} GB")
-        
-        if available_gb < 12.0:
+
+        if available_gb/(available_gb + used_gb) < 8.0:
             print(f"WARNING: Low memory! Available: {available_gb:.2f} GB, Used: {used_gb:.2f} GB")
             raise MemoryError("Insufficient memory to continue optimization.")
         
